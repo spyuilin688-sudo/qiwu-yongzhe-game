@@ -23,7 +23,8 @@
     "e2e": "npm run e2e -w @qiwu/mobile-web",
     "check": "npm run typecheck && npm run validate:content && npm run test",
     "balance": "node --experimental-strip-types tools/balance/report.ts docs/BALANCE_REPORT.md",
-    "balance:breakdown": "node --experimental-strip-types tools/balance/breakdown.ts"
+    "balance:breakdown": "node --experimental-strip-types tools/balance/breakdown.ts",
+    "balance:progression": "node --experimental-strip-types tools/balance/progressionReport.ts docs/PROGRESSION_REPORT.md"
   },
   "devDependencies": {
     "@types/node": "22.20.5",
