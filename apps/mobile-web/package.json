@@ -11,6 +11,7 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@fontsource/huninn": "5.3.1",
     "@qiwu/content": "*",
     "@qiwu/game-core": "*",
     "react": "19.3.1",

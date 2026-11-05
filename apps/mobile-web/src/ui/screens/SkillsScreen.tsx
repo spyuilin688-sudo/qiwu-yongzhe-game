@@ -1,4 +1,4 @@
-import { describeAutoCast, describeSteps, formatSeconds, lineageIds, skillSelectionRule, type SkillDef } from '@qiwu/content';
+import { describeAutoCast, describePassive, describeSteps, formatSeconds, lineageIds, skillNameLookup, skillSelectionRule, type SkillDef } from '@qiwu/content';
 import { assertNotInBossFight, availabilityOf, readLoadout, type SkillConditionMode, type TargetPolicy } from '@qiwu/game-core';
 import { useState } from 'react';
 import { useCatalog, useGame, useSend } from '../../app/GameContext.tsx';
@@ -213,6 +213,7 @@ export function SkillsScreen() {
                 />
               );
             })}
+            {candidate.passiveId ? <PassiveRow passiveId={candidate.passiveId} active={lineage.has(candidate.id)} /> : null}
           </section>
         ))}
       </div>
@@ -272,6 +273,25 @@ function SkillListRow({
           onClick={onAdd}
         />
       )}
+    </div>
+  );
+}
+
+/** 被動不佔欄位：只要職業在目前路線上（自己或祖先）就生效；分支外的被動不疊加。 */
+function PassiveRow({ passiveId, active }: { passiveId: string; active: boolean }) {
+  const catalog = useCatalog();
+  const passive = catalog.passives.get(passiveId);
+  if (!passive) return null;
+  return (
+    <div className={[styles.skillRow, styles.passiveRow].join(' ')}>
+      <div className={styles.skillInfo}>
+        <span className={ps.rowTitle}>
+          被動：{passive.name}
+          <span className={active ? styles.passiveActive : styles.passiveInactive}>{active ? '生效中' : '未在目前路線'}</span>
+        </span>
+        <span className={ps.rowSub}>{passive.description}</span>
+        {passive.effect ? <span className={ps.rowSub}>規則：{describePassive(passive.effect, skillNameLookup(catalog))}</span> : null}
+      </div>
     </div>
   );
 }

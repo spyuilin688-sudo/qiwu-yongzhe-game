@@ -1,4 +1,4 @@
-import { RESOURCE_LABELS, UNIT_LABELS, bossStageLocalNumber, getStageAt, type ResourceId } from '@qiwu/content';
+import { RESOURCE_LABELS, SUIT_NAMES, UNIT_LABELS, bossStageLocalNumber, getStageAt, type ResourceId } from '@qiwu/content';
 import { availabilityOf, assertCanStartBoss, type BattleView, type EnemyView } from '@qiwu/game-core';
 import { useEffect, useRef, useState } from 'react';
 import { useBattleView, useCatalog, useGame, useHostEvents, useSend } from '../../app/GameContext.tsx';
@@ -11,6 +11,8 @@ import styles from './battle.module.css';
 
 /** 戰場構圖（規格 07）：角色腳點在寬 24%；敵人依 62%、76%、90% 排列，最多 3 敵。 */
 const ENEMY_X = [62, 76, 90] as const;
+/** 花色符號只是輔助，旁邊一律附文字（下一張）並在 aria-label 給完整花色名。 */
+const SUIT_GLYPHS = ['♥', '♦', '♣', '♠'] as const;
 const BOSS_BODY_X = 76;
 const FLOAT_LIFETIME_MS = 800;
 const FLOAT_MERGE_MS = 160;
@@ -123,12 +125,24 @@ export function BattleViewport() {
             ))}
           </div>
         ) : null}
+        {view?.hero.cards ? (
+          <span className={styles.nextSuit} aria-label={`下一張牌：${SUIT_NAMES[view.hero.cards.nextSuit]}${view.hero.cards.setPending ? '（已切牌）' : ''}`}>
+            <span aria-hidden="true" data-suit={view.hero.cards.nextSuit}>
+              {SUIT_GLYPHS[view.hero.cards.nextSuit]}
+            </span>
+            下一張
+          </span>
+        ) : null}
         {view && view.hero.units.length > 0 ? (
           <div className={styles.units}>
             {view.hero.units.map((unit) => (
-              <span key={unit.uid} className={styles.unit} title={`${UNIT_LABELS[unit.kind]} 剩 ${Math.ceil(unit.remainingMs / 1000)} 秒`}>
+              <span
+                key={unit.uid}
+                className={styles.unit}
+                title={unit.permanent ? `${UNIT_LABELS[unit.kind]}（常駐）` : `${UNIT_LABELS[unit.kind]} 剩 ${Math.ceil(unit.remainingMs / 1000)} 秒`}
+              >
                 {UNIT_LABELS[unit.kind].slice(0, 1)}
-                <small className="numeric">{Math.ceil(unit.remainingMs / 1000)}</small>
+                {unit.permanent ? null : <small className="numeric">{Math.ceil(unit.remainingMs / 1000)}</small>}
               </span>
             ))}
           </div>
@@ -183,6 +197,7 @@ function Enemy({ enemy, x, isBody }: { enemy: EnemyView; x: number; isBody: bool
           {enemy.statuses.map((status) => (
             <span key={status.statusId} className={styles.status}>
               {status.label}
+              {status.stacks > 1 ? <span className="numeric">×{status.stacks}</span> : null}
             </span>
           ))}
         </span>

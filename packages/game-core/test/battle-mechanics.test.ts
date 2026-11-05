@@ -48,6 +48,13 @@ function skillSteps(skillId: string): readonly EffectStep[] {
   return effect.steps;
 }
 
+/** 斷鋼重斬消耗的是角色資源；測試只關心「每層加多少」，以型別守衛取出。 */
+function resourceConsume(step: DamageStep): Extract<NonNullable<DamageStep['consume']>, { from: 'selfResource' }> {
+  const consume = step.consume;
+  if (consume?.from !== 'selfResource') throw new Error('此技能不是消耗角色資源');
+  return consume;
+}
+
 function damageStep(skillId: string): DamageStep {
   const step = skillSteps(skillId).find((candidate): candidate is DamageStep => candidate.type === 'damage');
   if (!step) throw new Error(`技能 ${skillId} 沒有傷害步驟`);
@@ -323,7 +330,7 @@ describe('PS003 餘勢：保留層不計入消耗加傷', () => {
 
   it('PS003 斷鋼重斬 SK004 在 5 層戰意時只消耗 4 層並保留 1 層；加傷只算消耗的 4 層', () => {
     const step = damageStep('SK004');
-    const consume = step.consume!;
+    const consume = resourceConsume(step);
     const modifier = catalog.passives.get('PS003')!.effect!.consumeModifier!;
     const resourceMax = catalog.passives.get('PS002')!.effect!.resource!.max;
     const attack = 100;
@@ -337,10 +344,10 @@ describe('PS003 餘勢：保留層不計入消耗加傷', () => {
       // 同刻先普攻補到第 5 層，再施放。
       const spiritAtCast = Math.min(resourceMax, spiritBefore + basicsOf(castTick).length);
       expect(spiritAtCast).toBe(resourceMax);
-      const consumed = spiritAtCast - modifier.reduceConsumedBy;
+      const consumed = spiritAtCast - (modifier.reduceConsumedBy ?? 0);
       expect(consumed).toBe(4);
       expect(spiritAfter).toBe(spiritAtCast - consumed);
-      expect(spiritAfter).toBe(modifier.retain);
+      expect(spiritAfter).toBe(modifier.reduceConsumedBy);
 
       const hit = nextSkillHit(sim, 'SK004');
       const withConsumed = expectedDamage({ attack, coefBp: step.coefBp + consumed * consume.perUnitCoefBp, armor: TANKY_ARMOR });
@@ -353,7 +360,7 @@ describe('PS003 餘勢：保留層不計入消耗加傷', () => {
 
   it('PS003 對照：沒有餘勢時斷鋼重斬一次消耗全部 5 層，加傷計 5 層', () => {
     const step = damageStep('SK004');
-    const consume = step.consume!;
+    const consume = resourceConsume(step);
     const attack = 100;
     const sim = createSim({
       stats: makeStats({ attack, basicIntervalMs: 500 }),
@@ -532,7 +539,7 @@ describe('SK068 超頻指令：「至少 1 座砲台」是硬條件', () => {
 describe('一般資源門檻：最多等待 conditionFallbackMs 後基礎施放', () => {
   it('斷鋼重斬 SK004（需 5 層戰意）戰意不足時，自首次等待起滿 conditionFallbackMs 才以現有層數施放', () => {
     const step = damageStep('SK004');
-    const consume = step.consume!;
+    const consume = resourceConsume(step);
     const fallback = tuning.battle.conditionFallbackMs;
     const attack = 100;
     const sim = createSim({

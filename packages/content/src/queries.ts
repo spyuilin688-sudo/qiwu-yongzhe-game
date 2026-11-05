@@ -143,3 +143,8 @@ export function getStageAt(catalog: ContentCatalog, mapNumber: number, localNumb
 export function bossStageLocalNumber(catalog: ContentCatalog, mapNumber: number): number {
   return getMap(catalog, mapNumber).stageIds.length;
 }
+
+/** 文案用：技能 ID 轉顯示名稱（找不到時保留 ID，方便發現資料錯誤）。 */
+export function skillNameLookup(catalog: ContentCatalog): (skillId: string) => string {
+  return (skillId) => catalog.skills.get(skillId)?.name ?? skillId;
+}

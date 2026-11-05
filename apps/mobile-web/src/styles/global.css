@@ -65,6 +65,16 @@ button:disabled {
   font-variant-numeric: tabular-nums;
 }
 
+/* 顯示字型只有單一字重；設回 400 避免瀏覽器合成粗體造成筆畫糊掉。 */
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
 .q-Q1 {
   --q: var(--q1);
 }

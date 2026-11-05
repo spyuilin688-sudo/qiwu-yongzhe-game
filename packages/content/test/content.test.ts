@@ -30,9 +30,13 @@ describe('內容資料自動檢查', () => {
     });
   });
 
-  it('第一階段可玩職業：7 個一轉 + 劍士 A 路線 + 工匠 B 路線', () => {
-    const playable = [...catalog.jobs.values()].filter((job) => job.tier > 0 && job.playable).map((job) => job.id);
-    expect(playable.sort()).toEqual(['JOB01', 'JOB02', 'JOB03', 'JOB06', 'JOB11', 'JOB16', 'JOB21', 'JOB26', 'JOB31', 'JOB34', 'JOB35'].sort());
+  it('35 個職業節點全部可玩：每個技能、被動、傳說都有實作效果', () => {
+    const jobs = [...catalog.jobs.values()].filter((job) => job.tier > 0);
+    expect(jobs).toHaveLength(35);
+    expect(jobs.filter((job) => !job.playable).map((job) => job.id)).toEqual([]);
+    expect([...catalog.skills.values()].filter((skill) => !skill.effect).map((skill) => skill.id)).toEqual([]);
+    expect([...catalog.passives.values()].filter((passive) => !passive.effect).map((passive) => passive.id)).toEqual([]);
+    expect([...catalog.equipment.values()].filter((base) => !base.legend).map((base) => base.id)).toEqual([]);
   });
 
   it('技能選擇規則：一轉 2 招、二轉 4 選 3、三轉 5 選 3 + 絕招', () => {

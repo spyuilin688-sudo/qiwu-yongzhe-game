@@ -87,17 +87,29 @@ export function isFlatStat(stat: StatKey): boolean {
 }
 
 /** 戰鬥中由職業被動累積的角色資源（不是 MP）。 */
-export const RESOURCE_IDS = ['FIGHTING_SPIRIT'] as const;
+export const RESOURCE_IDS = ['FIGHTING_SPIRIT', 'FOCUS', 'COMBO', 'QI', 'HEAT'] as const;
 export type ResourceId = (typeof RESOURCE_IDS)[number];
 
 export const RESOURCE_LABELS: Readonly<Record<ResourceId, string>> = {
   FIGHTING_SPIRIT: '戰意',
+  FOCUS: '專注',
+  COMBO: '連擊點',
+  QI: '氣脈',
+  HEAT: '熱度',
 };
 
-export const UNIT_KINDS = ['turret', 'mech'] as const;
+/** zone 是區域持續技（星陣、餘燼區域）的承載單位：不是召喚物，傷害來源為持續傷害。 */
+export const UNIT_KINDS = ['turret', 'mech', 'beast', 'phantom', 'decoy', 'zone'] as const;
 export type UnitKind = (typeof UNIT_KINDS)[number];
 
 export const UNIT_LABELS: Readonly<Record<UnitKind, string>> = {
   turret: '砲台',
   mech: '機甲',
+  beast: '戰獸',
+  phantom: '幻影',
+  decoy: '替身',
+  zone: '區域',
 };
+
+/** 元素印記狀態 ID（元素術士引爆、餘燼傳承轉移順序：火→冰→雷）。 */
+export const ELEMENT_MARK_IDS = ['FIRE_MARK', 'ICE_MARK', 'THUNDER_MARK'] as const;

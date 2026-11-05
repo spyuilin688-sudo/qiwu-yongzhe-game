@@ -1,4 +1,13 @@
-import type { ContentCatalog, EliteTemplateDef, ResourceId, StageDef, StatusSpec, TargetRule, UnitKind } from '@qiwu/content';
+import type {
+  ContentCatalog,
+  EliteTemplateDef,
+  ResourceId,
+  SelfBuffEffect,
+  StageDef,
+  StatusSpec,
+  TargetRule,
+  UnitKind,
+} from '@qiwu/content';
 import type { CombatStatsSnapshot, DamageBonusKey, HeroLoadoutSnapshot } from '../model/types.ts';
 
 /** 傷害來源各有獨立標籤，只吃對應加成，不雙吃（規格 02「觸發限制」）。 */
@@ -19,6 +28,16 @@ export interface BattleSetup {
   readonly encounter: Encounter;
 }
 
+/** 一個持續傷害計時器；傷害以施加時的攻擊與持續加成快照計算。 */
+export interface DotTicker {
+  coefPerTickBp: number;
+  ticksLeft: number;
+  intervalMs: number;
+  nextTickAtMs: number;
+  attack: number;
+  dotBonusBp: number;
+}
+
 export interface StatusInstance {
   statusId: string;
   kind: StatusSpec['kind'];
@@ -27,14 +46,16 @@ export interface StatusInstance {
   pctBp: number;
   /** 召喚易傷適用的單位種類；其他狀態為空陣列。 */
   unitKinds: UnitKind[];
-  dot: {
-    coefPerTickBp: number;
-    ticksLeft: number;
-    intervalMs: number;
-    nextTickAtMs: number;
-    attack: number;
-    dotBonusBp: number;
-  } | null;
+  /** 疊層狀態的目前層數與上限；其他狀態為 0。 */
+  stacks: number;
+  maxStacks: number;
+  /** 單一持續傷害（燃燒、熔痕）。 */
+  dot: DotTicker | null;
+  /** 獨立毒層，每層各自計時。 */
+  poison: DotTicker[];
+  /** 指定來源／技能標籤易傷的適用範圍。 */
+  sources: DamageSource[];
+  skillTags: string[];
 }
 
 export type EnemyKind = 'normal' | 'elite' | 'boss' | 'add';
@@ -60,11 +81,25 @@ export interface EnemyState {
   mechanicIndex: number | null;
   expiresAtMs: number | null;
   damageTransferBp: number;
+  /** 本體最近一次命中此目標的時間（默契追獵）。 */
+  lastBodyHitAtMs: number;
+  /** 此目標累積承受的本體普攻次數（琥珀項鍊）。 */
+  basicAttacksTaken: number;
+  /** 每目標一次的觸發是否已用過（月紋長袍、木牙墜飾）。 */
+  cleanHitBonusUsed: boolean;
+  dotEverApplied: boolean;
 }
 
 export type HitTargeting =
   | { readonly mode: 'fixed'; readonly uid: number }
-  | { readonly mode: 'reacquire'; readonly rule: TargetRule; readonly distribute: boolean };
+  | { readonly mode: 'reacquire'; readonly rule: TargetRule; readonly distribute: boolean }
+  /** 命中時依「主目標、其餘生成序」輪替存活目標，第 index 段打第 index % n 名。 */
+  | { readonly mode: 'rotate'; readonly index: number };
+
+/** 命中後才執行的附帶效果（確保「傷害後加層」順序）。 */
+export type HitRider =
+  | { readonly kind: 'status'; readonly spec: StatusSpec }
+  | { readonly kind: 'copyDot'; readonly statusId: string; readonly toOthers: number };
 
 export interface PendingHit {
   atMs: number;
@@ -77,28 +112,51 @@ export interface PendingHit {
   critAllowed: boolean;
   armorIgnoreBp: number;
   bonusKeys: readonly DamageBonusKey[];
+  /** 增益、花色、單體加成等額外加成（萬分位，與屬性加成相加）。 */
+  bonusPctBp: number;
   skillId: string | null;
-  statuses: readonly StatusSpec[];
+  /** 召喚來源命中的單位種類（召喚易傷、召喚命中觸發）。 */
+  unitKind: UnitKind | null;
+  riders: readonly HitRider[];
+  /** 屬於技能本身的段數（追加與召喚以外），用來判斷「最後一段」與本次施放首殺。 */
+  tracked: boolean;
+  /** 原目標死亡時可依優先序重新選目標一次（餘箭追獵）。 */
+  retargetOnce: boolean;
 }
 
 export interface UnitState {
   uid: number;
   kind: UnitKind;
+  capGroup: string;
   spawnedAtMs: number;
+  /** 常駐單位（戰獸）為 Infinity。 */
   expiresAtMs: number;
   intervalMs: number;
   nextAttackAtMs: number;
   coefBp: number;
   stats: CombatStatsSnapshot;
+  attackTargets: TargetRule;
+  damageSource: 'summon' | 'dot';
+  onResolve: { readonly coefBp: number; readonly targets: TargetRule; readonly when: 'always' | 'early' } | null;
+  attacksMade: number;
+  /** 第一次攻擊的追加（鏡界線輪、發條機芯）。 */
+  firstAttackExtra: { readonly coefBp: number; readonly target: 'same' | 'otherOnly' } | null;
+  /** 下一次攻擊的追加係數（銅管手砲），用完歸零。 */
+  pendingExtraCoefBp: number;
 }
 
 export interface BuffState {
   buffId: string;
   label: string;
   expiresAtMs: number;
-  unitKind: UnitKind;
-  intervalMultBp: number;
+  effect: SelfBuffEffect;
+  /** 次數型增益剩餘次數；非次數型為 0。 */
+  charges: number;
+  /** 本次增益期間已觸發過的「每次增益一次」效果。 */
+  firedProcIds: string[];
 }
+
+export type UnitRemovedReason = 'expired' | 'replaced' | 'resolved' | 'consumed';
 
 export type BattleEvent =
   | { readonly type: 'waveSpawned'; readonly atMs: number; readonly waveIndex: number; readonly totalWaves: number | null; readonly uids: readonly number[] }
@@ -126,8 +184,20 @@ export type BattleEvent =
   | { readonly type: 'addsSpawned'; readonly atMs: number; readonly uids: readonly number[]; readonly name: string }
   | { readonly type: 'stageCleared'; readonly atMs: number; readonly stageId: string }
   | { readonly type: 'unitSpawned'; readonly atMs: number; readonly kind: UnitKind; readonly uid: number }
-  | { readonly type: 'unitRemoved'; readonly atMs: number; readonly kind: UnitKind; readonly uid: number; readonly reason: 'expired' | 'replaced' }
+  | { readonly type: 'unitRemoved'; readonly atMs: number; readonly kind: UnitKind; readonly uid: number; readonly reason: UnitRemovedReason }
+  | { readonly type: 'cardPlayed'; readonly atMs: number; readonly suit: CardSuit; readonly actionId: number }
   | { readonly type: 'bossResolved'; readonly atMs: number; readonly result: 'success' | 'timeout'; readonly bossHpRemainingBp: number };
+
+/** 花色索引：0 紅心、1 方塊、2 梅花、3 黑桃。 */
+export type CardSuit = 0 | 1 | 2 | 3;
+
+export interface EnemyStatusView {
+  readonly statusId: string;
+  readonly label: string;
+  readonly remainingMs: number;
+  /** 疊層或毒層數；不可疊層的狀態為 0。 */
+  readonly stacks: number;
+}
 
 export interface EnemyView {
   readonly uid: number;
@@ -136,7 +206,7 @@ export interface EnemyView {
   readonly kind: EnemyKind;
   readonly hp: number;
   readonly maxHp: number;
-  readonly statuses: readonly { readonly statusId: string; readonly label: string; readonly remainingMs: number }[];
+  readonly statuses: readonly EnemyStatusView[];
   /** 介面用的效果標籤（小首領模板、BOSS 機制狀態）。 */
   readonly traits: readonly string[];
 }
@@ -160,8 +230,11 @@ export interface BattleView {
     readonly basicIntervalMs: number;
     readonly skills: readonly SkillCooldownView[];
     readonly resources: Readonly<Partial<Record<ResourceId, number>>>;
-    readonly units: readonly { readonly uid: number; readonly kind: UnitKind; readonly remainingMs: number }[];
-    readonly buffs: readonly { readonly buffId: string; readonly label: string; readonly remainingMs: number }[];
+    /** 常駐單位 permanent 為 true，remainingMs 為 0。 */
+    readonly units: readonly { readonly uid: number; readonly kind: UnitKind; readonly remainingMs: number; readonly permanent: boolean }[];
+    readonly buffs: readonly { readonly buffId: string; readonly label: string; readonly remainingMs: number; readonly charges: number }[];
+    /** 牌術師的下一張花色；沒有花色被動時為 null。 */
+    readonly cards: { readonly nextSuit: CardSuit; readonly setPending: boolean } | null;
   };
   readonly boss: {
     readonly name: string;

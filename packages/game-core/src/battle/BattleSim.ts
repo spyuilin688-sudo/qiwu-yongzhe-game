@@ -2,33 +2,60 @@ import {
   getMap,
   type AutoCastRule,
   type BossMechanicDef,
+  type CompanionDef,
+  type ConsumeModifierDef,
   type ContentCatalog,
   type DamageStep,
+  type DeathTransferDef,
   type EffectStep,
   type MapDef,
+  type PlayCardsStep,
   type ProcDef,
+  type ProcPayload,
+  type ProcTarget,
+  type ProcTiming,
+  type ProcTrigger,
   type ResourceId,
   type ResourceRuleDef,
+  type SelfBuffStep,
   type SkillDef,
+  type SpawnUnitStep,
+  type StaticModifiers,
   type StatusSpec,
+  type SuitRuleDef,
   type TargetRule,
   type UnitKind,
-  type ConsumeModifierDef,
 } from '@qiwu/content';
 import type { CombatStatsSnapshot, DamageBonusKey, HeroLoadoutSnapshot, SkillConditionMode } from '../model/types.ts';
 import { bossHp, eliteHp, eliteRelicPoints, monsterArmor, normalMonsterHp, normalRelicPoints } from '../rules/formulas.ts';
 import { ceilSafe, floorSafe } from '../util/math.ts';
 import { SeededRandom } from '../util/rng.ts';
+import {
+  applyStatusSpec,
+  copyPoisonTo,
+  findStatus,
+  longestPoison,
+  removeStacks,
+  removeStatus,
+  stackCount,
+  takeShortestPoison,
+  tickerEndsAtMs,
+  transferStatus,
+} from './statusOps.ts';
 import type {
   BattleEvent,
   BattleSetup,
   BattleView,
   BuffState,
+  CardSuit,
   DamageSource,
+  DotTicker,
   Encounter,
   EnemyState,
   EnemyView,
+  HitRider,
   PendingHit,
+  UnitRemovedReason,
   UnitState,
 } from './types.ts';
 
@@ -47,11 +74,76 @@ interface ActiveProc {
   lastTriggeredAtMs: number;
 }
 
-type PendingTiming = 'nextBasic' | 'nextRegularSkill' | 'nextUltimate';
+type StoredTiming = Exclude<ProcTiming, 'immediate' | 'afterAction'>;
 
 interface StoredExtraHit {
   readonly procId: string;
   readonly coefBp: number;
+  readonly target: ProcTarget;
+  readonly count: number | undefined;
+  readonly fallbackMainCoefBp: number;
+  readonly timing: StoredTiming;
+  readonly skillId: string | null;
+  charges: number;
+}
+
+/** 技能本身的段數追蹤：判斷「最後一段」與「本次施放首殺」。 */
+interface ActionTrack {
+  readonly actionId: number;
+  readonly skillId: string;
+  readonly ultimate: boolean;
+  remaining: number;
+  lastLanded: boolean;
+  killed: number;
+  lastTargetUid: number;
+}
+
+interface ProcOrigin {
+  readonly actionId: number;
+  readonly atMs: number;
+  /** 觸發行動最後一段之後的時間（afterAction）。 */
+  readonly endAtMs?: number;
+}
+
+interface CastContext {
+  readonly now: number;
+  readonly atMs: number;
+  readonly actionId: number;
+  readonly stats: CombatStatsSnapshot;
+  readonly source: 'skill' | 'ultimate';
+  readonly skillId: string;
+  /** 本體增益（祝禱）與單體加成（不滅劍鞘），只加在本體直接命中。 */
+  readonly bodyBonusPct: number;
+  previousTargets: EnemyState[];
+  previousMain: EnemyState | null;
+  consumedTotal: number;
+  retained: boolean;
+  firstDamageTargetCount: number | null;
+  hasDamage: boolean;
+  firstCardPlayed: boolean;
+}
+
+/** 由被動與傳說組合出的靜態規則；配置改變時整份重建。 */
+interface HeroKit {
+  readonly resourceRules: ResourceRuleDef[];
+  readonly consumeModifiers: ConsumeModifierDef[];
+  readonly deathTransfers: DeathTransferDef[];
+  readonly buffDurationBonus: { readonly buffId: string; readonly addMs: number }[];
+  readonly singleEnemyCastBonus: { readonly skillId: string; readonly pctBp: number }[];
+  readonly unitFirstAttackExtra: { readonly skillId: string; readonly coefBp: number; readonly target: 'same' | 'otherOnly' }[];
+  setSuitEffectBonusBp: number;
+  suits: SuitRuleDef | null;
+  companion: CompanionDef | null;
+  projectileRetargetOnce: boolean;
+}
+
+interface CardState {
+  pointer: CardSuit;
+  setPending: boolean;
+  lastSuit: CardSuit | null;
+  streak: number;
+  /** 紅心：下一次本體普攻的加成（萬分位），不疊加只取高。 */
+  heartBonusBp: number;
 }
 
 interface BossRuntime {
@@ -72,12 +164,42 @@ interface BossRuntime {
 const BODY_ACTION_SOURCES: ReadonlySet<DamageSource> = new Set(['basic', 'skill', 'ultimate']);
 /** 每個敵人記住的最近行動 ID 數；遠大於任一多段技能的命中期間內可能交錯的行動數。 */
 const COUNTED_ACTION_MEMORY = 32;
+const MAIN_TARGET: TargetRule = { kind: 'main' };
+const SUIT_HEART: CardSuit = 0;
+const SUIT_DIAMOND: CardSuit = 1;
+const SUIT_CLUB: CardSuit = 2;
+const SUIT_SPADE: CardSuit = 3;
+const SUIT_COUNT = 4;
+const DIAMOND_STATUS_ID = 'DIAMOND_BREAK';
+
+function emptyKit(): HeroKit {
+  return {
+    resourceRules: [],
+    consumeModifiers: [],
+    deathTransfers: [],
+    buffDurationBonus: [],
+    singleEnemyCastBonus: [],
+    unitFirstAttackExtra: [],
+    setSuitEffectBonusBp: 0,
+    suits: null,
+    companion: null,
+    projectileRetargetOnce: false,
+  };
+}
+
+function emptyCards(): CardState {
+  return { pointer: SUIT_HEART, setPending: false, lastSuit: null, streak: 0, heartBonusBp: 0 };
+}
+
+function scaleBp(value: number, multBp: number): number {
+  return Math.round((value * multBp) / 10000);
+}
 
 /**
  * 固定 50ms 邏輯刻的戰鬥模擬（純邏輯，不依賴畫面或時鐘）。
- * 同一刻固定順序：到期／持續傷害 → 已排程命中 → 清理死亡 → 一次性產出與過關 → 生成下一波 →
- * 排程普攻／技能 → 回傳畫面事件（規格 02）。相同設定、種子與輸入必定重播相同結果。
- * 角色沒有 HP，敵人不攻擊角色。
+ * 同一刻固定順序：BOSS 時間軸 → 狀態到期 → 持續傷害 → 召喚／區域攻擊 → 單位與增益到期 → 已排程命中 →
+ * 清理死亡與過關 → 生成下一波 → 排程普攻／技能 → 回傳畫面事件（規格 02）。
+ * 相同設定、種子與輸入必定重播相同結果。角色沒有 HP，敵人不攻擊角色。
  */
 export class BattleSim {
   private readonly catalog: ContentCatalog;
@@ -107,11 +229,17 @@ export class BattleSim {
   /** 每個技能最後一次的可施放時間；移出再放回配置或換職再換回都沿用，避免重置冷卻。 */
   private readonly cooldownMemory = new Map<string, number>();
   private procs: ActiveProc[] = [];
-  private resourceRules: ResourceRuleDef[] = [];
-  private consumeModifiers: ConsumeModifierDef[] = [];
+  private kit: HeroKit = emptyKit();
   private resources: Partial<Record<ResourceId, number>> = {};
-  private stored: Record<PendingTiming, StoredExtraHit[]> = { nextBasic: [], nextRegularSkill: [], nextUltimate: [] };
+  private resourceBasicCounters: Partial<Record<ResourceId, number>> = {};
+  private focusTargetUid: number | null = null;
+  private stored: StoredExtraHit[] = [];
   private unitRoundBonus: { unitKind: UnitKind; pctBp: number; remaining: number } | null = null;
+  private readonly unitPartBonus = new Map<string, number>();
+  private readonly actions = new Map<number, ActionTrack>();
+  private cards: CardState = emptyCards();
+  private engagedUid: number | null = null;
+  private engagedSinceMs = 0;
   private nextBasicAtMs = 0;
   private castLockUntilMs = 0;
   private boss: BossRuntime | null = null;
@@ -142,26 +270,31 @@ export class BattleSim {
     return this.stageCleared;
   }
 
-  /** 普通戰鬥換裝：新行動使用新屬性；已排程命中沿用施放時快照。BOSS 整場不得呼叫。 */
+  /** 普通戰鬥換裝：新行動使用新屬性；已排程命中沿用施放時快照。常駐戰獸跟著角色屬性。BOSS 整場不得呼叫。 */
   updateStats(stats: CombatStatsSnapshot): void {
     if (this.encounter.kind === 'boss') throw new Error('BOSS 戰使用開戰快照，不能中途換屬性');
     this.stats = stats;
+    for (const unit of this.units) if (unit.expiresAtMs === Number.POSITIVE_INFINITY) unit.stats = stats;
   }
 
-  /** 配置或職業改變：重建技能與被動；職業不同時清除資源與召喚物（換職要重驗上限）。 */
+  /** 配置或職業改變：重建技能與被動；職業不同時清除資源、召喚物與花色（換職要重驗上限）。 */
   updateHero(hero: HeroLoadoutSnapshot): void {
     if (this.encounter.kind === 'boss') throw new Error('BOSS 戰凍結配置');
     const jobChanged = hero.jobId !== this.hero.jobId;
     this.hero = hero;
-    this.rebuildHeroKit();
     if (jobChanged) {
       this.resources = {};
-      this.stored = { nextBasic: [], nextRegularSkill: [], nextUltimate: [] };
+      this.resourceBasicCounters = {};
+      this.focusTargetUid = null;
+      this.stored = [];
       for (const unit of this.units) this.emit({ type: 'unitRemoved', atMs: this.timeMs, kind: unit.kind, uid: unit.uid, reason: 'replaced' });
       this.units = [];
       this.buffs = [];
       this.unitRoundBonus = null;
+      this.unitPartBonus.clear();
+      this.cards = emptyCards();
     }
+    this.rebuildHeroKit();
   }
 
   /** 進入下一關（由引擎在收到 stageCleared 後呼叫）；角色冷卻、資源與召喚物延續。 */
@@ -172,6 +305,9 @@ export class BattleSim {
     for (const enemy of this.enemies) enemy.alive = false;
     this.enemies = [];
     this.hits = [];
+    this.actions.clear();
+    this.focusTargetUid = null;
+    this.engagedUid = null;
     this.waveIndex = 0;
     this.stageCleared = false;
     this.nextWaveAtMs = this.timeMs + this.catalog.tuning.battle.waveSpawnDelayMs;
@@ -185,9 +321,10 @@ export class BattleSim {
     const now = this.timeMs;
 
     this.processBossTimeline(now);
-    this.expireTimedEffects(now);
+    this.expireEnemyStatuses(now);
     this.processDots(now);
     this.processUnits(now);
+    this.expireUnitsAndBuffs(now);
     this.processHits(now);
     this.resolveDeathsAndProgress(now);
     if (this.boss?.resolved) return this.events;
@@ -224,22 +361,60 @@ export class BattleSim {
 
     const previousProcs = new Map(this.procs.map((proc) => [proc.def.procId, proc]));
     const procDefs: ProcDef[] = [];
-    this.resourceRules = [];
-    this.consumeModifiers = [];
+    const kit = emptyKit();
     for (const passiveId of this.hero.passiveIds) {
       const effect = this.catalog.passives.get(passiveId)?.effect;
       if (!effect) continue;
       procDefs.push(...effect.procs);
-      if (effect.resource) this.resourceRules.push(effect.resource);
-      if (effect.consumeModifier) this.consumeModifiers.push(effect.consumeModifier);
+      if (effect.resource) kit.resourceRules.push(effect.resource);
+      if (effect.consumeModifier) kit.consumeModifiers.push(effect.consumeModifier);
+      if (effect.suits) kit.suits = effect.suits;
+      if (effect.companion) kit.companion = effect.companion;
+      if (effect.projectileRetargetOnce) kit.projectileRetargetOnce = true;
+      this.addStaticModifiers(kit, effect);
     }
     for (const baseId of this.hero.legendBaseIds) {
       const legend = this.catalog.equipment.get(baseId)?.legend;
-      if (legend) procDefs.push(...legend.procs);
+      if (!legend) continue;
+      procDefs.push(...legend.procs);
+      this.addStaticModifiers(kit, legend);
     }
+    this.kit = kit;
     this.procs = procDefs.map(
       (def) => previousProcs.get(def.procId) ?? { def, counter: 0, sequence: [], lastTriggeredAtMs: Number.NEGATIVE_INFINITY },
     );
+    this.ensureCompanion();
+  }
+
+  private addStaticModifiers(kit: HeroKit, mods: StaticModifiers): void {
+    if (mods.deathTransfer) kit.deathTransfers.push(mods.deathTransfer);
+    if (mods.buffDurationBonus) kit.buffDurationBonus.push(mods.buffDurationBonus);
+    if (mods.singleEnemyCastBonus) kit.singleEnemyCastBonus.push(mods.singleEnemyCastBonus);
+    if (mods.unitFirstAttackExtra) kit.unitFirstAttackExtra.push(mods.unitFirstAttackExtra);
+    kit.setSuitEffectBonusBp += mods.setSuitEffectBonusBp ?? 0;
+  }
+
+  /** 獵伴戰獸是常駐單位：開戰或轉入該職業時生成一次，不受召喚上限與到期影響。 */
+  private ensureCompanion(): void {
+    const companion = this.kit.companion;
+    if (!companion) return;
+    if (this.units.some((unit) => unit.kind === companion.unitKind && unit.expiresAtMs === Number.POSITIVE_INFINITY)) return;
+    this.addUnit({
+      kind: companion.unitKind,
+      capGroup: companion.unitKind,
+      expiresAtMs: Number.POSITIVE_INFINITY,
+      intervalMs: companion.attackIntervalMs,
+      coefBp: companion.coefBp,
+      stats: this.stats,
+      attackTargets: MAIN_TARGET,
+      damageSource: 'summon',
+      onResolve: null,
+      firstAttackExtra: null,
+    });
+  }
+
+  private hasPassive(passiveId: string): boolean {
+    return this.hero.passiveIds.includes(passiveId);
   }
 
   // ───────────── BOSS ─────────────
@@ -379,6 +554,10 @@ export class BattleSim {
       mechanicIndex: null,
       expiresAtMs: null,
       damageTransferBp: 0,
+      lastBodyHitAtMs: Number.NEGATIVE_INFINITY,
+      basicAttacksTaken: 0,
+      cleanHitBonusUsed: false,
+      dotEverApplied: false,
     };
     this.nextUid += 1;
     return enemy;
@@ -437,74 +616,122 @@ export class BattleSim {
 
   // ───────────── 到期與持續 ─────────────
 
-  private expireTimedEffects(now: number): void {
+  private expireEnemyStatuses(now: number): void {
     for (const enemy of this.enemies) {
       if (!enemy.alive) continue;
+      const expired: string[] = [];
       enemy.statuses = enemy.statuses.filter((status) => {
         if (status.kind === 'dot') return status.dot !== null && status.dot.ticksLeft > 0;
-        return status.expiresAtMs > now;
+        if (status.kind === 'dotStack') return status.poison.length > 0;
+        if (status.expiresAtMs > now) return true;
+        expired.push(status.statusId);
+        return false;
       });
       if (enemy.kind === 'add' && enemy.expiresAtMs !== null && enemy.expiresAtMs <= now) {
         enemy.alive = false;
         this.emit({ type: 'enemyRemoved', atMs: now, uid: enemy.uid, reason: 'expired' });
+        continue;
       }
+      for (const statusId of expired) this.fireStatusExpired(statusId, enemy, now);
     }
-    this.units = this.units.filter((unit) => {
-      if (unit.expiresAtMs > now) return true;
-      this.emit({ type: 'unitRemoved', atMs: now, kind: unit.kind, uid: unit.uid, reason: 'expired' });
-      return false;
-    });
-    this.buffs = this.buffs.filter((buff) => buff.expiresAtMs > now);
   }
 
   private processDots(now: number): void {
     for (const enemy of this.enemies) {
-      for (const status of enemy.statuses) {
-        const dot = status.dot;
-        if (!dot || !enemy.alive) continue;
-        while (dot.ticksLeft > 0 && dot.nextTickAtMs <= now && enemy.alive) {
-          dot.ticksLeft -= 1;
-          dot.nextTickAtMs += dot.intervalMs;
-          const amount = this.calculateDamage({
-            attack: dot.attack,
-            coefBp: dot.coefPerTickBp,
-            bonusBp: dot.dotBonusBp,
-            critMultBp: 10000,
-            target: enemy,
-            armorIgnoreBp: 0,
-            source: 'dot',
-          });
-          this.applyDamage(enemy, amount, false, 'dot', null, 0, now);
+      for (const status of [...enemy.statuses]) {
+        if (!enemy.alive) break;
+        if (status.dot) {
+          const finished = this.runTicker(enemy, status.dot, now);
+          // 熔痕等持續傷害「到期」＝最後一跳結算完且目標仍活著；被刷新會換成新計時器，不算到期。
+          if (finished && enemy.alive) this.fireStatusExpired(status.statusId, enemy, now);
+        } else if (status.kind === 'dotStack') {
+          for (const ticker of status.poison) this.runTicker(enemy, ticker, now);
+          status.poison = status.poison.filter((ticker) => ticker.ticksLeft > 0);
+          status.expiresAtMs = status.poison.reduce((latest, ticker) => Math.max(latest, tickerEndsAtMs(ticker)), 0);
         }
       }
     }
   }
 
+  /** 回傳此計時器是否在本刻跳完最後一次。 */
+  private runTicker(enemy: EnemyState, ticker: DotTicker, now: number): boolean {
+    let finished = false;
+    while (ticker.ticksLeft > 0 && ticker.nextTickAtMs <= now && enemy.alive) {
+      ticker.ticksLeft -= 1;
+      ticker.nextTickAtMs += ticker.intervalMs;
+      const amount = this.calculateDamage({
+        attack: ticker.attack,
+        coefBp: ticker.coefPerTickBp,
+        bonusBp: ticker.dotBonusBp,
+        critMultBp: 10000,
+        target: enemy,
+        armorIgnoreBp: 0,
+        source: 'dot',
+        unitKind: null,
+        skillId: null,
+      });
+      this.applyDamage(enemy, amount, false, 'dot', null, 0, now);
+      if (ticker.ticksLeft === 0) finished = true;
+    }
+    return finished;
+  }
+
   private processUnits(now: number): void {
-    for (const unit of this.units) {
-      if (unit.nextAttackAtMs > now) continue;
-      const target = this.mainTarget();
-      if (!target) continue;
-      let bonusBp = unit.stats.bonusBp.SUMMON_DMG;
-      if (this.unitRoundBonus && this.unitRoundBonus.unitKind === unit.kind && this.unitRoundBonus.remaining > 0) {
-        bonusBp += this.unitRoundBonus.pctBp;
+    for (const unit of [...this.units]) {
+      // 最後一擊可與到期同刻（幻影第 8 秒、星陣第 4 次），因此到期前先攻擊。
+      if (unit.intervalMs <= 0 || unit.nextAttackAtMs > now || unit.nextAttackAtMs > unit.expiresAtMs) continue;
+      const targets = this.selectTargets(unit.attackTargets);
+      if (targets.length === 0) continue;
+      let roundBonus = 0;
+      if (unit.damageSource === 'summon' && this.unitRoundBonus && this.unitRoundBonus.unitKind === unit.kind && this.unitRoundBonus.remaining > 0) {
+        roundBonus = this.unitRoundBonus.pctBp;
         this.unitRoundBonus.remaining -= 1;
         if (this.unitRoundBonus.remaining === 0) this.unitRoundBonus = null;
       }
-      const amount = this.calculateDamage({
-        attack: unit.stats.attack,
-        coefBp: unit.coefBp,
-        bonusBp,
-        critMultBp: 10000,
-        target,
-        armorIgnoreBp: 0,
-        source: 'summon',
-        unitKind: unit.kind,
-      });
-      this.applyDamage(target, amount, false, 'summon', null, 0, now);
-      const overclock = this.buffs.find((buff) => buff.unitKind === unit.kind);
-      const interval = overclock ? Math.round((unit.intervalMs * overclock.intervalMultBp) / 10000) : unit.intervalMs;
+      const actionId = this.newActionId();
+      for (const target of targets) {
+        this.pushHit({
+          atMs: now,
+          actionId,
+          source: unit.damageSource,
+          coefBp: unit.coefBp,
+          targeting: { mode: 'fixed', uid: target.uid },
+          stats: unit.stats,
+          critAllowed: false,
+          armorIgnoreBp: 0,
+          bonusKeys: [unit.damageSource === 'dot' ? 'DOT_DMG' : 'SUMMON_DMG'],
+          bonusPctBp: roundBonus + this.unitBuffBonusPct(unit.kind),
+          skillId: null,
+          unitKind: unit.kind,
+          riders: [],
+          tracked: false,
+          retargetOnce: false,
+        });
+      }
+      const first = targets[0]!;
+      if (unit.attacksMade === 0 && unit.firstAttackExtra) {
+        const extraTarget = unit.firstAttackExtra.target === 'same' ? first : this.otherThan(first);
+        if (extraTarget) this.pushFollowUp(extraTarget, unit.firstAttackExtra.coefBp, actionId, now);
+      }
+      if (unit.pendingExtraCoefBp > 0) {
+        this.pushFollowUp(first, unit.pendingExtraCoefBp, actionId, now);
+        unit.pendingExtraCoefBp = 0;
+      }
+      unit.attacksMade += 1;
+      const overclock = this.buffs.find((buff) => buff.effect.kind === 'unitAttackIntervalMult' && buff.effect.unitKind === unit.kind);
+      const interval =
+        overclock?.effect.kind === 'unitAttackIntervalMult' ? scaleBp(unit.intervalMs, overclock.effect.multBp) : unit.intervalMs;
       unit.nextAttackAtMs = now + interval;
+    }
+  }
+
+  private expireUnitsAndBuffs(now: number): void {
+    for (const unit of this.units.filter((candidate) => candidate.expiresAtMs <= now)) this.removeUnit(unit, 'expired', now);
+    const expired = this.buffs.filter((buff) => buff.expiresAtMs <= now);
+    if (expired.length === 0) return;
+    this.buffs = this.buffs.filter((buff) => buff.expiresAtMs > now);
+    for (const buff of expired) {
+      this.fireMatching((trigger) => trigger.kind === 'buffExpired' && trigger.buffId === buff.buffId, now, this.mainTarget());
     }
   }
 
@@ -518,17 +745,61 @@ export class BattleSim {
   }
 
   private resolveHit(hit: PendingHit, now: number): void {
-    if (hit.targeting.mode === 'fixed') {
-      const target = this.enemyByUid(hit.targeting.uid);
-      // 目標已死：此段落空，不把空箭轉向主目標（規格：一般技能不補足空段）。
-      if (!target?.alive) return;
-      this.strike(hit, target, hit.coefBp, now);
-      return;
+    let landedOn: EnemyState | null = null;
+    switch (hit.targeting.mode) {
+      case 'fixed': {
+        let target = this.enemyByUid(hit.targeting.uid) ?? null;
+        // 目標已死：此段落空，不把空箭轉向主目標（規格：一般技能不補足空段）；餘箭追獵可重選一次。
+        if (!target && hit.retargetOnce) target = this.mainTarget();
+        if (target) {
+          this.strike(hit, target, hit.coefBp, now);
+          landedOn = target;
+        }
+        break;
+      }
+      case 'reacquire': {
+        const targets = this.selectTargets(hit.targeting.rule);
+        const coef = hit.targeting.distribute && targets.length > 0 ? hit.coefBp / targets.length : hit.coefBp;
+        for (const target of targets) this.strike(hit, target, coef, now);
+        landedOn = targets[0] ?? null;
+        break;
+      }
+      case 'rotate': {
+        const rotation = this.rotationList();
+        const target = rotation.length > 0 ? rotation[hit.targeting.index % rotation.length]! : null;
+        if (target) {
+          this.strike(hit, target, hit.coefBp, now);
+          landedOn = target;
+        }
+        break;
+      }
     }
-    const targets = this.selectTargets(hit.targeting.rule);
-    if (targets.length === 0) return;
-    const coef = hit.targeting.distribute ? hit.coefBp / targets.length : hit.coefBp;
-    for (const target of targets) this.strike(hit, target, coef, now);
+    if (hit.tracked) this.onTrackedHitResolved(hit, landedOn, now);
+  }
+
+  private onTrackedHitResolved(hit: PendingHit, landedOn: EnemyState | null, now: number): void {
+    const track = this.actions.get(hit.actionId);
+    if (!track) return;
+    track.remaining -= 1;
+    track.lastLanded = landedOn !== null;
+    if (landedOn) track.lastTargetUid = landedOn.uid;
+    if (track.remaining > 0) return;
+    this.actions.delete(hit.actionId);
+    this.fireSkillEnded(track, now);
+  }
+
+  private fireSkillEnded(track: ActionTrack, now: number): void {
+    const reference = this.enemyByUid(track.lastTargetUid) ?? this.mainTarget();
+    const origin: ProcOrigin = { actionId: track.actionId, atMs: now + this.catalog.tuning.battle.minHitDelayMs };
+    this.fireMatching(
+      (trigger) =>
+        trigger.kind === 'skillEnded' &&
+        (trigger.skillId === track.skillId || (trigger.ultimate === true && track.ultimate)) &&
+        (!trigger.requireLastHitLanded || track.lastLanded),
+      now,
+      reference,
+      origin,
+    );
   }
 
   private strike(hit: PendingHit, target: EnemyState, coefBp: number, now: number): void {
@@ -538,7 +809,8 @@ export class BattleSim {
       crit = this.rng.nextInt(10000) < hit.stats.critRateBp;
       if (crit) critMultBp = hit.stats.critMultBp;
     }
-    const bonusBp = hit.bonusKeys.reduce((sum, key) => sum + hit.stats.bonusBp[key], 0);
+    const hadStatuses = target.statuses.length > 0;
+    const bonusBp = hit.bonusKeys.reduce((sum, key) => sum + hit.stats.bonusBp[key], 0) + hit.bonusPctBp;
     const amount = this.calculateDamage({
       attack: hit.stats.attack,
       coefBp,
@@ -547,23 +819,67 @@ export class BattleSim {
       target,
       armorIgnoreBp: hit.armorIgnoreBp,
       source: hit.source,
+      unitKind: hit.unitKind,
+      skillId: hit.skillId,
     });
     const isBodyAction = BODY_ACTION_SOURCES.has(hit.source);
-    if (isBodyAction) this.registerBodyAction(target, hit.actionId, now);
+    if (isBodyAction) {
+      this.registerBodyAction(target, hit.actionId, now);
+      target.lastBodyHitAtMs = now;
+    }
+    // 專注先計入這次命中，再由死亡規則決定保留層數（擊殺那一下不會讓保留層多 1）。
+    if (hit.source === 'basic') this.gainFocusOnBasicHit(target);
     const killed = this.applyDamage(target, amount, crit, hit.source, hit.skillId, hit.actionId, now);
 
     if (target.alive) {
-      for (const status of hit.statuses) this.applyStatus(target, status, hit.stats, now);
+      for (const rider of hit.riders) {
+        if (rider.kind === 'status') this.applyStatusFrom(target, rider.spec, hit.stats, now, isBodyAction);
+        else this.copyDotTo(target, rider.statusId, rider.toOthers, now, isBodyAction);
+      }
     }
+    if (hit.source === 'summon' && hit.unitKind) this.onSummonHit(hit.unitKind, target, hit.actionId, now);
+    if (hit.tracked && killed) this.onTrackedKill(hit, target, now);
     if (!isBodyAction) return;
     // 只有本體直接行動會觸發被動／裝備；追加、持續、召喚傷害一律不觸發（一層追加鏈）。
     if (crit) this.fireProcs(hit.source === 'basic' ? 'basicCrit' : 'directSkillCrit', now, target);
     if (killed && hit.source === 'basic') this.fireProcs('basicKill', now, target);
-    if (target.statuses.length > 0 || killed) {
-      for (const proc of this.procs) {
-        if (proc.def.trigger.kind !== 'bodyHitOnTargetWithStatus') continue;
-        const statusId = proc.def.trigger.statusId;
-        if (target.statuses.some((status) => status.statusId === statusId)) this.triggerProc(proc, now, target);
+    if (hit.source !== 'basic' && !hadStatuses && !target.cleanHitBonusUsed) {
+      target.cleanHitBonusUsed = true;
+      this.fireProcs('directSkillHitCleanTarget', now, target);
+    }
+    for (const proc of this.procs) {
+      const trigger = proc.def.trigger;
+      if (trigger.kind !== 'bodyHitOnTargetWithStatus') continue;
+      if (trigger.basicOnly && hit.source !== 'basic') continue;
+      const status = findStatus(target, trigger.statusId);
+      if (!status) continue;
+      if (trigger.minStacks !== undefined && stackCount(target, trigger.statusId, now) < trigger.minStacks) continue;
+      if (trigger.every !== undefined) {
+        proc.counter += 1;
+        if (proc.counter % trigger.every !== 0) continue;
+      }
+      this.triggerProc(proc, now, target);
+    }
+  }
+
+  private onTrackedKill(hit: PendingHit, target: EnemyState, now: number): void {
+    const track = this.actions.get(hit.actionId);
+    if (!track) return;
+    track.killed += 1;
+    if (track.killed !== 1) return;
+    this.fireMatching((trigger) => trigger.kind === 'skillKill' && trigger.skillId === track.skillId, now, target);
+  }
+
+  private onSummonHit(unitKind: UnitKind, target: EnemyState, actionId: number, now: number): void {
+    this.releaseStored('nextSummonHit', target, actionId, now + this.catalog.tuning.battle.minHitDelayMs, null);
+    for (const proc of this.procs) {
+      const trigger = proc.def.trigger;
+      if (trigger.kind === 'unitHitAfterBodyHit') {
+        if (trigger.unitKind === unitKind && now - target.lastBodyHitAtMs <= trigger.windowMs) this.triggerProc(proc, now, target);
+      } else if (trigger.kind === 'unitHitOnTargetWithStatus') {
+        if (trigger.unitKind !== unitKind || !findStatus(target, trigger.statusId)) continue;
+        proc.counter += 1;
+        if (proc.counter % trigger.every === 0) this.triggerProc(proc, now, target);
       }
     }
   }
@@ -576,12 +892,13 @@ export class BattleSim {
     target: EnemyState;
     armorIgnoreBp: number;
     source: DamageSource;
-    unitKind?: UnitKind;
+    unitKind: UnitKind | null;
+    skillId: string | null;
   }): number {
     const armorFactorConstant = this.catalog.tuning.armor.factorConstant;
     const armor = this.effectiveArmor(input.target, this.timeMs) * (1 - input.armorIgnoreBp / 10000);
     const armorFactor = armorFactorConstant / (armorFactorConstant + Math.max(0, armor));
-    const takenBp = this.damageTakenBp(input.target, this.timeMs, input.source, input.unitKind);
+    const takenBp = this.damageTakenBp(input.target, this.timeMs, input.source, input.unitKind, input.skillId);
     const raw =
       input.attack *
       (input.coefBp / 10000) *
@@ -637,8 +954,11 @@ export class BattleSim {
     return multiplier;
   }
 
-  /** 受傷增益以加總計算（N）；召喚物另吃目標上的召喚易傷（集火信標）。 */
-  private damageTakenBp(enemy: EnemyState, now: number, source: DamageSource, unitKind?: UnitKind): number {
+  /**
+   * 受傷增益以加總計算（N）。召喚物另吃目標上的召喚易傷（集火信標只加砲台、掠食標記只加戰獸）；
+   * 弱點標記只加本體來源，破綻標記只加帶「處決」標籤的技能。
+   */
+  private damageTakenBp(enemy: EnemyState, now: number, source: DamageSource, unitKind: UnitKind | null, skillId: string | null): number {
     let taken = 0;
     const template = enemy.eliteTemplate;
     if (template?.kind === 'periodicVulnerability') {
@@ -660,15 +980,19 @@ export class BattleSim {
         if (shell?.kind === 'shell') taken += shell.afterBreakTakenBp;
       }
     }
-    if (source === 'summon' && unitKind) {
-      // 召喚易傷只對指定單位生效（集火信標只加砲台，不加機甲）。
-      let beacon = 0;
-      for (const status of enemy.statuses) {
-        if (status.kind === 'summonDamageTaken' && status.unitKinds.includes(unitKind)) beacon = Math.max(beacon, status.pctBp);
+    const skillTags = skillId ? (this.catalog.skills.get(skillId)?.tags ?? []) : [];
+    let summonTaken = 0;
+    for (const status of enemy.statuses) {
+      if (status.kind === 'summonDamageTaken' && source === 'summon' && unitKind && status.unitKinds.includes(unitKind)) {
+        summonTaken = Math.max(summonTaken, status.pctBp);
       }
-      taken += beacon;
+      if (status.kind === 'damageTakenFor') {
+        const bySource = status.sources.includes(source);
+        const byTag = status.skillTags.some((tag) => skillTags.includes(tag));
+        if (bySource || byTag) taken += status.pctBp;
+      }
     }
-    return taken;
+    return taken + summonTaken;
   }
 
   /** 回傳是否擊殺。死亡只在此標記一次，同一隻怪只會結算一次產出（T-02）。 */
@@ -706,6 +1030,7 @@ export class BattleSim {
     }
 
     if (enemy.hp > 0) return false;
+    const wasMain = this.mainTarget()?.uid === enemy.uid;
     enemy.alive = false;
     this.emit({
       type: 'enemyDefeated',
@@ -716,6 +1041,7 @@ export class BattleSim {
       rewardPoints: enemy.rewardPoints,
     });
     if (boss && enemy.kind === 'add' && enemy.mechanicIndex !== null) this.onAddDestroyed(enemy, now);
+    this.onEnemyKilled(enemy, wasMain, now);
     return true;
   }
 
@@ -745,6 +1071,31 @@ export class BattleSim {
     }
   }
 
+  /** 擊殺後的角色規則：專注保留、狀態轉移、主目標死亡觸發。轉移與觸發都只發生一次。 */
+  private onEnemyKilled(enemy: EnemyState, wasMain: boolean, now: number): void {
+    if (this.focusTargetUid === enemy.uid) {
+      this.focusTargetUid = null;
+      for (const rule of this.kit.resourceRules) {
+        if (!rule.sameTargetOnly) continue;
+        this.resources[rule.resource] = Math.min(this.resources[rule.resource] ?? 0, rule.keepOnTargetDeath ?? 0);
+      }
+    }
+    if (this.engagedUid === enemy.uid) this.engagedUid = null;
+    const next = this.mainTarget();
+    for (const transfer of this.kit.deathTransfers) {
+      let moved = 0;
+      for (const statusId of transfer.statusIds) {
+        if (moved >= transfer.kinds) break;
+        const status = findStatus(enemy, statusId);
+        if (!status || status.expiresAtMs <= now) continue;
+        // 下一名敵人不存在則清除：狀態隨死亡目標消失，不保留到下一波。
+        if (next) transferStatus(status, next, now, transfer.stackAmount, transfer.durationFactorBp);
+        moved += 1;
+      }
+    }
+    if (wasMain) this.fireProcs('mainTargetDied', now, next);
+  }
+
   private registerBodyAction(target: EnemyState, actionId: number, now: number): void {
     // 反應核心：按行動不按段數，同一 action_id 只算一次（多段之間夾雜其他行動也不重算）。
     if (target.countedActionIds.includes(actionId)) return;
@@ -759,49 +1110,28 @@ export class BattleSim {
     }
   }
 
-  private applyStatus(target: EnemyState, spec: StatusSpec, stats: CombatStatsSnapshot, now: number): void {
-    const existing = target.statuses.find((status) => status.statusId === spec.statusId);
-    switch (spec.kind) {
-      case 'armorBreak':
-      case 'summonDamageTaken':
-      case 'mark': {
-        const pctBp = spec.kind === 'mark' ? 0 : spec.pctBp;
-        // 同名狀態只刷新／取較高值，不疊層。
-        if (existing) {
-          existing.expiresAtMs = now + spec.durationMs;
-          existing.pctBp = Math.max(existing.pctBp, pctBp);
-        } else {
-          target.statuses.push({
-            statusId: spec.statusId,
-            kind: spec.kind,
-            label: spec.label,
-            expiresAtMs: now + spec.durationMs,
-            pctBp,
-            unitKinds: spec.kind === 'summonDamageTaken' ? [...spec.unitKinds] : [],
-            dot: null,
-          });
-        }
-        if (spec.kind === 'armorBreak') this.fireProcs('armorBreakApplied', now, target);
-        break;
-      }
-      case 'dot': {
-        const dot = {
-          coefPerTickBp: spec.coefPerTickBp,
-          ticksLeft: spec.ticks,
-          intervalMs: spec.intervalMs,
-          nextTickAtMs: now + spec.intervalMs,
-          attack: stats.attack,
-          dotBonusBp: stats.bonusBp.DOT_DMG,
-        };
-        const expiresAtMs = now + spec.intervalMs * spec.ticks;
-        if (existing) {
-          existing.dot = dot;
-          existing.expiresAtMs = expiresAtMs;
-        } else {
-          target.statuses.push({ statusId: spec.statusId, kind: 'dot', label: spec.label, expiresAtMs, pctBp: 0, unitKinds: [], dot });
-        }
-        break;
-      }
+  /**
+   * 套用狀態。fromBody：由本體行動套用時才觸發「破甲生效」「首次持續傷害」等效果；
+   * 被動、傳說或死亡轉移施加的狀態不再觸發（一層追加鏈）。
+   */
+  private applyStatusFrom(target: EnemyState, spec: StatusSpec, stats: CombatStatsSnapshot, now: number, fromBody: boolean): void {
+    const outcome = applyStatusSpec(target, spec, stats, now);
+    const firstDot = outcome.isDot && !target.dotEverApplied;
+    if (outcome.isDot) target.dotEverApplied = true;
+    if (!fromBody) return;
+    if (outcome.isArmorBreak) this.fireProcs('armorBreakApplied', now, target);
+    if (firstDot) this.fireProcs('dotFirstOnTarget', now, target);
+  }
+
+  private copyDotTo(source: EnemyState, statusId: string, toOthers: number, now: number, fromBody: boolean): void {
+    const found = longestPoison(source, statusId);
+    if (!found) return;
+    const others = this.aliveEnemies().filter((enemy) => enemy.uid !== source.uid).slice(0, toOthers);
+    for (const other of others) {
+      const firstDot = !other.dotEverApplied;
+      copyPoisonTo(other, found.status, found.ticker);
+      other.dotEverApplied = true;
+      if (fromBody && firstDot) this.fireProcs('dotFirstOnTarget', now, other);
     }
   }
 
@@ -833,6 +1163,38 @@ export class BattleSim {
     this.nextWaveAtMs = now + this.catalog.tuning.battle.waveSpawnDelayMs;
   }
 
+  // ───────────── 角色資源 ─────────────
+
+  private gainResource(rule: ResourceRuleDef, amount: number): void {
+    if (amount <= 0) return;
+    this.resources[rule.resource] = Math.min(rule.max, (this.resources[rule.resource] ?? 0) + amount);
+  }
+
+  /** 專注：普攻命中同一主目標才累積；仍存活的舊目標被換掉（改目標）時歸零。 */
+  private gainFocusOnBasicHit(target: EnemyState): void {
+    for (const rule of this.kit.resourceRules) {
+      if (!rule.sameTargetOnly) continue;
+      if (this.focusTargetUid !== null && this.focusTargetUid !== target.uid && this.enemyByUid(this.focusTargetUid)) {
+        this.resources[rule.resource] = 0;
+      }
+      this.focusTargetUid = target.uid;
+      this.gainResource(rule, rule.gainOnBasicAttack);
+    }
+  }
+
+  private gainOnBasicAttack(): void {
+    for (const rule of this.kit.resourceRules) {
+      if (rule.sameTargetOnly) continue;
+      if (rule.gainOnBasicAttack > 0) {
+        const every = rule.basicAttacksPerGain ?? 1;
+        const count = (this.resourceBasicCounters[rule.resource] ?? 0) + 1;
+        this.resourceBasicCounters[rule.resource] = count;
+        if (count % every === 0) this.gainResource(rule, rule.gainOnBasicAttack);
+      }
+      this.gainResource(rule, rule.gainOnBodyDirectAction ?? 0);
+    }
+  }
+
   // ───────────── 角色行動 ─────────────
 
   private scheduleHeroActions(now: number): void {
@@ -848,6 +1210,10 @@ export class BattleSim {
     const actionId = this.newActionId();
     const stats = this.stats;
     const atMs = now + this.catalog.tuning.battle.minHitDelayMs;
+    const riders: HitRider[] = [];
+    for (const buff of this.buffs) if (buff.effect.kind === 'basicAppliesStatus') riders.push({ kind: 'status', spec: buff.effect.status });
+    const heartBonus = this.cards.heartBonusBp;
+    this.cards.heartBonusBp = 0;
     this.pushHit({
       atMs,
       actionId,
@@ -858,21 +1224,44 @@ export class BattleSim {
       critAllowed: true,
       armorIgnoreBp: 0,
       bonusKeys: ['BASIC_DMG'],
+      bonusPctBp: this.bodyBonusPct() + heartBonus,
       skillId: null,
-      statuses: [],
+      unitKind: null,
+      riders,
+      tracked: false,
+      retargetOnce: this.kit.projectileRetargetOnce,
     });
     this.emit({ type: 'basicAttack', atMs: now, targetUid: target.uid, actionId });
     this.nextBasicAtMs = now + stats.basicIntervalMs;
+    target.basicAttacksTaken += 1;
 
-    for (const rule of this.resourceRules) this.gainResource(rule, rule.gainOnBasicAttack);
-    this.releaseStored('nextBasic', target, actionId, atMs);
+    this.gainOnBasicAttack();
+    this.useChargedFollowUp(target, actionId, atMs, now);
+    this.releaseStored('nextBasic', target, actionId, atMs, null);
+    if (this.engagedUid !== target.uid) {
+      this.engagedUid = target.uid;
+      this.engagedSinceMs = now;
+    }
+    const origin: ProcOrigin = { actionId, atMs };
     for (const proc of this.procs) {
       const trigger = proc.def.trigger;
-      if (trigger.kind === 'basicAttackCount') {
-        proc.counter += 1;
-        if (proc.counter % trigger.every === 0) this.triggerProc(proc, now, target, { actionId, atMs });
-      } else if (trigger.kind === 'waveStartFirstBasic' && this.waveFirstBasicPending) {
-        this.triggerProc(proc, now, target, { actionId, atMs });
+      switch (trigger.kind) {
+        case 'basicAttackCount':
+          if (proc.def.requireUnit && !this.hasUnit(proc.def.requireUnit)) break;
+          proc.counter += 1;
+          if (proc.counter % trigger.every === 0) this.triggerProc(proc, now, target, origin);
+          break;
+        case 'waveStartFirstBasic':
+          if (this.waveFirstBasicPending) this.triggerProc(proc, now, target, origin);
+          break;
+        case 'sameTargetBasicCount':
+          if (target.basicAttacksTaken % trigger.count === 0) this.triggerProc(proc, now, target, origin);
+          break;
+        case 'sameTargetDuration':
+          if (now - this.engagedSinceMs >= trigger.durationMs) this.triggerProc(proc, now, target, origin);
+          break;
+        default:
+          break;
       }
     }
     this.waveFirstBasicPending = false;
@@ -896,15 +1285,48 @@ export class BattleSim {
       slot.waitingSinceMs = null;
       return false;
     }
-    if (slot.mode === 'immediate' || this.softConditionMet(rule, now)) return true;
+    if (slot.mode === 'immediate' || !this.loadoutCanProduce(rule) || this.softConditionMet(rule, now)) return true;
     slot.waitingSinceMs ??= now;
     return now - slot.waitingSinceMs >= this.catalog.tuning.battle.conditionFallbackMs;
   }
 
+  /**
+   * 等待條件只對「目前配置做得到」的條件有意義：例如沒帶切牌卻等「切牌後」、沒帶弱點標記卻等「標記後」，
+   * 只會每次白等 3 秒。配置裡沒有任何來源時，視為條件成立直接施放。
+   */
+  private loadoutCanProduce(rule: AutoCastRule): boolean {
+    const steps = this.skillSlots.flatMap((slot) => slot.skill.effect?.steps ?? []);
+    const appliesStatus = (statusId: string): boolean =>
+      steps.some(
+        (step) =>
+          (step.type === 'applyStatus' && step.status.statusId === statusId) ||
+          (step.type === 'selfBuff' && step.effect.kind === 'basicAppliesStatus' && step.effect.status.statusId === statusId),
+      );
+    switch (rule.kind) {
+      case 'pendingSetSuit':
+        return steps.some((step) => step.type === 'playCards' && step.mode === 'setNext');
+      case 'mainTargetHasStatusId':
+      case 'requiresUnitPreferStatus':
+      case 'targetStacksAtLeast':
+        return appliesStatus(rule.statusId);
+      case 'targetMarkKindsAtLeast':
+        return rule.statusIds.filter((statusId) => appliesStatus(statusId)).length >= rule.amount;
+      default:
+        return true;
+    }
+  }
+
+  /** 硬條件：缺乏必要對象（例如沒有砲台或戰獸）時持續跳過，不走等待後施放。 */
   private hardRequirementMet(rule: AutoCastRule): boolean {
-    if (rule.kind === 'requiresUnit') return this.units.filter((unit) => unit.kind === rule.unitKind).length >= rule.atLeast;
-    if (rule.kind === 'requiresUnitAndMainLacksStatus') return this.units.some((unit) => unit.kind === rule.unitKind);
-    return true;
+    switch (rule.kind) {
+      case 'requiresUnit':
+        return this.units.filter((unit) => unit.kind === rule.unitKind).length >= rule.atLeast;
+      case 'requiresUnitAndMainLacksStatus':
+      case 'requiresUnitPreferStatus':
+        return this.hasUnit(rule.unitKind);
+      default:
+        return true;
+    }
   }
 
   private softConditionMet(rule: AutoCastRule, now: number): boolean {
@@ -915,232 +1337,722 @@ export class BattleSim {
         return true;
       case 'mainTargetLacksStatus':
         return !main?.statuses.some((status) => status.kind === rule.statusKind && status.expiresAtMs - now > rule.refreshBelowMs);
+      case 'mainTargetLacksStatusId':
+        return !main?.statuses.some((status) => status.statusId === rule.statusId && status.expiresAtMs - now > rule.refreshBelowMs);
+      case 'mainTargetHasStatusId':
+        return Boolean(main && findStatus(main, rule.statusId));
+      case 'targetStacksAtLeast':
+        return stackCount(main, rule.statusId, now, rule.minRemainingMs ?? 0) >= rule.amount;
+      case 'targetStacksBelow':
+        return stackCount(main, rule.statusId, now) < rule.amount;
+      case 'targetMarkKindsAtLeast':
+        return main !== null && rule.statusIds.filter((statusId) => findStatus(main, statusId)).length >= rule.amount;
       case 'selfResourceAtLeast':
         return (this.resources[rule.resource] ?? 0) >= rule.amount;
+      case 'selfResourceBelow':
+        return (this.resources[rule.resource] ?? 0) < rule.amount;
+      case 'selfBuffAbsent':
+        return !this.buffs.some((buff) => buff.buffId === rule.buffId);
       case 'unitsBelowCapOrOldestExpiring': {
         const units = this.units.filter((unit) => unit.kind === rule.unitKind);
         if (units.length < rule.below) return true;
         return units.some((unit) => unit.expiresAtMs - now <= rule.oldestRemainingAtMostMs);
       }
+      case 'groupBelowCapOrOldestExpiring': {
+        const units = this.groupUnits(rule.capGroup);
+        if (units.length < rule.below) return true;
+        return units.some((unit) => unit.expiresAtMs - now <= rule.oldestRemainingAtMostMs);
+      }
+      case 'groupCountAtLeast':
+        return this.groupUnits(rule.capGroup).length >= rule.amount;
+      case 'groupOldestExpiring':
+        return this.groupUnits(rule.capGroup).some((unit) => unit.expiresAtMs - now <= rule.remainingAtMostMs);
       case 'requiresUnitAndMainLacksStatus':
         return !main?.statuses.some((status) => status.statusId === rule.statusId);
+      case 'requiresUnitPreferStatus':
+        return Boolean(main && findStatus(main, rule.statusId));
+      case 'nextSuitIsNotPreferred':
+        return this.kit.suits !== null && this.nextSuit() !== this.kit.suits.preferredSuit;
+      case 'nextSuitIsPreferred':
+        return this.kit.suits !== null && this.nextSuit() === this.kit.suits.preferredSuit;
+      case 'pendingSetSuit':
+        return this.cards.setPending;
     }
   }
 
   private castSkill(slot: SkillSlot, now: number, main: EnemyState): void {
     const effect = slot.skill.effect!;
+    const skillId = slot.skill.id;
     const actionId = this.newActionId();
     const stats = this.stats;
-    const cooldown = Math.round((slot.skill.cooldownMs * (10000 - stats.cdrBp)) / 10000);
+    const cooldown = scaleBp(slot.skill.cooldownMs, 10000 - stats.cdrBp);
     slot.readyAtMs = now + cooldown;
-    this.cooldownMemory.set(slot.skill.id, slot.readyAtMs);
+    this.cooldownMemory.set(skillId, slot.readyAtMs);
     slot.waitingSinceMs = null;
     this.castLockUntilMs = now + this.catalog.tuning.battle.castLockMs;
-    this.emit({ type: 'skillCast', atMs: now, skillId: slot.skill.id, ultimate: slot.ultimate, actionId });
+    this.emit({ type: 'skillCast', atMs: now, skillId, ultimate: slot.ultimate, actionId });
 
-    const source: DamageSource = slot.ultimate ? 'ultimate' : 'skill';
-    const atMs = now + this.catalog.tuning.battle.minHitDelayMs;
-    let previousTargets: EnemyState[] = [];
-    let hasDamage = false;
-    for (const step of effect.steps) {
-      previousTargets = this.executeStep(step, { now, atMs, actionId, stats, source, skillId: slot.skill.id, previousTargets });
-      if (step.type === 'damage') hasDamage = true;
-    }
+    const singleEnemyBonus =
+      this.aliveEnemies().length === 1
+        ? this.kit.singleEnemyCastBonus.filter((bonus) => bonus.skillId === skillId).reduce((sum, bonus) => sum + bonus.pctBp, 0)
+        : 0;
+    const ctx: CastContext = {
+      now,
+      atMs: now + this.catalog.tuning.battle.minHitDelayMs,
+      actionId,
+      stats,
+      source: slot.ultimate ? 'ultimate' : 'skill',
+      skillId,
+      bodyBonusPct: this.bodyBonusPct() + singleEnemyBonus,
+      previousTargets: [],
+      previousMain: null,
+      consumedTotal: 0,
+      retained: false,
+      firstDamageTargetCount: null,
+      hasDamage: false,
+      firstCardPlayed: false,
+    };
+    for (const step of effect.steps) this.executeStep(step, ctx);
 
-    if (!slot.ultimate && effect.generatesResource) {
-      for (const rule of this.resourceRules) this.gainResource(rule, rule.gainOnRegularSkillCast);
+    if (effect.generatesResource) {
+      for (const rule of this.kit.resourceRules) {
+        if (!slot.ultimate) this.gainResource(rule, rule.gainOnRegularSkillCast);
+        if (ctx.hasDamage) this.gainResource(rule, rule.gainOnBodyDirectAction ?? 0);
+      }
     }
-    if (slot.ultimate) {
-      if (hasDamage) this.releaseStored('nextUltimate', main, actionId, atMs);
-      this.fireProcs('ultimateCast', now, main, { actionId, atMs });
-      return;
+    if (ctx.hasDamage) this.useChargedFollowUp(main, actionId, ctx.atMs, now);
+
+    const trackedHits = this.hits.filter((hit) => hit.actionId === actionId && hit.tracked);
+    const lastHitAtMs = trackedHits.reduce((latest, hit) => Math.max(latest, hit.atMs), ctx.atMs);
+    const track: ActionTrack = {
+      actionId,
+      skillId,
+      ultimate: slot.ultimate,
+      remaining: trackedHits.length,
+      lastLanded: false,
+      killed: 0,
+      lastTargetUid: main.uid,
+    };
+    if (trackedHits.length > 0) this.actions.set(actionId, track);
+    const origin: ProcOrigin = { actionId, atMs: ctx.atMs, endAtMs: lastHitAtMs + this.tickMs };
+
+    if (ctx.hasDamage) {
+      this.releaseStored(slot.ultimate ? 'nextUltimate' : 'nextRegularSkill', main, actionId, ctx.atMs, null);
+      this.releaseStored('nextSkillId', main, actionId, ctx.atMs, skillId);
     }
-    if (hasDamage) this.releaseStored('nextRegularSkill', main, actionId, atMs);
+    if (slot.ultimate) this.fireProcs('ultimateCast', now, main, origin);
+    const singleTarget = (ctx.firstDamageTargetCount ?? this.aliveEnemies().length) === 1;
     for (const proc of this.procs) {
       const trigger = proc.def.trigger;
-      if (trigger.kind === 'regularSkillCastCount') {
-        proc.counter += 1;
-        if (proc.counter % trigger.every === 0) this.triggerProc(proc, now, main, { actionId, atMs });
-      } else if (trigger.kind === 'distinctRegularSequence') {
-        proc.sequence.push(slot.skill.id);
-        if (proc.sequence.length > trigger.length) proc.sequence.shift();
-        if (proc.sequence.length === trigger.length && new Set(proc.sequence).size === trigger.length) {
-          proc.sequence = [];
-          this.triggerProc(proc, now, main, { actionId, atMs });
-        }
-      } else if (trigger.kind === 'skillCast' && trigger.skillId === slot.skill.id) {
-        this.triggerProc(proc, now, main, { actionId, atMs });
+      switch (trigger.kind) {
+        case 'regularSkillCastCount':
+          if (slot.ultimate) break;
+          proc.counter += 1;
+          if (proc.counter % trigger.every === 0) this.triggerProc(proc, now, main, origin);
+          break;
+        case 'distinctRegularSequence':
+          if (slot.ultimate) break;
+          proc.sequence.push(skillId);
+          if (proc.sequence.length > trigger.length) proc.sequence.shift();
+          if (proc.sequence.length === trigger.length && new Set(proc.sequence).size === trigger.length) {
+            proc.sequence = [];
+            this.triggerProc(proc, now, main, origin);
+          }
+          break;
+        case 'skillCast':
+          if (trigger.skillId === skillId && (!trigger.singleTargetOnly || singleTarget)) this.triggerProc(proc, now, main, origin);
+          break;
+        case 'skillCastConsumed':
+          if (trigger.skillIds.includes(skillId) && ctx.consumedTotal >= trigger.minConsumed) this.triggerProc(proc, now, main, origin);
+          break;
+        case 'skillCastRetained':
+          if (trigger.skillIds.includes(skillId) && ctx.retained) this.triggerProc(proc, now, main, origin);
+          break;
+        default:
+          break;
       }
     }
+    // 沒有命中段的技能（增益、召喚）施放即視為結束。
+    if (trackedHits.length === 0) this.fireSkillEnded(track, now);
   }
 
-  private executeStep(
-    step: EffectStep,
-    ctx: {
-      now: number;
-      atMs: number;
-      actionId: number;
-      stats: CombatStatsSnapshot;
-      source: DamageSource;
-      skillId: string;
-      previousTargets: EnemyState[];
-    },
-  ): EnemyState[] {
+  private executeStep(step: EffectStep, ctx: CastContext): void {
     switch (step.type) {
       case 'damage':
-        return this.executeDamage(step, ctx);
+        this.executeDamage(step, ctx);
+        return;
       case 'applyStatus': {
-        const targets = step.targets === 'sameAsPreviousDamage' ? ctx.previousTargets : this.selectTargets(step.targets);
-        // 狀態附在該目標本次行動的第一段命中後套用，確保「傷害後加層」的順序。
-        for (const target of targets) {
-          const firstHit = this.hits.find(
-            (hit) => hit.actionId === ctx.actionId && hit.targeting.mode === 'fixed' && hit.targeting.uid === target.uid,
-          );
-          if (firstHit) firstHit.statuses = [...firstHit.statuses, step.status];
-          else this.applyStatus(target, step.status, ctx.stats, ctx.now);
-        }
-        return targets;
+        if (step.requiresPassive && !this.hasPassive(step.requiresPassive)) return;
+        let targets: EnemyState[];
+        if (step.targets === 'sameAsPreviousDamage') targets = ctx.previousTargets;
+        else if (step.targets === 'mainOfPreviousDamage') targets = ctx.previousMain ? [ctx.previousMain] : [];
+        else if (step.targets === 'othersOfPreviousDamage') targets = ctx.previousTargets.filter((target) => target !== ctx.previousMain);
+        else targets = this.selectTargets(step.targets);
+        for (const target of targets) this.attachRider(ctx, target, { kind: 'status', spec: step.status });
+        return;
       }
-      case 'spawnUnit': {
-        const existing = this.units.filter((unit) => unit.kind === step.unitKind);
-        if (existing.length >= step.cap) {
-          // 超額先移除最舊者；移除不爆炸、不結算任何獎勵。
-          const oldest = existing[0]!;
-          this.units = this.units.filter((unit) => unit.uid !== oldest.uid);
-          this.emit({ type: 'unitRemoved', atMs: ctx.now, kind: oldest.kind, uid: oldest.uid, reason: 'replaced' });
-        }
-        const unit: UnitState = {
-          uid: this.nextUid,
-          kind: step.unitKind,
-          spawnedAtMs: ctx.now,
-          expiresAtMs: ctx.now + step.durationMs,
-          intervalMs: step.attackIntervalMs,
-          nextAttackAtMs: ctx.now + step.attackIntervalMs,
-          coefBp: step.coefBp,
-          stats: ctx.stats,
-        };
-        this.nextUid += 1;
-        this.units.push(unit);
-        this.emit({ type: 'unitSpawned', atMs: ctx.now, kind: unit.kind, uid: unit.uid });
-        return ctx.previousTargets;
+      case 'copyDotStack':
+        if (ctx.previousMain) this.attachRider(ctx, ctx.previousMain, { kind: 'copyDot', statusId: step.statusId, toOthers: step.toOthers });
+        return;
+      case 'spawnUnit':
+        this.spawnUnit(step, ctx.now, ctx.stats, ctx.skillId);
+        return;
+      case 'resolveOldestUnit': {
+        const oldest = this.groupUnits(step.capGroup)[0];
+        if (oldest) this.removeUnit(oldest, 'resolved', ctx.now);
+        return;
       }
-      case 'selfBuff': {
-        this.buffs = this.buffs.filter((buff) => buff.buffId !== step.buffId);
-        this.buffs.push({
-          buffId: step.buffId,
-          label: step.label,
-          expiresAtMs: ctx.now + step.durationMs,
-          unitKind: step.effect.unitKind,
-          intervalMultBp: step.effect.multBp,
-        });
-        // 超頻立即作用於下一發：已排程的下一次攻擊依新間隔重新計算。
-        for (const unit of this.units) {
-          if (unit.kind !== step.effect.unitKind) continue;
-          const remaining = unit.nextAttackAtMs - ctx.now;
-          unit.nextAttackAtMs = ctx.now + Math.round((remaining * step.effect.multBp) / 10000);
-        }
-        return ctx.previousTargets;
+      case 'selfBuff':
+        this.applySelfBuff(step, ctx.now);
+        return;
+      case 'gainResource': {
+        const rule = this.kit.resourceRules.find((candidate) => candidate.resource === step.resource);
+        if (rule) this.gainResource(rule, step.amount);
+        return;
       }
+      case 'playCards':
+        this.playCards(step, ctx);
+        return;
     }
   }
 
-  private executeDamage(
-    step: DamageStep,
-    ctx: { now: number; atMs: number; actionId: number; stats: CombatStatsSnapshot; source: DamageSource; skillId: string },
-  ): EnemyState[] {
-    let coefBp = step.coefBp;
-    if (step.consume) {
-      const have = this.resources[step.consume.resource] ?? 0;
-      const modifier = this.consumeModifiers.find((mod) => mod.skillIds.includes(ctx.skillId));
-      const reducible = modifier ? Math.max(0, have - modifier.reduceConsumedBy) : have;
-      const consumed = Math.min(step.consume.max, reducible);
-      // 保留層不計入消耗加傷，也不再算一次生成。
-      this.resources[step.consume.resource] = have - consumed;
-      coefBp += consumed * step.consume.perUnitCoefBp;
+  /** 附帶效果掛在該目標本次行動的第一段命中後，確保「傷害後加層」；沒有命中段則立即套用。 */
+  private attachRider(ctx: CastContext, target: EnemyState, rider: HitRider): void {
+    const firstHit = this.hits.find(
+      (hit) => hit.actionId === ctx.actionId && hit.tracked && hit.targeting.mode === 'fixed' && hit.targeting.uid === target.uid,
+    );
+    if (firstHit) {
+      firstHit.riders = [...firstHit.riders, rider];
+      return;
     }
+    if (rider.kind === 'status') this.applyStatusFrom(target, rider.spec, ctx.stats, ctx.now, true);
+    else this.copyDotTo(target, rider.statusId, rider.toOthers, ctx.now, true);
+  }
+
+  private executeDamage(step: DamageStep, ctx: CastContext): void {
+    if (step.requiresPassive && !this.hasPassive(step.requiresPassive)) return;
+    const unitPart = step.unitPart ?? null;
+    if (unitPart && !this.hasUnit(unitPart)) return;
+    const selected = this.selectTargets(step.targets);
+    ctx.firstDamageTargetCount ??= selected.length;
+    if (selected.length === 0) return;
+    const main = this.mainTarget();
+    const mode = step.distributeTotal ? 'reacquire' : (step.retarget ?? 'fixed');
+    const consumed = step.consume ? this.consume(step, ctx, selected, main) : { global: 0, perTarget: new Map<number, number>() };
+
     const hits = step.hits ?? 1;
     const interval = step.hitIntervalMs ?? 0;
-    const bonusKeys: DamageBonusKey[] = ['SKILL_DMG', ...((step.extraBonusStats ?? []) as DamageBonusKey[])];
-    const base = {
+    const firstAtMs = ctx.atMs + (step.delayMs ?? 0);
+    const base: Omit<PendingHit, 'seq' | 'atMs' | 'coefBp' | 'targeting'> = {
       actionId: ctx.actionId,
-      source: ctx.source,
+      source: unitPart ? 'summon' : ctx.source,
       stats: ctx.stats,
-      critAllowed: true,
+      critAllowed: !unitPart,
       armorIgnoreBp: step.armorIgnoreBp ?? 0,
-      bonusKeys,
+      bonusKeys: unitPart ? ['SUMMON_DMG'] : ['SKILL_DMG', ...((step.extraBonusStats ?? []) as DamageBonusKey[])],
+      bonusPctBp: unitPart ? this.unitPartBonusPct(unitPart, ctx.skillId) : ctx.bodyBonusPct,
       skillId: ctx.skillId,
-      statuses: [] as StatusSpec[],
+      unitKind: unitPart,
+      riders: [],
+      tracked: true,
+      retargetOnce: !unitPart && mode === 'fixed' && this.kit.projectileRetargetOnce,
     };
-    if (step.retarget === 'reacquire' || step.distributeTotal) {
+    const coefBp = step.coefBp + consumed.global;
+    if (mode === 'reacquire') {
       for (let index = 0; index < hits; index += 1) {
         this.pushHit({
           ...base,
-          atMs: ctx.atMs + index * interval,
+          atMs: firstAtMs + index * interval,
           coefBp,
           targeting: { mode: 'reacquire', rule: step.targets, distribute: Boolean(step.distributeTotal) },
         });
       }
-      return [];
-    }
-    const targets = this.selectTargets(step.targets);
-    for (const target of targets) {
+    } else if (mode === 'rotate') {
       for (let index = 0; index < hits; index += 1) {
-        this.pushHit({ ...base, atMs: ctx.atMs + index * interval, coefBp, targeting: { mode: 'fixed', uid: target.uid } });
+        this.pushHit({ ...base, atMs: firstAtMs + index * interval, coefBp, targeting: { mode: 'rotate', index } });
+      }
+    } else {
+      for (const target of selected) {
+        const targetCoef = coefBp + (consumed.perTarget.get(target.uid) ?? 0);
+        for (let index = 0; index < hits; index += 1) {
+          this.pushHit({ ...base, atMs: firstAtMs + index * interval, coefBp: targetCoef, targeting: { mode: 'fixed', uid: target.uid } });
+        }
       }
     }
-    return targets;
+    if (!unitPart) ctx.hasDamage = true;
+    ctx.previousTargets = selected;
+    ctx.previousMain = selected.find((target) => target.uid === main?.uid) ?? null;
   }
 
-  private gainResource(rule: ResourceRuleDef, amount: number): void {
-    if (amount <= 0) return;
-    this.resources[rule.resource] = Math.min(rule.max, (this.resources[rule.resource] ?? 0) + amount);
+  /**
+   * 消耗資源／層數／印記／毒層／單位。保留層不計入消耗加傷（被動修正）；
+   * 目標類消耗只看主目標（main）或每個被打到的目標各自計算（each）。
+   */
+  private consume(
+    step: DamageStep,
+    ctx: CastContext,
+    selected: readonly EnemyState[],
+    main: EnemyState | null,
+  ): { global: number; perTarget: Map<number, number> } {
+    const spec = step.consume!;
+    const modifier = this.kit.consumeModifiers.find((candidate) => candidate.skillIds.includes(ctx.skillId));
+    const take = (have: number): number => {
+      const afterRetain = Math.max(0, have - (modifier?.reduceConsumedBy ?? 0));
+      const count = Math.min(spec.max, modifier?.maxConsumed ?? Number.POSITIVE_INFINITY, afterRetain);
+      if (have - count > 0 && (modifier?.reduceConsumedBy ?? 0) > 0) ctx.retained = true;
+      return count;
+    };
+    const perUnitPart = (count: number, perUnitCoefBp: number): number =>
+      Math.round(count * perUnitCoefBp * (1 + (modifier?.bonusByConsumedBp?.[count] ?? 0) / 10000));
+    const perTarget = new Map<number, number>();
+    const targetsForConsume = step.consumePer === 'each' ? selected : selected.filter((target) => target.uid === main?.uid);
+
+    switch (spec.from) {
+      case 'selfResource': {
+        const have = this.resources[spec.resource] ?? 0;
+        const count = take(have);
+        this.resources[spec.resource] = have - count;
+        ctx.consumedTotal += count;
+        return { global: perUnitPart(count, spec.perUnitCoefBp), perTarget };
+      }
+      case 'units': {
+        const units = this.groupUnits(spec.capGroup);
+        const count = take(units.length);
+        // 被消耗的單位直接移除，不再走自然到期或提前結算（不重複爆炸）。
+        for (const unit of units.slice(0, count)) this.removeUnit(unit, 'consumed', ctx.now);
+        ctx.consumedTotal += count;
+        return { global: perUnitPart(count, spec.perUnitCoefBp), perTarget };
+      }
+      case 'targetStacks': {
+        for (const target of targetsForConsume) {
+          const count = take(stackCount(target, spec.statusId, ctx.now));
+          removeStacks(target, spec.statusId, count);
+          perTarget.set(target.uid, perUnitPart(count, spec.perUnitCoefBp));
+          if (target.uid === main?.uid) ctx.consumedTotal += count;
+        }
+        return { global: 0, perTarget };
+      }
+      case 'targetMarks': {
+        for (const target of targetsForConsume) {
+          const present = spec.statusIds.filter((statusId) => findStatus(target, statusId));
+          const count = take(present.length);
+          for (const statusId of present.slice(0, count)) removeStatus(target, statusId);
+          perTarget.set(target.uid, perUnitPart(count, spec.perUnitCoefBp));
+          if (target.uid === main?.uid) ctx.consumedTotal += count;
+        }
+        return { global: 0, perTarget };
+      }
+      case 'targetDots': {
+        if (!main || !selected.includes(main)) return { global: 0, perTarget };
+        const count = take(stackCount(main, spec.statusId, ctx.now));
+        const taken = takeShortestPoison(main, spec.statusId, count);
+        ctx.consumedTotal += taken.length;
+        if (taken.length > 0) this.pushDotBurst(main, taken, spec.remainingDamagePctBp, ctx);
+        return { global: 0, perTarget };
+      }
+    }
+  }
+
+  /** 毒爆：被消耗毒層的剩餘傷害（各自快照）乘比例，以持續傷害來源一次打出；不暴擊、不觸發。 */
+  private pushDotBurst(target: EnemyState, tickers: readonly DotTicker[], pctBp: number, ctx: CastContext): void {
+    const raw = tickers.reduce(
+      (sum, ticker) => sum + ticker.attack * ticker.coefPerTickBp * ticker.ticksLeft * (1 + ticker.dotBonusBp / 10000),
+      0,
+    );
+    const coefBp = Math.round(((raw / ctx.stats.attack) * pctBp) / 10000);
+    if (coefBp <= 0) return;
+    this.pushHit({
+      atMs: ctx.atMs,
+      actionId: ctx.actionId,
+      source: 'dot',
+      coefBp,
+      targeting: { mode: 'fixed', uid: target.uid },
+      stats: ctx.stats,
+      critAllowed: false,
+      armorIgnoreBp: 0,
+      bonusKeys: [],
+      bonusPctBp: 0,
+      skillId: ctx.skillId,
+      unitKind: null,
+      riders: [],
+      tracked: false,
+      retargetOnce: false,
+    });
+  }
+
+  private applySelfBuff(step: SelfBuffStep, now: number): void {
+    const extraMs = this.kit.buffDurationBonus.filter((bonus) => bonus.buffId === step.buffId).reduce((sum, bonus) => sum + bonus.addMs, 0);
+    this.buffs = this.buffs.filter((buff) => buff.buffId !== step.buffId);
+    const effect = step.effect;
+    const charges = effect.kind === 'chargedFollowUp' ? effect.charges : effect.kind === 'suitBoost' ? 1 : 0;
+    this.buffs.push({ buffId: step.buffId, label: step.label, expiresAtMs: now + step.durationMs + extraMs, effect, charges, firedProcIds: [] });
+    if (effect.kind !== 'unitAttackIntervalMult') return;
+    // 超頻立即作用於下一發：已排程的下一次攻擊依新間隔重新計算。
+    for (const unit of this.units) {
+      if (unit.kind !== effect.unitKind) continue;
+      unit.nextAttackAtMs = now + scaleBp(unit.nextAttackAtMs - now, effect.multBp);
+    }
+  }
+
+  /** 符文刻印：本體直接攻擊各用 1 次，最後一次用完觸發「刻印用盡」。 */
+  private useChargedFollowUp(target: EnemyState, actionId: number, atMs: number, now: number): void {
+    const buff = this.buffs.find((candidate) => candidate.effect.kind === 'chargedFollowUp' && candidate.charges > 0);
+    if (buff?.effect.kind !== 'chargedFollowUp') return;
+    buff.charges -= 1;
+    this.pushFollowUp(target, buff.effect.coefBp, actionId, atMs);
+    if (buff.charges > 0) return;
+    this.buffs = this.buffs.filter((candidate) => candidate !== buff);
+    this.fireMatching((trigger) => trigger.kind === 'buffChargesDepleted' && trigger.buffId === buff.buffId, now, target, { actionId, atMs });
+  }
+
+  private bodyBonusPct(): number {
+    let total = 0;
+    for (const buff of this.buffs) if (buff.effect.kind === 'bodyDamageBonus') total += buff.effect.pctBp;
+    return total;
+  }
+
+  private unitBuffBonusPct(unitKind: UnitKind): number {
+    let total = 0;
+    for (const buff of this.buffs) if (buff.effect.kind === 'unitDamageBonus' && buff.effect.unitKind === unitKind) total += buff.effect.pctBp;
+    return total;
+  }
+
+  /** 技能中的召喚段：吃該單位的增益與「下一次協同撲擊戰獸段」加成（用完即清）。 */
+  private unitPartBonusPct(unitKind: UnitKind, skillId: string): number {
+    const pending = this.unitPartBonus.get(skillId) ?? 0;
+    this.unitPartBonus.delete(skillId);
+    return this.unitBuffBonusPct(unitKind) + pending;
+  }
+
+  // ───────────── 召喚單位 ─────────────
+
+  private addUnit(input: Omit<UnitState, 'uid' | 'spawnedAtMs' | 'nextAttackAtMs' | 'attacksMade' | 'pendingExtraCoefBp'>): UnitState {
+    const unit: UnitState = {
+      ...input,
+      uid: this.nextUid,
+      spawnedAtMs: this.timeMs,
+      nextAttackAtMs: input.intervalMs > 0 ? this.timeMs + input.intervalMs : Number.POSITIVE_INFINITY,
+      attacksMade: 0,
+      pendingExtraCoefBp: 0,
+    };
+    this.nextUid += 1;
+    this.units.push(unit);
+    this.emit({ type: 'unitSpawned', atMs: this.timeMs, kind: unit.kind, uid: unit.uid });
+    return unit;
+  }
+
+  /**
+   * 生成單位；同群組達上限時先提前結算最舊者（替身爆炸、幻影補一擊）。
+   * sourceSkillId 為 null 表示由被動或傳說生成，不再套用「生成時」效果（謝幕返場）。
+   */
+  private spawnUnit(step: SpawnUnitStep, now: number, stats: CombatStatsSnapshot, sourceSkillId: string | null): void {
+    const capGroup = step.capGroup ?? step.unitKind;
+    let existing = this.groupUnits(capGroup);
+    while (existing.length >= step.cap && existing.length > 0) {
+      const oldest = existing[0]!;
+      this.removeUnit(oldest, oldest.onResolve ? 'resolved' : 'replaced', now);
+      existing = this.groupUnits(capGroup);
+    }
+    const extra = sourceSkillId ? this.kit.unitFirstAttackExtra.find((candidate) => candidate.skillId === sourceSkillId) : undefined;
+    this.addUnit({
+      kind: step.unitKind,
+      capGroup,
+      expiresAtMs: now + step.durationMs,
+      intervalMs: step.attackIntervalMs,
+      coefBp: step.coefBp,
+      stats,
+      attackTargets: step.attackTargets ?? MAIN_TARGET,
+      damageSource: step.damageSource ?? 'summon',
+      onResolve: step.onResolve ?? null,
+      firstAttackExtra: extra ? { coefBp: extra.coefBp, target: extra.target } : null,
+    });
+  }
+
+  /** 移除單位；resolved（提前結算）與 expired（自然到期）依 onResolve 規則打出一次，consumed／replaced 不結算。 */
+  private removeUnit(unit: UnitState, reason: UnitRemovedReason, now: number): void {
+    this.units = this.units.filter((candidate) => candidate.uid !== unit.uid);
+    this.emit({ type: 'unitRemoved', atMs: now, kind: unit.kind, uid: unit.uid, reason });
+    const resolve = unit.onResolve;
+    if (!resolve) return;
+    const shouldResolve = reason === 'resolved' || (reason === 'expired' && resolve.when === 'always');
+    if (!shouldResolve) return;
+    const actionId = this.newActionId();
+    for (const target of this.selectTargets(resolve.targets)) {
+      this.pushHit({
+        atMs: now,
+        actionId,
+        source: 'summon',
+        coefBp: resolve.coefBp,
+        targeting: { mode: 'fixed', uid: target.uid },
+        stats: unit.stats,
+        critAllowed: false,
+        armorIgnoreBp: 0,
+        bonusKeys: ['SUMMON_DMG'],
+        bonusPctBp: this.unitBuffBonusPct(unit.kind),
+        skillId: null,
+        unitKind: unit.kind,
+        riders: [],
+        tracked: false,
+        retargetOnce: false,
+      });
+    }
+  }
+
+  /** 同上限群組的有期限單位，依生成先後排序（最舊在前）。 */
+  private groupUnits(capGroup: string): UnitState[] {
+    return this.units
+      .filter((unit) => unit.capGroup === capGroup && unit.expiresAtMs !== Number.POSITIVE_INFINITY)
+      .sort((a, b) => a.spawnedAtMs - b.spawnedAtMs || a.uid - b.uid);
+  }
+
+  private hasUnit(unitKind: UnitKind): boolean {
+    return this.units.some((unit) => unit.kind === unitKind);
+  }
+
+  private hasSummonUnit(): boolean {
+    return this.units.some((unit) => unit.damageSource === 'summon' && unit.intervalMs > 0);
+  }
+
+  // ───────────── 花色輪轉 ─────────────
+
+  private nextSuit(): CardSuit {
+    const suits = this.kit.suits;
+    return this.cards.setPending && suits ? suits.preferredSuit : this.cards.pointer;
+  }
+
+  private playCards(step: PlayCardsStep, ctx: CastContext): void {
+    const suits = this.kit.suits;
+    if (step.mode === 'setNext') {
+      if (suits) this.cards.setPending = true;
+      return;
+    }
+    const rotation = this.rotationList();
+    const main = rotation[0];
+    if (!main) return;
+    ctx.firstDamageTargetCount ??= step.spreadTargets ? Math.min(step.count, rotation.length) : 1;
+    for (let index = 0; index < step.count; index += 1) {
+      let suit: CardSuit | null = null;
+      let isSetCard = false;
+      if (suits) {
+        if (step.mode === 'fixedSequence') {
+          suit = (index % SUIT_COUNT) as CardSuit;
+        } else {
+          // 切牌只改這一張的花色；花色指標照常前進一格（不造成額外出牌）。
+          isSetCard = this.cards.setPending;
+          suit = isSetCard ? suits.preferredSuit : this.cards.pointer;
+          this.cards.setPending = false;
+          this.cards.pointer = ((this.cards.pointer + 1) % SUIT_COUNT) as CardSuit;
+        }
+      }
+      const target = step.spreadTargets ? rotation[index % rotation.length]! : main;
+      this.playCard(suit, isSetCard, step, index, ctx, target);
+    }
+    ctx.hasDamage = true;
+    ctx.previousTargets = [main];
+    ctx.previousMain = main;
+  }
+
+  private playCard(suit: CardSuit | null, isSetCard: boolean, step: PlayCardsStep, index: number, ctx: CastContext, target: EnemyState): void {
+    const suits = this.kit.suits;
+    const atMs = ctx.atMs + index * (step.hitIntervalMs ?? 0);
+    let effectMultBp = 10000;
+    if (suit !== null && suits) {
+      if (suit === suits.preferredSuit) {
+        const boost = this.buffs.find((buff) => buff.effect.kind === 'suitBoost' && buff.charges > 0);
+        if (boost?.effect.kind === 'suitBoost') {
+          effectMultBp += boost.effect.pctBp;
+          this.buffs = this.buffs.filter((buff) => buff !== boost);
+        }
+      }
+      if (isSetCard) effectMultBp += this.kit.setSuitEffectBonusBp;
+    }
+    let coefBp = step.coefBp;
+    const riders: HitRider[] = [];
+    if (suits && suit === SUIT_SPADE) coefBp += scaleBp(suits.spadeExtraCoefBp, effectMultBp);
+    if (suits && suit === SUIT_DIAMOND) {
+      riders.push({
+        kind: 'status',
+        spec: {
+          kind: 'armorBreak',
+          statusId: DIAMOND_STATUS_ID,
+          label: '方塊破甲',
+          pctBp: scaleBp(suits.diamondArmorBreakBp, effectMultBp),
+          durationMs: suits.diamondDurationMs,
+        },
+      });
+    }
+    this.pushHit({
+      atMs,
+      actionId: ctx.actionId,
+      source: ctx.source,
+      coefBp,
+      targeting: { mode: 'fixed', uid: target.uid },
+      stats: ctx.stats,
+      critAllowed: true,
+      armorIgnoreBp: 0,
+      bonusKeys: ['SKILL_DMG'],
+      bonusPctBp: ctx.bodyBonusPct,
+      skillId: ctx.skillId,
+      unitKind: null,
+      riders,
+      tracked: true,
+      retargetOnce: false,
+    });
+    if (suits && suit === SUIT_HEART) this.cards.heartBonusBp = Math.max(this.cards.heartBonusBp, scaleBp(suits.heartNextBasicBonusBp, effectMultBp));
+    if (suits && suit === SUIT_CLUB) {
+      const other = this.otherThan(target);
+      if (other) this.pushFollowUp(other, scaleBp(suits.clubExtraCoefBp, effectMultBp), ctx.actionId, atMs);
+    }
+    if (!ctx.firstCardPlayed) {
+      ctx.firstCardPlayed = true;
+      this.releaseStored('nextCard', target, ctx.actionId, atMs, null);
+    }
+    if (suit === null) return;
+    this.emit({ type: 'cardPlayed', atMs: ctx.now, suit, actionId: ctx.actionId });
+    this.cards.streak = this.cards.lastSuit === suit ? this.cards.streak + 1 : 1;
+    this.cards.lastSuit = suit;
+    if (this.cards.streak >= 2) {
+      // 每湊成一組同花只觸發一次，第三張同花重新起算。
+      this.cards.streak = 0;
+      this.cards.lastSuit = null;
+      this.fireProcs('sameSuitTwice', ctx.now, target, { actionId: ctx.actionId, atMs });
+    }
   }
 
   // ───────────── 被動／裝備觸發 ─────────────
 
-  private fireProcs(kind: ProcDef['trigger']['kind'], now: number, target: EnemyState, origin?: { actionId: number; atMs: number }): void {
+  private fireProcs(kind: ProcTrigger['kind'], now: number, target: EnemyState | null, origin?: ProcOrigin): void {
     for (const proc of this.procs) if (proc.def.trigger.kind === kind) this.triggerProc(proc, now, target, origin);
   }
 
-  private triggerProc(proc: ActiveProc, now: number, target: EnemyState, origin?: { actionId: number; atMs: number }): void {
-    const icd = proc.def.internalCooldownMs ?? 0;
+  private fireMatching(predicate: (trigger: ProcTrigger) => boolean, now: number, target: EnemyState | null, origin?: ProcOrigin): void {
+    for (const proc of this.procs) if (predicate(proc.def.trigger)) this.triggerProc(proc, now, target, origin);
+  }
+
+  private fireStatusExpired(statusId: string, enemy: EnemyState, now: number): void {
+    this.fireMatching((trigger) => trigger.kind === 'statusExpired' && trigger.statusId === statusId, now, enemy);
+  }
+
+  private triggerProc(proc: ActiveProc, now: number, target: EnemyState | null, origin?: ProcOrigin): void {
+    const def = proc.def;
+    if (def.requireUnit && !this.hasUnit(def.requireUnit)) return;
+    let buff: BuffState | undefined;
+    if (def.requireBuff) {
+      buff = this.buffs.find((candidate) => candidate.buffId === def.requireBuff);
+      if (!buff) return;
+      if (def.oncePerBuff && buff.firedProcIds.includes(def.procId)) return;
+    }
+    const icd = def.internalCooldownMs ?? 0;
     if (now - proc.lastTriggeredAtMs < icd) return;
     proc.lastTriggeredAtMs = now;
-    const payload = proc.def.payload;
-    if (payload.kind === 'nextUnitRoundBonus') {
-      this.unitRoundBonus = { unitKind: payload.unitKind, pctBp: payload.pctBp, remaining: payload.maxUnits };
-      return;
-    }
-    if (payload.timing !== 'immediate') {
-      const list = this.stored[payload.timing];
-      // 同一來源最多存 1 次，不可囤積。
-      if (!list.some((entry) => entry.procId === proc.def.procId)) list.push({ procId: proc.def.procId, coefBp: payload.coefBp });
-      return;
-    }
-    const hitTarget = this.resolveProcTarget(payload.target, target);
-    if (!hitTarget) return;
-    this.pushFollowUp(hitTarget, payload.coefBp, origin?.actionId ?? this.newActionId(), origin?.atMs ?? now + this.catalog.tuning.battle.minHitDelayMs);
+    if (buff && def.oncePerBuff) buff.firedProcIds.push(def.procId);
+    this.applyPayload(def.procId, def.payload, now, target, origin);
   }
 
-  private resolveProcTarget(rule: 'same' | 'main' | 'otherPreferred' | 'otherOnly', reference: EnemyState): EnemyState | null {
-    const alive = this.aliveEnemies();
+  private applyPayload(procId: string, payload: ProcPayload, now: number, target: EnemyState | null, origin?: ProcOrigin): void {
+    switch (payload.kind) {
+      case 'nextUnitRoundBonus':
+        this.unitRoundBonus = { unitKind: payload.unitKind, pctBp: payload.pctBp, remaining: payload.maxUnits };
+        return;
+      case 'nextUnitRoundExtra':
+        for (const unit of this.units) if (unit.kind === payload.unitKind) unit.pendingExtraCoefBp = payload.coefBp;
+        return;
+      case 'nextSkillUnitPartBonus':
+        this.unitPartBonus.set(payload.skillId, payload.pctBp);
+        return;
+      case 'spawnUnit':
+        this.spawnUnit(payload.unit, now, this.stats, null);
+        return;
+      case 'applyStatus': {
+        const destination = payload.target === 'same' ? target : target ? this.otherThan(target) : null;
+        if (destination?.alive) this.applyStatusFrom(destination, payload.status, this.stats, now, false);
+        return;
+      }
+      case 'copyDot':
+        if (target?.alive) this.copyDotTo(target, payload.statusId, payload.toOthers, now, false);
+        return;
+      case 'extraHit':
+        break;
+    }
+    const fallbackAtMs = now + this.catalog.tuning.battle.minHitDelayMs;
+    switch (payload.timing) {
+      case 'immediate':
+      case 'afterAction': {
+        const atMs = payload.timing === 'afterAction' ? (origin?.endAtMs ?? origin?.atMs ?? fallbackAtMs) : (origin?.atMs ?? fallbackAtMs);
+        const actionId = origin?.actionId ?? this.newActionId();
+        for (const entry of this.resolveProcTargets(payload.target, payload.count, payload.coefBp, payload.fallbackMainCoefBp ?? 0, target)) {
+          this.pushFollowUp(entry.target, entry.coefBp, actionId, atMs);
+        }
+        return;
+      }
+      case 'nextSummonHit':
+        this.storeExtraHit(procId, payload, this.hasSummonUnit() ? 'nextSummonHit' : 'nextBasic');
+        return;
+      default:
+        this.storeExtraHit(procId, payload, payload.timing);
+    }
+  }
+
+  /** 同一來源最多存一筆；再次觸發只把次數補滿，不可囤積。 */
+  private storeExtraHit(procId: string, payload: Extract<ProcPayload, { kind: 'extraHit' }>, timing: StoredTiming): void {
+    const charges = payload.charges ?? 1;
+    const existing = this.stored.find((entry) => entry.procId === procId);
+    if (existing) {
+      existing.charges = Math.max(existing.charges, charges);
+      return;
+    }
+    this.stored.push({
+      procId,
+      coefBp: payload.coefBp,
+      target: payload.target,
+      count: payload.count,
+      fallbackMainCoefBp: payload.fallbackMainCoefBp ?? 0,
+      timing,
+      skillId: payload.skillId ?? null,
+      charges,
+    });
+  }
+
+  private releaseStored(timing: StoredTiming, target: EnemyState, actionId: number, atMs: number, skillId: string | null): void {
+    const due = this.stored.filter((entry) => entry.timing === timing && (timing !== 'nextSkillId' || entry.skillId === skillId));
+    if (due.length === 0) return;
+    for (const entry of due) {
+      for (const hit of this.resolveProcTargets(entry.target, entry.count, entry.coefBp, entry.fallbackMainCoefBp, target)) {
+        this.pushFollowUp(hit.target, hit.coefBp, actionId, atMs);
+      }
+      entry.charges -= 1;
+    }
+    this.stored = this.stored.filter((entry) => entry.charges > 0);
+  }
+
+  private resolveProcTargets(
+    rule: ProcTarget,
+    count: number | undefined,
+    coefBp: number,
+    fallbackMainCoefBp: number,
+    reference: EnemyState | null,
+  ): { target: EnemyState; coefBp: number }[] {
+    const main = this.mainTarget();
+    const anchor = reference?.alive ? reference : main;
+    const others = this.aliveEnemies().filter((enemy) => enemy.uid !== anchor?.uid);
+    const each = (targets: readonly EnemyState[]) => targets.map((target) => ({ target, coefBp }));
     switch (rule) {
       case 'same':
-        return reference.alive ? reference : this.mainTarget();
+        return anchor ? each([anchor]) : [];
       case 'main':
-        return this.mainTarget();
-      case 'otherPreferred':
-        return alive.find((enemy) => enemy.uid !== reference.uid) ?? this.mainTarget();
+        return main ? each([main]) : [];
+      case 'otherPreferred': {
+        const target = others[0] ?? anchor;
+        return target ? each([target]) : [];
+      }
       case 'otherOnly':
-        return alive.find((enemy) => enemy.uid !== reference.uid) ?? null;
+        if (others[0]) return each([others[0]]);
+        return fallbackMainCoefBp > 0 && main ? [{ target: main, coefBp: fallbackMainCoefBp }] : [];
+      case 'othersEach':
+        return each(others.slice(0, count ?? others.length));
+      case 'upToEach':
+        return each([...(anchor ? [anchor] : []), ...others].slice(0, count ?? this.catalog.tuning.battle.monstersPerWave));
     }
-  }
-
-  private releaseStored(timing: PendingTiming, target: EnemyState, actionId: number, atMs: number): void {
-    const list = this.stored[timing];
-    if (list.length === 0) return;
-    this.stored[timing] = [];
-    for (const entry of list) this.pushFollowUp(target, entry.coefBp, actionId, atMs);
   }
 
   private pushFollowUp(target: EnemyState, coefBp: number, actionId: number, atMs: number): void {
@@ -1155,8 +2067,12 @@ export class BattleSim {
       critAllowed: false,
       armorIgnoreBp: 0,
       bonusKeys: ['FOLLOWUP_DMG'],
+      bonusPctBp: 0,
       skillId: null,
-      statuses: [],
+      unitKind: null,
+      riders: [],
+      tracked: false,
+      retargetOnce: false,
     });
   }
 
@@ -1179,17 +2095,31 @@ export class BattleSim {
     return alive[0] ?? null;
   }
 
+  /** 輪替順序：主目標在前，其餘依生成序。 */
+  private rotationList(): EnemyState[] {
+    const main = this.mainTarget();
+    if (!main) return [];
+    return [main, ...this.aliveEnemies().filter((enemy) => enemy.uid !== main.uid)];
+  }
+
+  private otherThan(reference: EnemyState): EnemyState | null {
+    return this.aliveEnemies().find((enemy) => enemy.uid !== reference.uid) ?? null;
+  }
+
   /** 範圍攻擊按主目標、生成序處理，最多 N 名；目標不足時不補足空段。 */
   private selectTargets(rule: TargetRule): EnemyState[] {
-    const main = this.mainTarget();
+    const rotation = this.rotationList();
+    const main = rotation[0];
     if (!main) return [];
     switch (rule.kind) {
       case 'main':
         return [main];
       case 'upTo':
-        return [main, ...this.aliveEnemies().filter((enemy) => enemy.uid !== main.uid)].slice(0, rule.count);
+        return rotation.slice(0, rule.count);
+      case 'others':
+        return rotation.slice(1, 1 + rule.count);
       case 'othersPreferred':
-        return [this.aliveEnemies().find((enemy) => enemy.uid !== main.uid) ?? main];
+        return [rotation[1] ?? main];
     }
   }
 
@@ -1227,11 +2157,13 @@ export class BattleSim {
         statusId: status.statusId,
         label: status.label,
         remainingMs: Math.max(0, status.expiresAtMs - now),
+        stacks: status.kind === 'dotStack' ? status.poison.length : status.stacks,
       })),
       traits: this.traitsOf(enemy, now),
     }));
     const boss = this.boss;
     const body = boss ? this.enemies.find((enemy) => enemy.uid === boss.bodyUid) : undefined;
+    const suits = this.kit.suits;
     return {
       encounterKind: this.encounter.kind,
       stageId: this.encounter.stage.id,
@@ -1244,13 +2176,22 @@ export class BattleSim {
         skills: this.skillSlots.map((slot) => ({
           skillId: slot.skill.id,
           ultimate: slot.ultimate,
-          cooldownMs: Math.round((slot.skill.cooldownMs * (10000 - this.stats.cdrBp)) / 10000),
+          cooldownMs: scaleBp(slot.skill.cooldownMs, 10000 - this.stats.cdrBp),
           remainingMs: Math.max(0, slot.readyAtMs - now),
           waitingForCondition: slot.waitingSinceMs !== null,
         })),
         resources: { ...this.resources },
-        units: this.units.map((unit) => ({ uid: unit.uid, kind: unit.kind, remainingMs: Math.max(0, unit.expiresAtMs - now) })),
-        buffs: this.buffs.map((buff) => ({ buffId: buff.buffId, label: buff.label, remainingMs: Math.max(0, buff.expiresAtMs - now) })),
+        units: this.units.map((unit) => {
+          const permanent = unit.expiresAtMs === Number.POSITIVE_INFINITY;
+          return { uid: unit.uid, kind: unit.kind, remainingMs: permanent ? 0 : Math.max(0, unit.expiresAtMs - now), permanent };
+        }),
+        buffs: this.buffs.map((buff) => ({
+          buffId: buff.buffId,
+          label: buff.label,
+          remainingMs: Math.max(0, buff.expiresAtMs - now),
+          charges: buff.charges,
+        })),
+        cards: suits ? { nextSuit: this.nextSuit(), setPending: this.cards.setPending } : null,
       },
       boss: boss
         ? {

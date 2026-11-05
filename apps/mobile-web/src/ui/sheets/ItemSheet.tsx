@@ -1,4 +1,4 @@
-import { describeProc } from '@qiwu/content';
+import { describeLegend, skillNameLookup } from '@qiwu/content';
 import {
   assertCanEquip,
   availabilityOf,
@@ -210,8 +210,7 @@ export function ItemSheet({ itemId, mode, identify, onClose }: { itemId: string;
       {item.hasLegendEffect ? (
         <div className={styles.legend}>
           <p>{base.legendText}</p>
-          {!base.legend ? <p className={ps.note}>原型尚未實作此特效的戰鬥效果，暫時不會觸發。</p> : null}
-          {base.legend ? <p className={ps.note}>實作：{base.legend.procs.map(describeProc).join(' ')}</p> : null}
+          {base.legend ? <p className={ps.note}>觸發規則：{describeLegend(base.legend, skillNameLookup(catalog))}</p> : null}
           {legendInactive ? <p className={ps.warning}>目前配置未啟用：{legendInactive}</p> : null}
         </div>
       ) : (

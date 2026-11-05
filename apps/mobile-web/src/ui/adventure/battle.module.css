@@ -109,6 +109,32 @@
   white-space: nowrap;
 }
 
+.nextSuit {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--c-pop-bg);
+  color: var(--c-text);
+  font-size: var(--font-xs);
+  white-space: nowrap;
+}
+
+.nextSuit [data-suit='0'],
+.nextSuit [data-suit='1'] {
+  color: var(--suit-red);
+}
+
+.nextSuit [data-suit='2'],
+.nextSuit [data-suit='3'] {
+  color: var(--suit-black);
+}
+
 .units {
   position: absolute;
   left: -34px;

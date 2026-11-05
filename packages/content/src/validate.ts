@@ -1,6 +1,8 @@
 import type { ContentCatalog } from './catalog.ts';
+import { BALANCE_ADJUSTMENTS } from './effects/balanceAdjustments.ts';
+import type { ProcDef } from './effects/types.ts';
 import { TIER3_DEFAULT_SKILLS } from './defaultLoadouts.ts';
-import { describeProc, describeSteps } from './describe.ts';
+import { describeLegend, describePassive, describeSteps } from './describe.ts';
 import { STAT_KEYS } from './ids.ts';
 import { skillSelectionRule } from './queries.ts';
 import type { DesignData } from './schema.ts';
@@ -19,6 +21,19 @@ export interface ValidationReport {
 const EXPECTED_COUNTS = { classes: 35, active_skills: 70, passives: 35, equipment_bases: 88, maps: 12, stages: 360 } as const;
 const FORBIDDEN_STAT_PATTERN = /HP|MP|生命|魔力|法力|防禦|回血|吸血|護盾|格擋|回魔/;
 const COEF_PATTERN = /\d+\.\d{2}A/g;
+
+/** 觸發器與效果中引用的技能 ID（用來檢查傳說與被動沒有指到不存在的技能）。 */
+function referencedSkillIds(proc: ProcDef): string[] {
+  const ids: string[] = [];
+  const trigger = proc.trigger;
+  if (trigger.kind === 'skillCast' || trigger.kind === 'skillKill') ids.push(trigger.skillId);
+  if (trigger.kind === 'skillEnded' && trigger.skillId) ids.push(trigger.skillId);
+  if (trigger.kind === 'skillCastConsumed' || trigger.kind === 'skillCastRetained') ids.push(...trigger.skillIds);
+  const payload = proc.payload;
+  if (payload.kind === 'extraHit' && payload.skillId) ids.push(payload.skillId);
+  if (payload.kind === 'nextSkillUnitPartBonus') ids.push(payload.skillId);
+  return ids;
+}
 
 export function validateContent(data: DesignData, catalog: ContentCatalog): ValidationReport {
   const issues: string[] = [];
@@ -115,12 +130,17 @@ export function validateContent(data: DesignData, catalog: ContentCatalog): Vali
     if (!skill.effect) continue;
     const generated = describeSteps(skill.effect.steps);
     for (const token of skill.designEffectText.match(COEF_PATTERN) ?? []) {
-      check(generated.includes(token), `${skill.id} 設計倍率 ${token} 未出現在實作效果「${generated}」`);
+      if (generated.includes(token)) continue;
+      const adjustment = BALANCE_ADJUSTMENTS.find((entry) => entry.skillId === skill.id && entry.designToken === token);
+      check(
+        adjustment !== undefined && generated.includes(adjustment.tunedToken),
+        `${skill.id} 設計倍率 ${token} 未出現在實作效果「${generated}」，且不在平衡調整清單`,
+      );
     }
   }
   for (const passive of catalog.passives.values()) {
     if (!passive.effect) continue;
-    const generated = passive.effect.procs.map(describeProc).join('');
+    const generated = describePassive(passive.effect);
     const tokens = passive.designRuleText.match(COEF_PATTERN) ?? [];
     for (const token of tokens) {
       check(generated.includes(token), `${passive.id} 設計倍率 ${token} 未出現在實作效果「${generated}」`);
@@ -128,15 +148,22 @@ export function validateContent(data: DesignData, catalog: ContentCatalog): Vali
   }
   for (const base of catalog.equipment.values()) {
     if (!base.legend) continue;
-    const generated = base.legend.procs.map(describeProc).join('');
+    const generated = describeLegend(base.legend);
     for (const token of base.legendText.match(COEF_PATTERN) ?? []) {
       check(generated.includes(token), `${base.id} 傳說倍率 ${token} 未出現在實作效果「${generated}」`);
     }
     for (const proc of base.legend.procs) {
-      if (proc.trigger.kind === 'skillCast') {
-        check(catalog.skills.has(proc.trigger.skillId), `${base.id} 觸發技能不存在：${proc.trigger.skillId}`);
-      }
+      for (const skillId of referencedSkillIds(proc)) check(catalog.skills.has(skillId), `${base.id} 引用的技能不存在：${skillId}`);
     }
+  }
+
+  // 平衡調整清單不能有失效條目：設計倍率必須真的存在、調整後的倍率必須真的被實作。
+  for (const adjustment of BALANCE_ADJUSTMENTS) {
+    const skill = catalog.skills.get(adjustment.skillId);
+    check(skill !== undefined, `平衡調整引用不存在的技能 ${adjustment.skillId}`);
+    if (!skill?.effect) continue;
+    check(skill.designEffectText.includes(adjustment.designToken), `${skill.id} 平衡調整的設計倍率 ${adjustment.designToken} 不在設計文字中`);
+    check(describeSteps(skill.effect.steps).includes(adjustment.tunedToken), `${skill.id} 平衡調整後的倍率 ${adjustment.tunedToken} 未被實作`);
   }
 
   // 三轉預設配置引用

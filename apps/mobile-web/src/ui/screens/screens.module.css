@@ -282,6 +282,33 @@
   border-bottom: 1px solid var(--c-border);
 }
 
+.passiveRow {
+  background: var(--c-surface-2);
+  border-radius: var(--radius-s);
+  padding: var(--space-2) var(--space-3);
+  margin-top: var(--space-2);
+  border-bottom: none;
+}
+
+.passiveActive,
+.passiveInactive {
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  font-size: var(--font-xs);
+  vertical-align: middle;
+}
+
+.passiveActive {
+  background: var(--c-success-soft);
+  color: var(--c-success);
+}
+
+.passiveInactive {
+  background: var(--c-surface-3);
+  color: var(--c-text-dim);
+}
+
 .skillRowEmpty {
   padding: var(--space-3);
   margin: var(--space-2) 0;

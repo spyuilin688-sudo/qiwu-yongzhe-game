@@ -92,6 +92,8 @@
   --float-summon: #a8d8ff;
   --float-follow: #d8ffb0;
   --hp-boss-deep: #b8382a;
+  --suit-red: #ff8d7a;
+  --suit-black: #e8e2d6;
   --c-white: #fff;
   --c-black: #000;
 
@@ -114,8 +116,10 @@
   --font-m: 0.9375rem;
   --font-l: 1.125rem;
   --font-xl: 1.25rem;
-  --font-family: 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', 'Heiti TC', system-ui, -apple-system, sans-serif;
-  --font-numeric: ui-rounded, 'SF Pro Rounded', var(--font-family);
+  --font-family: 'PingFang TC', 'Noto Sans TC', 'Noto Sans CJK TC', 'Microsoft JhengHei', 'Heiti TC', system-ui, -apple-system, sans-serif;
+  /* 粉圓（Huninn，OFL）只有一種字重：標題、按鈕、數字用它表現遊戲感，內文維持系統字型以利閱讀與流量。 */
+  --font-display: 'Huninn', var(--font-family);
+  --font-numeric: 'Huninn', ui-rounded, 'SF Pro Rounded', var(--font-family);
 
   --app-max-width: 480px;
   --h-header: 60px;
