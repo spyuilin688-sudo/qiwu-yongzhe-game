@@ -238,6 +238,37 @@ describe('花色輪轉', () => {
   });
 });
 
+describe('連環牌擊「單目標可集中」', () => {
+  const cardHits = (events: readonly BattleEvent[]) =>
+    events.filter((event): event is Extract<BattleEvent, { type: 'hit' }> => event.type === 'hit' && event.skillId === 'SK054');
+
+  it('刷怪：3 張牌依序輪替打到不同敵人', () => {
+    const events = runUntil(sim(hero('JOB27', ['SK054'], { passiveIds: [] }), stats({ basicIntervalMs: 600_000 })), 3_000);
+    expect(new Set(cardHits(events).map((hit) => hit.targetUid)).size).toBeGreaterThan(1);
+  });
+
+  it('BOSS 戰：副目標零產出，牌全部集中主目標（BOSS）', () => {
+    const stage = getStageAt(catalog, 9, 30);
+    const battle = new BattleSim({
+      catalog,
+      seed: 4242,
+      stats: stats({ basicIntervalMs: 600_000 }),
+      hero: hero('JOB27', ['SK054'], { passiveIds: [] }),
+      encounter: { kind: 'boss', stage, durationMs: catalog.globals.bossDurationMs },
+    });
+    let bossUid: number | null = null;
+    let adds = 0;
+    const events = runUntil(battle, 20_000, (_events, view) => {
+      bossUid ??= view.enemies.find((enemy) => enemy.kind === 'boss')?.uid ?? null;
+      adds = Math.max(adds, view.enemies.filter((enemy) => enemy.kind !== 'boss').length);
+    });
+    expect(adds, '這場 BOSS 要有副目標，測試才有意義').toBeGreaterThan(0);
+    const hits = cardHits(events);
+    expect(hits.length).toBeGreaterThanOrEqual(3);
+    for (const hit of hits) expect(hit.targetUid).toBe(bossUid);
+  });
+});
+
 describe('幻影與替身（幻影舞臺）', () => {
   it('合計最多 2 個；超額時先提前結算最舊者，替身到期爆炸打最多 3 名', () => {
     const battle = sim(hero('JOB29', ['SK057', 'SK058']), stats({ basicIntervalMs: 600_000 }));

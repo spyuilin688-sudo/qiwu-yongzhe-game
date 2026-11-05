@@ -62,7 +62,7 @@ const PASSIVES: readonly PassiveEffectDef[] = [
   {
     passiveId: 'PS009',
     procs: [],
-    companion: { unitKind: 'beast', attackIntervalMs: 1500, coefBp: 5000 },
+    companion: { unitKind: 'beast', attackIntervalMs: 1500, coefBp: 4500 },
   },
   {
     passiveId: 'PS010',

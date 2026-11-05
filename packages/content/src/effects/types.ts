@@ -197,7 +197,10 @@ export interface PlayCardsStep {
   readonly count: number;
   readonly coefBp: number;
   readonly hitIntervalMs?: number;
-  /** 多張牌依「主目標、其餘生成序」輪替目標；只有一名敵人時集中主目標（連環牌擊「單目標可集中」）。 */
+  /**
+   * 刷怪時多張牌依「主目標、其餘生成序」輪替目標；只有一名敵人或 BOSS 戰時集中主目標
+   * （連環牌擊「單目標可集中」：BOSS 副目標零產出，散到副目標沒有收益）。
+   */
   readonly spreadTargets?: boolean;
 }
 

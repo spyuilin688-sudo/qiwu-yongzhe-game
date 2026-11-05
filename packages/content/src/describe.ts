@@ -214,7 +214,7 @@ export function describeStep(step: EffectStep): string {
           return `依序打出紅心→方塊→梅花→黑桃${step.count}張，各${formatCoef(step.coefBp)}並執行花色效果`;
         case 'pointer':
           return step.count > 1
-            ? `${step.count}張牌各${formatCoef(step.coefBp)}，依花色指標逐張推進並執行花色效果，${step.spreadTargets ? '依序輪替目標，只有一名敵人時集中' : '集中主目標'}`
+            ? `${step.count}張牌各${formatCoef(step.coefBp)}，依花色指標逐張推進並執行花色效果，${step.spreadTargets ? '刷怪時依序輪替目標；只有一名敵人或 BOSS 戰時集中主目標' : '集中主目標'}`
             : `主目標${formatCoef(step.coefBp)}；有花色被動時使用並前進一次花色指標`;
       }
   }

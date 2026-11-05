@@ -1939,7 +1939,9 @@ export class BattleSim {
     const rotation = this.rotationList();
     const main = rotation[0];
     if (!main) return;
-    ctx.firstDamageTargetCount ??= step.spreadTargets ? Math.min(step.count, rotation.length) : 1;
+    // 「單目標可集中」：BOSS 戰的副目標零產出，散牌到副目標沒有收益，因此 BOSS 戰一律集中主目標。
+    const spread = step.spreadTargets === true && this.boss === null;
+    ctx.firstDamageTargetCount ??= spread ? Math.min(step.count, rotation.length) : 1;
     for (let index = 0; index < step.count; index += 1) {
       let suit: CardSuit | null = null;
       let isSetCard = false;
@@ -1954,7 +1956,7 @@ export class BattleSim {
           this.cards.pointer = ((this.cards.pointer + 1) % SUIT_COUNT) as CardSuit;
         }
       }
-      const target = step.spreadTargets ? rotation[index % rotation.length]! : main;
+      const target = spread ? rotation[index % rotation.length]! : main;
       this.playCard(suit, isSetCard, step, index, ctx, target);
     }
     ctx.hasDamage = true;

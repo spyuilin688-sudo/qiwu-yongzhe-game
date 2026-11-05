@@ -19,7 +19,10 @@ export const TIER3_DEFAULT_SKILLS: Readonly<Record<string, DefaultSkillTable>> =
   JOB23: { farm: ['SK042', 'SK044', 'SK045'], boss: ['SK043', 'SK044', 'SK045'] },
   JOB25: { farm: ['SK042', 'SK048', 'SK049'], boss: ['SK041', 'SK047', 'SK049'] },
   JOB28: { farm: ['SK052', 'SK054', 'SK055'], boss: ['SK053', 'SK054', 'SK055'] },
-  JOB30: { farm: ['SK052', 'SK057', 'SK058'], boss: ['SK057', 'SK058', 'SK059'] },
+  // 打王配置偏離規格表（P）：規格為鏡像飛牌、替身爆彈、戲法換位。替身與幻影共用上限 2，替身會把幻影提前擠掉，
+  // 同投入打王輸出比中位數低約 23%，把幻影倍率加到設計的 2.9 倍仍低 13%；改以飛牌取代替身爆彈（約 −10%），
+  // 保留「布置幻影、調整結算、集中謝幕」。證據：docs/BALANCE_REPORT.md 表二。
+  JOB30: { farm: ['SK052', 'SK057', 'SK058'], boss: ['SK051', 'SK057', 'SK059'] },
   JOB33: { farm: ['SK062', 'SK063', 'SK064'], boss: ['SK061', 'SK063', 'SK065'] },
   JOB35: { farm: ['SK062', 'SK067', 'SK068'], boss: ['SK067', 'SK068', 'SK069'] },
 };

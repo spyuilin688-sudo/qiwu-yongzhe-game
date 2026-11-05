@@ -66,7 +66,7 @@ const DEFS: readonly SkillEffectDef[] = [
   // ── 狂劍士 JOB02 ──
   {
     skillId: 'SK003',
-    steps: [{ type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 4000, hits: 4, hitIntervalMs: 250, retarget: 'reacquire' }],
+    steps: [{ type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 2600, hits: 4, hitIntervalMs: 250, retarget: 'reacquire' }],
     autoCast: { kind: 'hasEnemy' },
     generatesResource: true,
   },
@@ -123,7 +123,7 @@ const DEFS: readonly SkillEffectDef[] = [
       {
         type: 'damage',
         targets: { kind: 'upTo', count: 3 },
-        coefBp: 16000,
+        coefBp: 10000,
         consume: { from: 'targetStacks', statusId: 'BREACH', perUnitCoefBp: 3500, max: 3 },
       },
     ],
@@ -151,7 +151,7 @@ const DEFS: readonly SkillEffectDef[] = [
   // ── 弓手 JOB06 ──
   {
     skillId: 'SK011',
-    steps: [{ type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 15000 }],
+    steps: [{ type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 13500 }],
     autoCast: { kind: 'hasEnemy' },
     generatesResource: true,
   },
@@ -225,8 +225,8 @@ const DEFS: readonly SkillEffectDef[] = [
   {
     skillId: 'SK018',
     steps: [
-      { type: 'damage', targets: { kind: 'main' }, coefBp: 13000 },
-      { type: 'damage', targets: { kind: 'main' }, coefBp: 15000, unitPart: 'beast', delayMs: 200 },
+      { type: 'damage', targets: { kind: 'main' }, coefBp: 6000 },
+      { type: 'damage', targets: { kind: 'main' }, coefBp: 10000, unitPart: 'beast', delayMs: 200 },
     ],
     autoCast: { kind: 'requiresUnitPreferStatus', unitKind: 'beast', statusId: 'PREY_MARK' },
     generatesResource: true,
@@ -404,7 +404,7 @@ const DEFS: readonly SkillEffectDef[] = [
   {
     skillId: 'SK033',
     steps: [
-      { type: 'damage', targets: { kind: 'main' }, coefBp: 7500, hits: 3, hitIntervalMs: 150 },
+      { type: 'damage', targets: { kind: 'main' }, coefBp: 9000, hits: 3, hitIntervalMs: 150 },
       { type: 'gainResource', resource: 'COMBO', amount: 1 },
     ],
     autoCast: { kind: 'selfResourceBelow', resource: 'COMBO', amount: 5 },
@@ -559,7 +559,7 @@ const DEFS: readonly SkillEffectDef[] = [
   },
   {
     skillId: 'SK048',
-    steps: [{ type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 19000 }],
+    steps: [{ type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 12500 }],
     autoCast: { kind: 'hasEnemy' },
     generatesResource: true,
   },
@@ -710,7 +710,7 @@ const DEFS: readonly SkillEffectDef[] = [
   },
   {
     skillId: 'SK064',
-    steps: [{ type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 19000 }],
+    steps: [{ type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 15000 }],
     autoCast: { kind: 'hasEnemy' },
     generatesResource: true,
   },

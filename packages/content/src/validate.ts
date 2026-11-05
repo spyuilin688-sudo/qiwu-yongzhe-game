@@ -132,7 +132,7 @@ export function validateContent(data: DesignData, catalog: ContentCatalog): Vali
     const generated = describeSteps(skill.effect.steps);
     for (const token of skill.designEffectText.match(COEF_PATTERN) ?? []) {
       if (generated.includes(token)) continue;
-      const adjustment = BALANCE_ADJUSTMENTS.find((entry) => entry.skillId === skill.id && entry.designToken === token);
+      const adjustment = BALANCE_ADJUSTMENTS.find((entry) => entry.targetId === skill.id && entry.designToken === token);
       check(
         adjustment !== undefined && generated.includes(adjustment.tunedToken),
         `${skill.id} 設計倍率 ${token} 未出現在實作效果「${generated}」，且不在平衡調整清單`,
@@ -144,7 +144,12 @@ export function validateContent(data: DesignData, catalog: ContentCatalog): Vali
     const generated = describePassive(passive.effect);
     const tokens = passive.designRuleText.match(COEF_PATTERN) ?? [];
     for (const token of tokens) {
-      check(generated.includes(token), `${passive.id} 設計倍率 ${token} 未出現在實作效果「${generated}」`);
+      if (generated.includes(token)) continue;
+      const adjustment = BALANCE_ADJUSTMENTS.find((entry) => entry.targetId === passive.id && entry.designToken === token);
+      check(
+        adjustment !== undefined && generated.includes(adjustment.tunedToken),
+        `${passive.id} 設計倍率 ${token} 未出現在實作效果「${generated}」，且不在平衡調整清單`,
+      );
     }
   }
   for (const base of catalog.equipment.values()) {
@@ -171,11 +176,17 @@ export function validateContent(data: DesignData, catalog: ContentCatalog): Vali
 
   // 平衡調整清單不能有失效條目：設計倍率必須真的存在、調整後的倍率必須真的被實作。
   for (const adjustment of BALANCE_ADJUSTMENTS) {
-    const skill = catalog.skills.get(adjustment.skillId);
-    check(skill !== undefined, `平衡調整引用不存在的技能 ${adjustment.skillId}`);
-    if (!skill?.effect) continue;
-    check(skill.designEffectText.includes(adjustment.designToken), `${skill.id} 平衡調整的設計倍率 ${adjustment.designToken} 不在設計文字中`);
-    check(describeSteps(skill.effect.steps).includes(adjustment.tunedToken), `${skill.id} 平衡調整後的倍率 ${adjustment.tunedToken} 未被實作`);
+    const skill = catalog.skills.get(adjustment.targetId);
+    const passive = catalog.passives.get(adjustment.targetId);
+    check(skill !== undefined || passive !== undefined, `平衡調整引用不存在的技能或被動 ${adjustment.targetId}`);
+    const target = skill?.effect
+      ? { designText: skill.designEffectText, generated: describeSteps(skill.effect.steps) }
+      : passive?.effect
+        ? { designText: passive.designRuleText, generated: describePassive(passive.effect) }
+        : null;
+    if (!target) continue;
+    check(target.designText.includes(adjustment.designToken), `${adjustment.targetId} 平衡調整的設計倍率 ${adjustment.designToken} 不在設計文字中`);
+    check(target.generated.includes(adjustment.tunedToken), `${adjustment.targetId} 平衡調整後的倍率 ${adjustment.tunedToken} 未被實作`);
   }
 
   // 三轉預設配置引用
