@@ -16,6 +16,13 @@ import { ActionButton, Chip, QualityBadge, Segmented, primitiveStyles as ps } fr
 import { formatAttack, formatBp, formatFull, formatStatValue, statLabel } from '../format/format.ts';
 import { baseOf, firstJobUnlockLevel, ownedItemsSorted, qualityName, referencingLoadoutLabels, slotLabel } from '../format/viewModels.ts';
 import styles from './screens.module.css';
+import { EquipIcon, HeroArt, SlotIcon, heroLookFor } from '../../art/index.ts';
+
+/** 職業樹節點的角色小圖寬度（viewBox 64×80）。 */
+const JOB_PORTRAIT_WIDTH = 38;
+/** 裝備列表的裝備圖示與空部位圖示寬度。 */
+const EQUIP_ROW_ICON = 32;
+const EQUIP_ROW_SLOT_ICON = 20;
 
 const TABS: readonly { value: CharacterTab; label: string }[] = [
   { value: 'equipment', label: '裝備' },
@@ -85,6 +92,9 @@ function EquipmentTab() {
             <li key={slot}>
               <button type="button" className={styles.listButton} onClick={() => openSheet({ kind: 'slot', slot })}>
                 <span className={styles.slotName}>{slotLabel(slot)}</span>
+                <span className={[styles.rowArt, `q-${item?.qualityId ?? 'Q1'}`, item ? styles.equipArtFilled : styles.equipArtEmpty].join(' ')} aria-hidden="true">
+                  {item ? <EquipIcon typeName={baseOf(catalog, item).typeName} slot={slot} size={EQUIP_ROW_ICON} /> : <SlotIcon slot={slot} size={EQUIP_ROW_SLOT_ICON} />}
+                </span>
                 <span className={ps.rowMain}>
                   {item ? (
                     <>
@@ -238,6 +248,9 @@ function BagTab() {
               onClick={() => (selecting ? toggle(item.id) : openSheet({ kind: 'itemDetail', itemId: item.id }))}
               aria-label={`${qualityName(catalog, item.qualityId)} ${baseOf(catalog, item).name} Lv${item.level}${refs.length ? '，使用中' : ''}${item.locked ? '，已鎖定' : ''}`}
             >
+              <span className={styles.itemArt} aria-hidden="true">
+                <EquipIcon typeName={baseOf(catalog, item).typeName} slot={item.slot} size={30} />
+              </span>
               <span className={styles.itemSlot}>{slotLabel(item.slot, true)}</span>
               <span className={styles.itemQuality}>{qualityName(catalog, item.qualityId)}</span>
               <span className="numeric">Lv{item.level}</span>
@@ -337,11 +350,16 @@ function JobNode({ jobId, unlocked, onOpen }: { jobId: string; unlocked: Readonl
       disabled={isCurrent || !availability.enabled}
       data-job={jobId}
     >
-      <span className={ps.rowTitle}>
-        {job.tier}轉・{job.name}
+      <span className={styles.jobArt} aria-hidden="true">
+        <HeroArt {...heroLookFor(catalog, jobId)} size={JOB_PORTRAIT_WIDTH} />
       </span>
-      <span className={ps.rowSub}>{skills}</span>
-      <span className={styles.jobStatus}>{status}</span>
+      <span className={styles.jobText}>
+        <span className={ps.rowTitle}>
+          {job.tier}轉・{job.name}
+        </span>
+        <span className={ps.rowSub}>{skills}</span>
+        <span className={styles.jobStatus}>{status}</span>
+      </span>
     </button>
   );
 }

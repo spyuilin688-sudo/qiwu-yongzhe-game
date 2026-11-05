@@ -23,13 +23,25 @@ test('Lv10 解鎖一轉並切換：技能列出現招式、不給經驗或金幣
   await expect(page.getByTestId('route-picker')).toContainText('劍士');
 });
 
-test('尚未實作的職業顯示停用原因，不能解鎖', async ({ page }) => {
+test('第二輪補完的路線可解鎖並切換：破陣騎士的招式出現在技能列', async ({ page }) => {
   await openGame(page, 'swordSaint');
+  const before = await gameState(page);
   await page.locator(nav('角色')).click();
   await page.getByRole('radio', { name: '職業' }).click();
   const node = page.locator('[data-job="JOB04"]');
-  await expect(node).toBeDisabled();
-  await expect(node).toContainText('原型尚未實作');
+  await expect(node).toBeEnabled();
+  await expect(node).toContainText('可解鎖');
+  await node.click();
+  await expect(page.getByTestId('job-switch-sheet')).toBeVisible();
+  await page.getByTestId('confirm-job-switch').click();
+  await expect(page.getByTestId('job-switch-sheet')).toHaveCount(0);
+  const after = await gameState(page);
+  expect(after.player.currentJobId).toBe('JOB04');
+  // 轉職不給經驗或金幣（C：經驗只來自鑑定、金幣只來自出售）。
+  expect(after.player.xp).toBe(before.player.xp);
+  expect(after.wallet.gold).toBe(before.wallet.gold);
+  await page.locator(nav('冒險')).click();
+  await expect(page.getByRole('button', { name: /盾刃突擊/ })).toBeVisible();
 });
 
 test('自動出售需確認條件；開啟後自動鑑定的普通裝備自動換成金幣', async ({ page }) => {

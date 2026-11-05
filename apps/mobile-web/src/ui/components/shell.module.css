@@ -58,8 +58,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 35% 30%, var(--avatar-light), var(--avatar-dark));
-  border: 2px solid var(--c-accent);
   font-weight: 800;
   font-size: var(--font-s);
 }
@@ -155,7 +153,7 @@
 }
 
 .navGlyph {
-  font-size: 1.15rem;
+  display: inline-flex;
   line-height: 1;
 }
 

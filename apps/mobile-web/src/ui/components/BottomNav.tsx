@@ -1,11 +1,12 @@
 import { useUi, type TabId } from '../../app/uiStore.tsx';
+import { UiIcon, type UiIconName } from '../../art/index.ts';
 import styles from './shell.module.css';
 
-const TABS: readonly { id: TabId; label: string; glyph: string }[] = [
-  { id: 'adventure', label: '冒險', glyph: '⚔' },
-  { id: 'character', label: '角色', glyph: '◈' },
-  { id: 'skills', label: '技能', glyph: '✦' },
-  { id: 'codex', label: '圖鑑', glyph: '❖' },
+const TABS: readonly { id: TabId; label: string; icon: UiIconName }[] = [
+  { id: 'adventure', label: '冒險', icon: 'adventure' },
+  { id: 'character', label: '角色', icon: 'character' },
+  { id: 'skills', label: '技能', icon: 'skills' },
+  { id: 'codex', label: '圖鑑', icon: 'codex' },
 ];
 
 /** 底部固定四個入口（UI-A14）；不放未定義的商城、社群、活動或充值。 */
@@ -22,7 +23,7 @@ export function BottomNav() {
           onClick={() => dispatch({ type: 'setTab', tab: tab.id })}
         >
           <span className={styles.navGlyph} aria-hidden="true">
-            {tab.glyph}
+            <UiIcon name={tab.icon} size={22} />
           </span>
           <span>{tab.label}</span>
         </button>

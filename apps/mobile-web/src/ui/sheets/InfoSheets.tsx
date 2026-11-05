@@ -6,6 +6,10 @@ import { ActionButton, Sheet, primitiveStyles as ps } from '../components/primit
 import { formatAttack, formatBp, formatFull } from '../format/format.ts';
 import { eliteStageNumbers, firstJobUnlockLevel } from '../format/viewModels.ts';
 import styles from './sheets.module.css';
+import { SkillIcon } from '../../art/index.ts';
+
+/** 面板內主圖寬度。 */
+const SHEET_ART_SIZE = 56;
 
 /** 技能詳情（UI-A05）：只查看；BOSS 中可查看不可修改。文案由效果參數產生。 */
 export function SkillDetailSheet({ skillId, onClose }: { skillId: string; onClose: () => void }) {
@@ -34,9 +38,12 @@ export function SkillDetailSheet({ skillId, onClose }: { skillId: string; onClos
         />
       }
     >
-      <p className={ps.note}>
-        {job?.tier}轉 {job?.name}・{skill.kind === 'ultimate' ? '絕招' : '常規技能'}・冷卻 {formatSeconds(skill.cooldownMs)}・{skill.tags.join('／')}
-      </p>
+      <div className={styles.artHeader}>
+        <SkillIcon skillId={skill.id} size={SHEET_ART_SIZE} />
+        <p className={ps.note}>
+          {job?.tier}轉 {job?.name}・{skill.kind === 'ultimate' ? '絕招' : '常規技能'}・冷卻 {formatSeconds(skill.cooldownMs)}・{skill.tags.join('／')}
+        </p>
+      </div>
       <p>{skill.description}</p>
       {skill.effect ? (
         <>

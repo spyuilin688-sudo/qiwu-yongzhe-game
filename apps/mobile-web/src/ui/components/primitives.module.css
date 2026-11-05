@@ -59,6 +59,20 @@
   width: 100%;
 }
 
+.labelRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.labelIcon {
+  display: inline-flex;
+}
+
+.labelIcon > svg {
+  display: block;
+}
+
 .subLabel {
   font-family: var(--font-family);
   font-size: var(--font-xs);
@@ -370,12 +384,20 @@
   color: var(--c-text-muted);
   font-size: var(--font-s);
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
 }
 
+/* 選取狀態同時用底色、勾號與 aria-pressed 表示，不只靠框線顏色。 */
 .chipOn {
-  background: var(--c-accent-soft);
-  border-color: var(--c-accent);
-  color: var(--c-text);
+  background: linear-gradient(180deg, var(--c-accent-strong), var(--c-accent));
+  border-color: var(--c-accent-strong);
+  color: var(--c-accent-ink);
+}
+
+.chipCheck {
+  flex: none;
 }
 
 .listRow {

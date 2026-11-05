@@ -10,9 +10,12 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background:
-    radial-gradient(ellipse at 70% 20%, var(--battle-sun), transparent 60%),
-    linear-gradient(180deg, var(--battle-sky-top) 0%, var(--battle-sky-bottom) 64%, var(--battle-ground) 64%, var(--battle-ground-deep) 100%);
+  /* 背景圖載入前與裁切邊緣的底色。 */
+  background: linear-gradient(180deg, var(--battle-sky-top) 0%, var(--battle-sky-bottom) 64%, var(--battle-ground) 64%, var(--battle-ground-deep) 100%);
+}
+
+.backdrop > svg {
+  display: block;
 }
 
 .hint,
@@ -47,18 +50,12 @@
 }
 
 .heroBody {
-  width: 52px;
-  height: 64px;
-  border-radius: 18px 18px 10px 10px;
+  width: 56px;
+  height: 70px;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  background: linear-gradient(180deg, var(--hero-top), var(--hero-bottom));
-  border: 2px solid var(--hero-rim);
-  font-size: var(--font-l);
-  font-weight: 800;
-  color: var(--hero-text);
-  box-shadow: 0 6px 0 var(--shade-25);
+  filter: drop-shadow(0 2px 2px var(--shade-45));
 }
 
 .heroLunge {
@@ -110,19 +107,14 @@
 }
 
 .nextSuit {
-  position: absolute;
-  top: -22px;
-  left: 50%;
-  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: var(--c-pop-bg);
-  color: var(--c-text);
-  font-size: var(--font-xs);
   white-space: nowrap;
+}
+
+.resourcePips > * + * {
+  margin-left: 6px;
 }
 
 .nextSuit [data-suit='0'],
@@ -137,7 +129,7 @@
 
 .units {
   position: absolute;
-  left: -34px;
+  left: -36px;
   bottom: 0;
   display: flex;
   flex-direction: column;
@@ -145,21 +137,43 @@
 }
 
 .unit {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  background: var(--unit-body);
-  border: 1px solid var(--unit-rim);
+  position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.625rem;
-  line-height: 1;
+  filter: drop-shadow(0 1px 1px var(--shade-45));
 }
 
-.unit small {
+.unit > svg {
+  display: block;
+}
+
+/* 剩餘秒數貼在召喚物右下角；常駐單位（戰獸）不顯示。 */
+.unitTimer {
+  position: absolute;
+  right: -4px;
+  bottom: -2px;
+  min-width: 14px;
+  padding: 0 2px;
+  border-radius: 7px;
+  background: var(--c-pop-bg);
+  color: var(--c-text);
   font-size: 0.5625rem;
+  line-height: 14px;
+  text-align: center;
+}
+
+/* 區域持續技（星陣、餘燼區域）鋪在敵群腳下，位於敵人圖層之下。 */
+.zone {
+  position: absolute;
+  top: 82%;
+  width: 46%;
+  max-width: 200px;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.zone > svg {
+  display: block;
 }
 
 /* ── 敵人 ── */
@@ -184,11 +198,13 @@
 }
 
 .enemyBody {
-  width: 44px;
-  height: 40px;
-  border-radius: 50% 50% 40% 40%;
-  background: radial-gradient(circle at 40% 35%, var(--enemy-light), var(--enemy-dark));
-  border: 2px solid var(--enemy-rim);
+  width: 48px;
+  max-width: 100%;
+  filter: drop-shadow(0 2px 2px var(--shade-45));
+}
+
+.enemyBody > svg {
+  display: block;
 }
 
 .enemyLarge {
@@ -197,16 +213,15 @@
 }
 
 .enemyLarge .enemyBody {
-  width: 72px;
-  height: 66px;
-  background: radial-gradient(circle at 40% 30%, var(--elite-light), var(--elite-dark));
-  border-color: var(--elite-rim);
+  width: 88px;
+}
+
+.enemy[data-enemy-kind='boss'] .enemyBody {
+  width: 112px;
 }
 
 .enemyAdd .enemyBody {
-  width: 32px;
-  height: 30px;
-  background: radial-gradient(circle at 40% 35%, var(--add-light), var(--add-dark));
+  width: 34px;
 }
 
 .enemyName {

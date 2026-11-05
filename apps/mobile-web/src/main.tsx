@@ -25,6 +25,14 @@ if (import.meta.env.DEV) installDevTools(host, storage);
 const root = document.getElementById('root');
 if (!root) throw new Error('找不到 #root');
 
+// 粉圓字型的 @font-face 表（111 個字元切片）約 90KB（gzip）；改為首屏後非同步載入，
+// 不阻擋第一次繪製。字型本身為 font-display: swap，載入前以系統字型顯示。
+void import('@fontsource/huninn/400.css');
+
+// 開發模式美術總覽：?gallery=1。動態載入，正式建置不包含。
+if (import.meta.env.DEV && params.has('gallery')) {
+  void import('./art/Gallery.tsx').then(({ Gallery }) => createRoot(root).render(<Gallery catalog={catalog} />));
+} else {
 createRoot(root).render(
   <StrictMode>
     <PrefsProvider storage={storage}>
@@ -36,3 +44,4 @@ createRoot(root).render(
     </PrefsProvider>
   </StrictMode>,
 );
+}

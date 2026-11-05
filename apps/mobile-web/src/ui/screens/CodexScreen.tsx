@@ -4,6 +4,7 @@ import { useCatalog, useGame } from '../../app/GameContext.tsx';
 import { Chip, Segmented, primitiveStyles as ps } from '../components/primitives.tsx';
 import { eliteStageNumbers, slotLabel } from '../format/viewModels.ts';
 import styles from './screens.module.css';
+import { EquipIcon, MapBackdrop, MonsterArt } from '../../art/index.ts';
 
 type CodexTab = 'maps' | 'monsters' | 'equipment';
 
@@ -61,6 +62,9 @@ function MapsTab() {
             </button>
             {open === map.number ? (
               <div className={styles.expand}>
+                <div className={[styles.mapThumb, !reachable && styles.silhouette].filter(Boolean).join(' ')} aria-hidden="true">
+                  <MapBackdrop mapNumber={map.number} />
+                </div>
                 <p className={ps.note}>小區：{map.zones.map((zone) => zone.name).join('、')}</p>
                 <p className={ps.note}>
                   小首領：
@@ -114,6 +118,9 @@ function MonstersTab() {
               const seen = discovered.has(monster.id);
               return (
                 <li key={monster.id} className={ps.listRow}>
+                  <span className={[styles.rowArt, !seen && styles.silhouette].filter(Boolean).join(' ')} aria-hidden="true">
+                    <MonsterArt monsterId={monster.id} size={group.label === '小首領' ? 52 : 44} />
+                  </span>
                   <span className={ps.rowMain}>
                     <span className={ps.rowTitle}>{seen ? monster.name : '？？？'}</span>
                     <span className={ps.rowSub}>
@@ -129,6 +136,9 @@ function MonstersTab() {
       ))}
       <h3 className={styles.familyTitle}>地圖 BOSS</h3>
       <div className={ps.listRow}>
+        <span className={[styles.rowArt, !bossSeen && styles.silhouette].filter(Boolean).join(' ')} aria-hidden="true">
+          <MonsterArt monsterId={map.boss.id} size={72} />
+        </span>
         <span className={ps.rowMain}>
           <span className={ps.rowTitle}>{bossSeen ? map.boss.name : '？？？'}</span>
           <span className={ps.rowSub}>{bossSeen ? map.bossFeature : '召喚挑戰後記錄'}</span>
@@ -169,6 +179,9 @@ function EquipmentCodexTab() {
       <ul className={styles.list}>
         {bases.map((base) => (
           <li key={base.id} className={ps.listRow}>
+            <span className={[styles.rowArt, !discovered.has(base.id) && styles.silhouette].filter(Boolean).join(' ')} aria-hidden="true">
+              <EquipIcon typeName={base.typeName} slot={base.slot} size={40} />
+            </span>
             <span className={ps.rowMain}>
               <span className={ps.rowTitle}>
                 {base.name}
@@ -179,7 +192,6 @@ function EquipmentCodexTab() {
               </span>
               <span className={ps.rowSub}>
                 傳說：{base.legendText}
-                {base.legend ? '' : '（原型尚未實作）'}
               </span>
             </span>
           </li>

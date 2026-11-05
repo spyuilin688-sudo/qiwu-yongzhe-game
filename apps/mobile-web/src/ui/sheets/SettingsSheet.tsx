@@ -1,3 +1,4 @@
+import type { ContentCatalog } from '@qiwu/content';
 import { useCatalog, useGame, useHost, useSend } from '../../app/GameContext.tsx';
 import { TEXT_SCALES, usePrefs } from '../../app/prefs.tsx';
 import { useUi } from '../../app/uiStore.tsx';
@@ -23,19 +24,23 @@ const DEV_FIXTURES: readonly { name: FixtureName; label: string }[] = [
   { name: 'bossReady', label: '第 30 關（Lv10 見習者）' },
   { name: 'bossStrong', label: '第 30 關（強化劍士）' },
   { name: 'fullBag', label: '背包已滿' },
-  { name: 'swordSaint', label: '劍聖 Lv80（戰意）' },
-  { name: 'mechCommander', label: '機械統帥 Lv80（砲台／機甲）' },
 ];
+
+/** 14 條三轉路線各一個 Lv80 夾具，用來在手機上預覽各路線的機制與美術。 */
+function routeFixtures(catalog: ContentCatalog): { name: FixtureName; label: string }[] {
+  return [...catalog.jobs.values()].filter((job) => job.tier === 3).map((job) => ({ name: `route:${job.id}` as const, label: `${job.name} Lv80` }));
+}
 
 /** 僅開發模式：在手機上直接載入測試前置狀態，用來檢查二、三轉的差異機制。正式建置不包含。 */
 function DevFixtures({ onClose }: { onClose: () => void }) {
   const { dispatch } = useUi();
+  const catalog = useCatalog();
   return (
     <>
       <h3 className={ps.sectionTitle}>開發測試（僅開發模式）</h3>
       <p className={ps.note}>載入後會覆蓋目前本機存檔。夾具只建立前置狀態，之後的操作仍走正式命令流程。</p>
       <div className={ps.chipRow}>
-        {DEV_FIXTURES.map((fixture) => (
+        {[...DEV_FIXTURES, ...routeFixtures(catalog)].map((fixture) => (
           <ActionButton
             key={fixture.name}
             label={fixture.label}

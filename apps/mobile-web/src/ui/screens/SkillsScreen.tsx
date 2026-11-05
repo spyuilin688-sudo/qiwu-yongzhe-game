@@ -7,6 +7,10 @@ import { useEffectiveLoadoutView } from '../adventure/SkillBar.tsx';
 import { ActionButton, Segmented, primitiveStyles as ps } from '../components/primitives.tsx';
 import { firstJobUnlockLevel } from '../format/viewModels.ts';
 import styles from './screens.module.css';
+import { SkillIcon } from '../../art/index.ts';
+
+/** 技能清單列的小圖示寬度（viewBox 48×48）。 */
+const SKILL_ICON_SMALL = 28;
 
 interface Draft {
   skillIds: string[];
@@ -128,7 +132,8 @@ export function SkillsScreen() {
             return (
               <li key={skillId} className={styles.skillRow}>
                 <div className={ps.rowMain}>
-                  <div className={ps.rowTitle}>
+                  <div className={[ps.rowTitle, styles.skillTitleWithIcon].join(' ')}>
+                    <SkillIcon skillId={skillId} size={SKILL_ICON_SMALL} />
                     {index + 1}. {skill.name}
                   </div>
                   <div className={ps.rowSub}>
@@ -253,7 +258,8 @@ function SkillListRow({
   return (
     <div className={styles.skillRow}>
       <button type="button" className={styles.skillInfo} onClick={onDetail}>
-        <span className={ps.rowTitle}>
+        <span className={[ps.rowTitle, styles.skillTitleWithIcon].join(' ')}>
+          <SkillIcon skillId={skill.id} size={SKILL_ICON_SMALL} />
           {skill.name}
           {isUltimate ? '【絕招】' : ''}
         </span>

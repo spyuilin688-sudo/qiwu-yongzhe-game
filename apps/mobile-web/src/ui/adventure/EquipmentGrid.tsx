@@ -1,10 +1,18 @@
 import { SLOT_IDS, slotsAvailableForJob } from '@qiwu/content';
+import { memo } from 'react';
 import { readLoadout } from '@qiwu/game-core';
 import { useCatalog, useGame } from '../../app/GameContext.tsx';
 import { useOpenSheet, useUi } from '../../app/uiStore.tsx';
 import { baseOf, qualityShort, slotLabel } from '../format/viewModels.ts';
+import { EquipIcon, SlotIcon } from '../../art/index.ts';
 import styles from './adventure.module.css';
 import { useEffectiveLoadoutView } from './SkillBar.tsx';
+
+/** 古物等狀態頻繁更新時，裝備圖不變就不重繪。 */
+const EquipArt = memo(EquipIcon);
+const EQUIP_ICON_SIZE = 22;
+const SLOT_ICON_SIZE = 18;
+const SlotArt = memo(SlotIcon);
 
 /** 八個裝備格（UI-A07）：2 列 × 4 格；部位與品質以文字顯示。短螢幕時收合為 60 高摘要列。 */
 export function EquipmentGrid() {
@@ -50,6 +58,9 @@ export function EquipmentGrid() {
               }
               data-slot={slot}
             >
+              <span className={styles.equipIcon} aria-hidden="true">
+                {item ? <EquipArt typeName={baseOf(catalog, item).typeName} slot={slot} size={EQUIP_ICON_SIZE} /> : <SlotArt slot={slot} size={SLOT_ICON_SIZE} />}
+              </span>
               <span className={styles.equipSlot}>{label}</span>
               {item ? (
                 <span className={styles.equipInfo}>

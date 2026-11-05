@@ -115,9 +115,3 @@ export function needsSellConfirm(catalog: ContentCatalog, qualityId: QualityId):
   const threshold = catalog.qualities.get(catalog.tuning.identify.defaultKeepMinQuality)?.rank ?? Number.POSITIVE_INFINITY;
   return rank >= threshold;
 }
-
-export function jobGlyph(catalog: ContentCatalog, jobId: string): string {
-  const job = catalog.jobs.get(jobId);
-  if (!job || job.tier === 0) return '見';
-  return (job.familyName ?? job.name).slice(0, 1);
-}

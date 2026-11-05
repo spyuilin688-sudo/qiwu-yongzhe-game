@@ -181,3 +181,23 @@
   font-weight: 800;
   overflow-wrap: anywhere;
 }
+
+/* ── 面板主圖（技能、BOSS、裝備） ── */
+.artHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.artHeader > svg {
+  flex: none;
+}
+
+.itemArt {
+  flex: none;
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--q);
+  background: color-mix(in srgb, var(--q) 12%, var(--c-surface-2));
+}

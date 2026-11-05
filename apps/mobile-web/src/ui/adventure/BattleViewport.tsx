@@ -1,16 +1,38 @@
 import { RESOURCE_LABELS, SUIT_NAMES, UNIT_LABELS, bossStageLocalNumber, getStageAt, type ResourceId } from '@qiwu/content';
 import { availabilityOf, assertCanStartBoss, type BattleView, type EnemyView } from '@qiwu/game-core';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { useBattleView, useCatalog, useGame, useHostEvents, useSend } from '../../app/GameContext.tsx';
 import { useOpenSheet, useUi } from '../../app/uiStore.tsx';
 import { usePrefs } from '../../app/prefs.tsx';
 import { formatClock, formatCompact } from '../format/format.ts';
-import { jobGlyph } from '../format/viewModels.ts';
+import { AddArt, HeroArt, MapBackdrop, MonsterArt, heroLookFor } from '../../art/index.ts';
+import { UnitArt } from '../../art/units/UnitArt.tsx';
 import { ActionButton } from '../components/primitives.tsx';
 import styles from './battle.module.css';
 
 /** 戰場構圖（規格 07）：角色腳點在寬 24%；敵人依 62%、76%、90% 排列，最多 3 敵。 */
 const ENEMY_X = [62, 76, 90] as const;
+/**
+ * 戰場每 50ms 依快照重繪；向量圖本身與戰況無關（只依職業、怪物、地圖），
+ * 以 memo 包裝讓 React 跳過未變動的 SVG 樹，避免每刻重建數百個節點。
+ */
+const BackdropArt = memo(MapBackdrop);
+const HeroPortrait = memo(HeroArt);
+const EnemyPortrait = memo(MonsterArt);
+const AddPortrait = memo(AddArt);
+const UnitPortrait = memo(UnitArt);
+
+/** 角色圖寬度（viewBox 64×80）；與 .heroBody 尺寸一致。 */
+const HERO_ART_WIDTH = 56;
+/** 角色身旁召喚物圖寬度（viewBox 40×40）。 */
+const UNIT_ART_SIZE = 30;
+/** 每張地圖 6 個小區、每區 5 關；第 6 區（26～30 關）為 BOSS 王庭。 */
+const STAGES_PER_ZONE = 5;
+
+function zoneIndexOf(localStage: number): number {
+  return Math.floor((localStage - 1) / STAGES_PER_ZONE);
+}
+
 /** 花色符號只是輔助，旁邊一律附文字（下一張）並在 aria-label 給完整花色名。 */
 const SUIT_GLYPHS = ['♥', '♦', '♣', '♠'] as const;
 const BOSS_BODY_X = 76;
@@ -96,11 +118,17 @@ export function BattleViewport() {
   const mode = state.progress.mode;
   const positions = view ? enemyPositions(view) : new Map<number, number>();
   const resources = view ? (Object.entries(view.hero.resources) as [ResourceId, number][]) : [];
+  const heroLook = heroLookFor(catalog, state.player.currentJobId);
+  // 區域（星陣、餘燼）畫在敵群腳下；其餘召喚物排在角色身旁。
+  const zones = view?.hero.units.filter((unit) => unit.kind === 'zone') ?? [];
+  const companions = view?.hero.units.filter((unit) => unit.kind !== 'zone') ?? [];
 
   const showSummon = state.progress.mode === 'BOSS_READY' || state.progress.mode === 'FARM_BLOCKED';
   return (
     <div className={styles.viewport} data-testid="battle-viewport" data-summon={showSummon}>
-      <div className={styles.backdrop} aria-hidden="true" />
+      <div className={styles.backdrop} aria-hidden="true">
+        <BackdropArt mapNumber={state.progress.mapNumber} zoneIndex={zoneIndexOf(state.progress.localStage)} />
+      </div>
       {view?.boss ? <BossBar view={view} /> : null}
       {mode === 'FARM_BLOCKED' ? (
         <p className={styles.hint}>BOSS 未通過：持續刷怪累積古物，先鑑定變強，再手動召喚。</p>
@@ -109,48 +137,60 @@ export function BattleViewport() {
 
       <div className={styles.hero} style={{ left: '24%' }} aria-label="角色">
         <div key={heroAction.key} className={[styles.heroBody, heroAction.key > 0 && styles.heroLunge].filter(Boolean).join(' ')}>
-          {jobGlyph(catalog, state.player.currentJobId)}
+          <HeroPortrait {...heroLook} size={HERO_ART_WIDTH} />
         </div>
         {heroAction.skillName ? (
           <span key={`s${heroAction.key}`} className={styles.skillPop}>
             {heroAction.skillName}
           </span>
         ) : null}
-        {resources.length > 0 ? (
+        {resources.length > 0 || view?.hero.cards ? (
           <div className={styles.resourcePips} aria-label="角色資源">
             {resources.map(([id, value]) => (
               <span key={id}>
                 {RESOURCE_LABELS[id]} {value}
               </span>
             ))}
+            {view?.hero.cards ? (
+              <span className={styles.nextSuit} aria-label={`下一張牌：${SUIT_NAMES[view.hero.cards.nextSuit]}${view.hero.cards.setPending ? '（已切牌）' : ''}`}>
+                下一張
+                <span aria-hidden="true" data-suit={view.hero.cards.nextSuit}>
+                  {SUIT_GLYPHS[view.hero.cards.nextSuit]}
+                </span>
+              </span>
+            ) : null}
           </div>
         ) : null}
-        {view?.hero.cards ? (
-          <span className={styles.nextSuit} aria-label={`下一張牌：${SUIT_NAMES[view.hero.cards.nextSuit]}${view.hero.cards.setPending ? '（已切牌）' : ''}`}>
-            <span aria-hidden="true" data-suit={view.hero.cards.nextSuit}>
-              {SUIT_GLYPHS[view.hero.cards.nextSuit]}
-            </span>
-            下一張
-          </span>
-        ) : null}
-        {view && view.hero.units.length > 0 ? (
-          <div className={styles.units}>
-            {view.hero.units.map((unit) => (
+        {companions.length > 0 ? (
+          <div className={styles.units} aria-label="召喚物">
+            {companions.map((unit) => (
               <span
                 key={unit.uid}
                 className={styles.unit}
-                title={unit.permanent ? `${UNIT_LABELS[unit.kind]}（常駐）` : `${UNIT_LABELS[unit.kind]} 剩 ${Math.ceil(unit.remainingMs / 1000)} 秒`}
+                role="img"
+                aria-label={unit.permanent ? `${UNIT_LABELS[unit.kind]}（常駐）` : `${UNIT_LABELS[unit.kind]} 剩 ${Math.ceil(unit.remainingMs / 1000)} 秒`}
               >
-                {UNIT_LABELS[unit.kind].slice(0, 1)}
-                {unit.permanent ? null : <small className="numeric">{Math.ceil(unit.remainingMs / 1000)}</small>}
+                <UnitPortrait kind={unit.kind} size={UNIT_ART_SIZE} />
+                {unit.permanent ? null : <small className={`${styles.unitTimer} numeric`}>{Math.ceil(unit.remainingMs / 1000)}</small>}
               </span>
             ))}
           </div>
         ) : null}
       </div>
 
+      {zones.map((zone) => (
+        <div key={zone.uid} className={styles.zone} style={{ left: `${ENEMY_X[1]}%` }} role="img" aria-label={`${UNIT_LABELS.zone} 剩 ${Math.ceil(zone.remainingMs / 1000)} 秒`}>
+          <UnitPortrait kind="zone" />
+        </div>
+      ))}
       {view?.enemies.map((enemy) => (
-        <Enemy key={enemy.uid} enemy={enemy} x={positions.get(enemy.uid) ?? ENEMY_X[1]} isBody={enemy.uid === view.boss?.bodyUid} />
+        <Enemy
+          key={enemy.uid}
+          enemy={enemy}
+          x={positions.get(enemy.uid) ?? ENEMY_X[1]}
+          isBody={enemy.uid === view.boss?.bodyUid}
+          mapNumber={state.progress.mapNumber}
+        />
       ))}
 
       {floats.map((item) => (
@@ -172,7 +212,7 @@ export function BattleViewport() {
   );
 }
 
-function Enemy({ enemy, x, isBody }: { enemy: EnemyView; x: number; isBody: boolean }) {
+function Enemy({ enemy, x, isBody, mapNumber }: { enemy: EnemyView; x: number; isBody: boolean; mapNumber: number }) {
   const large = enemy.kind === 'boss' || enemy.kind === 'elite';
   return (
     <div
@@ -185,7 +225,9 @@ function Enemy({ enemy, x, isBody }: { enemy: EnemyView; x: number; isBody: bool
           <span style={{ width: `${(enemy.hp / enemy.maxHp) * 100}%` }} />
         </div>
       ) : null}
-      <div className={styles.enemyBody} aria-hidden="true" />
+      <div className={styles.enemyBody} aria-hidden="true">
+        {enemy.kind === 'add' ? <AddPortrait mapNumber={mapNumber} /> : <EnemyPortrait monsterId={enemy.monsterId} />}
+      </div>
       <span className={styles.enemyName}>{enemy.name}</span>
       {enemy.statuses.length > 0 || enemy.traits.length > 0 ? (
         <span className={styles.statusRow}>

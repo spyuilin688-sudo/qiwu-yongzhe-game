@@ -1,10 +1,15 @@
+import { memo } from 'react';
 import { skillSelectionRule } from '@qiwu/content';
 import { readLoadout, type LoadoutPurpose } from '@qiwu/game-core';
 import { useBattleView, useCatalog, useGame } from '../../app/GameContext.tsx';
 import { useOpenSheet, useUi } from '../../app/uiStore.tsx';
 import { formatSecondsShort } from '../format/format.ts';
 import { firstJobUnlockLevel } from '../format/viewModels.ts';
+import { SkillIcon } from '../../art/index.ts';
 import styles from './adventure.module.css';
+
+/** 冷卻每刻更新；技能圖不變，memo 避免每刻重繪 SVG。 */
+const SkillArt = memo(SkillIcon);
 
 /** 目前畫面顯示／編輯的配置；BOSS 戰中固定為打王配置且不可切換（UI-A06 戰鬥中凍結修改）。 */
 export function useEffectiveLoadoutView(): { view: LoadoutPurpose; frozen: boolean } {
@@ -67,6 +72,9 @@ export function SkillBar() {
               onClick={() => openSheet({ kind: 'skillDetail', skillId: skill.id })}
               aria-label={`${skill.name}${cooldown && cooldown.remainingMs > 0 ? `，冷卻 ${formatSecondsShort(cooldown.remainingMs)} 秒` : ''}。查看技能詳情`}
             >
+              <span className={styles.skillArt} aria-hidden="true">
+                <SkillArt skillId={skill.id} />
+              </span>
               <span className={styles.skillName}>{skill.name}</span>
               {ratio > 0 ? (
                 <span className={styles.skillCooldown} style={{ height: `${ratio * 100}%` }} aria-hidden="true" />

@@ -1,6 +1,7 @@
 import type { ContentCatalog, QualityId } from '@qiwu/content';
 import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode, type Ref } from 'react';
 import { qualityName } from '../format/viewModels.ts';
+import { UiIcon } from '../../art/index.ts';
 import styles from './primitives.module.css';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -12,10 +13,12 @@ export interface ActionButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonE
   readonly block?: boolean;
   /** 次要說明；停用時應填入停用原因，不能只變灰讓玩家猜（規格 07）。 */
   readonly subLabel?: ReactNode;
+  /** 標題前的輔助圖示（裝飾用，aria-hidden）；文字仍是主要資訊。 */
+  readonly icon?: ReactNode;
   readonly ref?: Ref<HTMLButtonElement>;
 }
 
-export function ActionButton({ label, variant = 'secondary', size = 'm', block, subLabel, className, ref, ...rest }: ActionButtonProps) {
+export function ActionButton({ label, variant = 'secondary', size = 'm', block, subLabel, icon, className, ref, ...rest }: ActionButtonProps) {
   const classes = [
     styles.button,
     variant === 'primary' && styles.primary,
@@ -29,7 +32,16 @@ export function ActionButton({ label, variant = 'secondary', size = 'm', block, 
     .join(' ');
   return (
     <button ref={ref} type="button" className={classes} {...rest}>
-      <span>{label}</span>
+      {icon ? (
+        <span className={styles.labelRow}>
+          <span className={styles.labelIcon} aria-hidden="true">
+            {icon}
+          </span>
+          <span>{label}</span>
+        </span>
+      ) : (
+        <span>{label}</span>
+      )}
       {subLabel ? <span className={styles.subLabel}>{subLabel}</span> : null}
     </button>
   );
@@ -83,7 +95,7 @@ export function Sheet({ title, onClose, children, footer, headerExtra, compact, 
           </h2>
           {headerExtra}
           <IconButton label="關閉" onClick={onClose}>
-            ✕
+            <UiIcon name="close" size={20} />
           </IconButton>
         </div>
         <div className={styles.sheetBody}>{children}</div>
@@ -153,6 +165,7 @@ export function Toggle({ label, description, on, onChange, disabled }: { label: 
 export function Chip({ label, on, onClick, disabled }: { label: string; on: boolean; onClick: () => void; disabled?: boolean }) {
   return (
     <button type="button" className={[styles.chip, on && styles.chipOn].filter(Boolean).join(' ')} aria-pressed={on} onClick={onClick} disabled={disabled}>
+      {on ? <UiIcon name="check" size={14} className={styles.chipCheck} /> : null}
       {label}
     </button>
   );

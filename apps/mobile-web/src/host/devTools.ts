@@ -1,3 +1,4 @@
+import { jobLineage } from '@qiwu/content';
 import { createInitialState, defaultEquipFixture, serializeSave, type GameState } from './devFixtures.ts';
 import type { LocalGameHost } from './LocalGameHost.ts';
 import { STORAGE_KEYS, type KeyValueStorage } from './storage.ts';
@@ -14,7 +15,13 @@ export interface QiwuDevTools {
   state(): unknown;
 }
 
-export type FixtureName = 'fresh' | 'gold' | 'lv10' | 'bossReady' | 'bossStrong' | 'fullBag' | 'swordSaint' | 'mechCommander';
+/** route:JOBxx 載入該三轉路線的 Lv80 角色（路線全部職業已解鎖、全身稀有裝備）。 */
+export type RouteFixtureName = `route:${string}`;
+export type FixtureName = 'fresh' | 'gold' | 'lv10' | 'bossReady' | 'bossStrong' | 'fullBag' | 'swordSaint' | 'mechCommander' | RouteFixtureName;
+
+/** 三轉路線夾具的等級與裝備品質（只用於開發預覽）。 */
+const ROUTE_FIXTURE_LEVEL = 80;
+const ROUTE_FIXTURE_QUALITY = 'Q3';
 
 declare global {
   interface Window {
@@ -70,18 +77,21 @@ function buildFixture(host: LocalGameHost, name: FixtureName): GameState {
       return state;
     }
     case 'swordSaint':
-      state.player.level = 80;
-      state.player.unlockedJobIds = ['JOB01', 'JOB02', 'JOB03'];
-      state.player.currentJobId = 'JOB03';
-      state.identifySettings.targetJobId = 'JOB03';
-      defaultEquipFixture(catalog, state, 'JOB03', 80, 'Q3');
-      return state;
+      return routeFixture(host, state, 'JOB03');
     case 'mechCommander':
-      state.player.level = 80;
-      state.player.unlockedJobIds = ['JOB31', 'JOB34', 'JOB35'];
-      state.player.currentJobId = 'JOB35';
-      state.identifySettings.targetJobId = 'JOB35';
-      defaultEquipFixture(catalog, state, 'JOB35', 80, 'Q3');
-      return state;
+      return routeFixture(host, state, 'JOB35');
+    default:
+      return routeFixture(host, state, name.slice('route:'.length));
   }
+}
+
+function routeFixture(host: LocalGameHost, state: GameState, jobId: string): GameState {
+  const catalog = host.catalog;
+  const lineage = jobLineage(catalog, jobId).map((job) => job.id);
+  state.player.level = ROUTE_FIXTURE_LEVEL;
+  state.player.unlockedJobIds = lineage;
+  state.player.currentJobId = jobId;
+  state.identifySettings.targetJobId = jobId;
+  defaultEquipFixture(catalog, state, jobId, ROUTE_FIXTURE_LEVEL, ROUTE_FIXTURE_QUALITY);
+  return state;
 }

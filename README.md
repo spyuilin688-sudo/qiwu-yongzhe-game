@@ -22,7 +22,7 @@
 
 ---
 
-## 開發與啟動（第一階段原型）
+## 開發與啟動（原型）
 
 需求：Node.js 22.12 以上、npm 10。
 
@@ -36,14 +36,17 @@ npm run preview          # 預覽正式建置 http://localhost:4173
 驗證（全部在本機執行，不使用 GitHub Actions）：
 
 ```bash
-npm run typecheck        # 三個套件的 TypeScript 型別檢查
-npm run validate:content # 35 職業／70 技能／88 裝備／12 圖／360 關等內容自動檢查
-npm test                 # 核心規則、經濟、BOSS 狀態機、戰鬥機制單元測試
+npm run typecheck        # 三個套件與平衡工具的 TypeScript 型別檢查
+npm run validate:content # 35 職業／70 技能／88 裝備／12 圖／360 關等內容自動檢查（含設計倍率與實作一致）
+npm test                 # 核心規則、經濟、BOSS 狀態機、戰鬥機制、35 職業壓力測試、美術渲染測試
 npm run e2e              # Playwright：核心循環與 320／360／390／430 寬版面（會自動啟動開發伺服器）
+npm run balance          # 14 路線同投入平衡模擬，輸出 docs/BALANCE_REPORT.md（本機離線，約 10 秒）
+npm run balance:breakdown -- JOB03 JOB28   # 指定路線的傷害來源拆解
 ```
 
 開發模式小工具（只在 `npm run dev` 有效，正式建置不會包含）：
 - 網址加 `?devSpeed=10` 以 10 倍時間推進（畫面上會顯示「開發加速」標記）。
-- 瀏覽器主控台 `window.__qiwuDev.loadFixture('bossReady')` 載入測試前置狀態；可用名稱：`fresh`、`gold`、`lv10`、`bossReady`、`bossStrong`、`fullBag`、`swordSaint`、`mechCommander`。
+- 瀏覽器主控台 `window.__qiwuDev.loadFixture('bossReady')` 載入測試前置狀態；可用名稱：`fresh`、`gold`、`lv10`、`bossReady`、`bossStrong`、`fullBag`、`swordSaint`、`mechCommander`，以及 14 條三轉路線的 `route:JOB03`～`route:JOB35`（Lv80、全身稀有）。手機上可在「更多 → 開發測試」直接點選。
+- 網址加 `?gallery=1` 開啟美術總覽（角色、怪物、BOSS、背景、圖示、召喚物）。
 
-實作說明、規則落點與假設見 `docs/IMPLEMENTATION_NOTES.md`。
+實作說明、規則落點與假設見 `docs/IMPLEMENTATION_NOTES.md`；平衡結果見 `docs/BALANCE_REPORT.md`。

@@ -147,6 +147,28 @@
   border-style: dashed;
 }
 
+.skillArt {
+  position: absolute;
+  inset: 2px;
+  display: flex;
+}
+
+.skillArt > svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* 有技能圖時名稱貼底並加深底色，確保圖上文字對比。 */
+.skillArt + .skillName {
+  align-self: flex-end;
+  width: 100%;
+  padding: 1px 2px;
+  border-radius: 0 0 var(--radius-s) var(--radius-s);
+  background: linear-gradient(180deg, transparent, var(--shade-60) 35%);
+  font-size: 0.625rem;
+  -webkit-line-clamp: 1;
+}
+
 .skillName {
   position: relative;
   z-index: 1;
@@ -175,21 +197,23 @@
   pointer-events: none;
 }
 
+/* 冷卻秒數置中於圖示上（名稱在底部），兩者不重疊。 */
 .skillTimer {
   position: absolute;
-  right: 3px;
-  bottom: 1px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -62%);
   z-index: 2;
-  font-size: 0.625rem;
-  font-weight: 800;
+  font-size: var(--font-m);
   color: var(--c-timer);
+  text-shadow: 0 1px 2px var(--c-black);
 }
 
 .skillWaiting {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
+  top: 0;
   z-index: 2;
   font-size: 0.5625rem;
   background: var(--c-accent-banner);
@@ -280,8 +304,20 @@
   background: color-mix(in srgb, var(--q) 10%, var(--c-surface-2));
 }
 
+.equipIcon {
+  display: flex;
+  height: 22px;
+  align-items: center;
+  color: var(--c-text-dim);
+}
+
+.equipIcon > svg {
+  display: block;
+}
+
 .equipSlot {
   font-size: 0.6875rem;
+  line-height: 1.1;
   color: var(--c-text-dim);
 }
 
@@ -551,8 +587,9 @@
 :global(html[data-text-scale='1.5']) .skillTimer,
 :global(html[data-text-scale='2']) .skillTimer {
   position: relative;
-  right: auto;
-  bottom: auto;
+  top: auto;
+  left: auto;
+  transform: none;
 }
 
 :global(html[data-text-scale='1.5']) .stageName,
@@ -560,4 +597,10 @@
 :global(html[data-text-scale='1.5']) .stageMapName,
 :global(html[data-text-scale='2']) .stageMapName {
   white-space: normal;
+}
+
+/* 字體放大時文字優先：隱藏輔助圖示，保留部位與品質文字。 */
+:global(html[data-text-scale='1.5']) .equipIcon,
+:global(html[data-text-scale='2']) .equipIcon {
+  display: none;
 }

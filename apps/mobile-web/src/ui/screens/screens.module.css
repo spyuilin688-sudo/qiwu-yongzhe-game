@@ -207,10 +207,27 @@
   border: 1px solid var(--c-border-strong);
   background: var(--c-surface-2);
   display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: left;
+}
+
+.jobArt {
+  flex: none;
+  display: flex;
+}
+
+.jobArt > svg {
+  display: block;
+}
+
+.jobText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  text-align: left;
 }
 
 .jobNode:disabled {
@@ -374,4 +391,72 @@
   margin: 0;
   padding-left: 1.2em;
   font-size: var(--font-s);
+}
+
+/* ── 美術縮圖（圖鑑、背包） ── */
+.rowArt {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+}
+
+.rowArt > svg {
+  display: block;
+}
+
+/* 未發現的怪物與裝備只顯示剪影，不提前暴露外觀。 */
+.silhouette > svg {
+  filter: brightness(0) opacity(0.45);
+}
+
+.mapThumb {
+  width: 100%;
+  height: 140px;
+  border-radius: var(--radius-s);
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+}
+
+.itemArt {
+  display: flex;
+  height: 30px;
+  align-items: center;
+}
+
+.itemArt > svg {
+  display: block;
+}
+
+:global(html[data-text-scale='1.5']) .itemArt,
+:global(html[data-text-scale='2']) .itemArt {
+  display: none;
+}
+
+.skillTitleWithIcon {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.skillTitleWithIcon > svg {
+  flex: none;
+}
+
+.equipArtFilled,
+.equipArtEmpty {
+  min-width: 40px;
+  height: 40px;
+  border-radius: var(--radius-s);
+}
+
+.equipArtFilled {
+  border: 1px solid var(--q);
+  background: color-mix(in srgb, var(--q) 10%, var(--c-surface-2));
+}
+
+.equipArtEmpty {
+  border: 1px dashed var(--c-border-strong);
+  color: var(--c-text-dim);
 }

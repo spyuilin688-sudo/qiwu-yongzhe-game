@@ -8,7 +8,12 @@ import {
 } from '@qiwu/game-core';
 import { useCatalog, useGame, useHost, useSend } from '../../app/GameContext.tsx';
 import { useOpenSheet, useUi } from '../../app/uiStore.tsx';
+import { UiIcon } from '../../art/index.ts';
 import { ActionButton } from '../components/primitives.tsx';
+
+/** 鑑定區按鈕內的輔助圖示大小（與按鈕字級一致）。 */
+const DOCK_ICON_SIZE = 16;
+const MAIN_ICON_SIZE = 20;
 import { formatCompact } from '../format/format.ts';
 import { qualityShort } from '../format/viewModels.ts';
 import styles from './adventure.module.css';
@@ -96,6 +101,7 @@ export function MainActions() {
         className={styles.identifyButton}
         variant="primary"
         size="l"
+        icon={<UiIcon name="lens" size={MAIN_ICON_SIZE} />}
         label="鑑定一次"
         subLabel={identifySub}
         disabled={identifyDisabled}
@@ -129,8 +135,22 @@ export function SecondaryActions() {
   const relicPercent = (state.wallet.relicProgress / catalog.tuning.relic.pointsPerRelic) * 100;
   return (
     <div className={styles.secondaryRow}>
-      <ActionButton className={styles.secondaryButton} label="篩選" subLabel="保留・出售" onClick={() => openSheet({ kind: 'filter' })} data-testid="filter-open" />
-      <ActionButton className={styles.routeButton} label="產出路線" subLabel={targetLabel} onClick={() => openSheet({ kind: 'routePicker' })} data-testid="route-picker" />
+      <ActionButton
+        className={styles.secondaryButton}
+        icon={<UiIcon name="filter" size={DOCK_ICON_SIZE} />}
+        label="篩選"
+        subLabel="保留・出售"
+        onClick={() => openSheet({ kind: 'filter' })}
+        data-testid="filter-open"
+      />
+      <ActionButton
+        className={styles.routeButton}
+        icon={<UiIcon name="route" size={DOCK_ICON_SIZE} />}
+        label="產出路線"
+        subLabel={targetLabel}
+        onClick={() => openSheet({ kind: 'routePicker' })}
+        data-testid="route-picker"
+      />
       <div className={styles.relicStock} aria-label={`古物剩餘 ${state.wallet.relics} 件，背包 ${bagCount}/${catalog.globals.backpackCapacity}`}>
         <span className={styles.relicCount + ' numeric'}>古物 {formatCompact(state.wallet.relics)}</span>
         <span className={styles.relicNext} aria-hidden="true">

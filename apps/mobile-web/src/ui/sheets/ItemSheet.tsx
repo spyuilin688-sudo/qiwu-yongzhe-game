@@ -15,6 +15,10 @@ import { ActionButton, QualityBadge, Sheet, primitiveStyles as ps } from '../com
 import { formatStatDiff, formatStatValue, statLabel } from '../format/format.ts';
 import { baseOf, compareItems, equippedInSlot, needsSellConfirm, qualityName, referencingLoadoutLabels, slotLabel, type ReadonlyItem } from '../format/viewModels.ts';
 import styles from './sheets.module.css';
+import { EquipIcon } from '../../art/index.ts';
+
+/** 面板標題列的圖示寬度。 */
+const SHEET_ART_SIZE = 40;
 
 type IdentifySheet = Extract<SheetState, { kind: 'identifyResult' }>;
 
@@ -111,6 +115,9 @@ export function ItemSheet({ itemId, mode, identify, onClose }: { itemId: string;
       testId="item-sheet"
       title={
         <span className={styles.itemTitle}>
+          <span className={`${styles.itemArt} q-${item.qualityId}`} aria-hidden="true">
+            <EquipIcon typeName={base.typeName} slot={item.slot} size={SHEET_ART_SIZE} />
+          </span>
           <QualityBadge catalog={catalog} qualityId={item.qualityId} />
           <span className={`${styles.itemName} q-${item.qualityId}`}>{base.name}</span>
         </span>

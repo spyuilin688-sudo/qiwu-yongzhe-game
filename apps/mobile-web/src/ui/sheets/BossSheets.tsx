@@ -6,6 +6,10 @@ import { useUi, useToast } from '../../app/uiStore.tsx';
 import { ActionButton, Segmented, Sheet, primitiveStyles as ps } from '../components/primitives.tsx';
 import { formatAttack, formatBp } from '../format/format.ts';
 import styles from './sheets.module.css';
+import { MonsterArt } from '../../art/index.ts';
+
+/** 召喚面板的 BOSS 圖寬度（viewBox 128×128）。 */
+const BOSS_ART_SIZE = 88;
 
 /** 召喚 BOSS 前顯示將使用哪套配置（規格 03）；不在未告知時替玩家改裝。挑戰不消耗任何資源。 */
 export function BossSummonSheet({ onClose }: { onClose: () => void }) {
@@ -87,9 +91,12 @@ export function BossSummonSheet({ onClose }: { onClose: () => void }) {
         />
       }
     >
-      <p className={ps.note}>
-        {map.name}・{stage.name}。擊敗才會解鎖下一張地圖；失敗停在此關刷怪，下次必須手動召喚。挑戰期間暫停鑑定、出售、升台與換裝。
-      </p>
+      <div className={styles.artHeader}>
+        <MonsterArt monsterId={map.boss.id} size={BOSS_ART_SIZE} />
+        <p className={ps.note}>
+          {map.name}・{stage.name}。擊敗才會解鎖下一張地圖；失敗停在此關刷怪，下次必須手動召喚。挑戰期間暫停鑑定、出售、升台與換裝。
+        </p>
+      </div>
       <h3 className={ps.sectionTitle}>BOSS 機制</h3>
       <ul className={styles.bulletList}>
         {map.bossMechanicTexts.map((text) => (

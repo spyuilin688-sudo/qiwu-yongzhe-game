@@ -2,7 +2,7 @@ import { nextLevelXp } from '@qiwu/game-core';
 import { useCatalog, useGame } from '../../app/GameContext.tsx';
 import { useOpenSheet } from '../../app/uiStore.tsx';
 import { formatCompact } from '../format/format.ts';
-import { jobGlyph } from '../format/viewModels.ts';
+import { JobEmblem, UiIcon, familyKeyOfName } from '../../art/index.ts';
 import { ProgressBar } from './primitives.tsx';
 import styles from './shell.module.css';
 
@@ -18,7 +18,7 @@ export function ResourceHeader() {
     <header className={styles.header}>
       <button type="button" className={styles.profile} onClick={() => openSheet({ kind: 'resource', resource: 'level' })} aria-label={`角色 ${jobName} Lv${level}，經驗 ${xp}/${needed}`}>
         <span className={styles.avatar} aria-hidden="true">
-          {jobGlyph(catalog, currentJobId)}
+          <JobEmblem family={familyKeyOfName(catalog.jobs.get(currentJobId)?.familyName ?? null)} size={34} />
         </span>
         <span className={styles.levelBlock}>
           <span className={styles.levelText}>
@@ -43,7 +43,7 @@ export function ResourceHeader() {
         </span>
       </button>
       <button type="button" className={styles.more} onClick={() => openSheet({ kind: 'settings' })} aria-label="更多：設定與版本">
-        <span aria-hidden="true">⋯</span>
+        <UiIcon name="more" size={20} />
         <span className={styles.moreLabel}>更多</span>
       </button>
     </header>
