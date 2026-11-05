@@ -387,11 +387,14 @@ function describePayload(payload: ProcPayload, name: SkillNameLookup): string {
         nextRegularSkillAny: '下一次常規技能追加',
         nextUltimate: '下一次絕招追加',
         nextSkillId: `下一次${name(payload.skillId ?? '')}追加`,
-        nextCard: '下一張牌追加',
+        nextCard: '下一張本體出牌追加',
         nextSummonHit: '下一次召喚物命中追加（沒有召喚物則改為下一次普攻）',
       }[payload.timing];
       const charges = payload.charges && payload.charges > 1 ? `，可用${payload.charges}次` : '';
       const fallback = payload.fallbackMainCoefBp ? `；沒有其他目標則主目標${formatCoef(payload.fallbackMainCoefBp)}` : '';
+      if (payload.coefBasis === 'cardBase') {
+        return `${timing}${describeProcTarget(payload.target, payload.count)}該牌基礎倍率${formatPercentBp(payload.coefBp)}的重演${charges}（不帶花色效果、不算出牌）；追加不再觸發其他追加`;
+      }
       return `${timing}${describeProcTarget(payload.target, payload.count)}${formatCoef(payload.coefBp)}${charges}${fallback}；追加不再觸發其他追加`;
     }
   }

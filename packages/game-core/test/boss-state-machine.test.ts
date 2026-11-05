@@ -13,8 +13,10 @@ import {
   createInitialState,
   eliteRelicPoints,
   normalRelicPoints,
+  CONTENT_UPGRADES,
   parseSave,
   serializeSave,
+  upgradePath,
   type BattleEvent,
   type BossAttempt,
   type CombatStatsSnapshot,
@@ -1037,21 +1039,21 @@ describe('存檔與版本', () => {
     expect(lastHistory(restored)).toEqual(expected);
   });
 
-  it('parseSave 偵測內容版本不符（CONTENT_VERSION_MISMATCH），以及空檔／損壞', () => {
+  it('parseSave：沒有升級路徑的內容版本 → CONTENT_VERSION_MISMATCH；外層與內層版本不一致、空檔、損壞', () => {
     const state = fixture(atBossStage(MID_LEVEL));
     const raw = serializeSave(state, 0);
 
-    const fileMismatch = JSON.parse(raw) as { contentVersion: string; state: GameState };
-    fileMismatch.contentVersion = 'old-version';
-    const res1 = parseSave(JSON.stringify(fileMismatch), catalog);
+    const unknownVersion = JSON.parse(raw) as { contentVersion: string; state: GameState };
+    unknownVersion.contentVersion = 'old-version';
+    unknownVersion.state.contentVersion = 'old-version';
+    const res1 = parseSave(JSON.stringify(unknownVersion), catalog);
     expect(res1.ok).toBe(false);
     if (!res1.ok) expect(res1.reason).toBe('CONTENT_VERSION_MISMATCH');
 
-    const stateMismatch = JSON.parse(raw) as { contentVersion: string; state: GameState };
-    stateMismatch.state.contentVersion = 'old-version';
-    const res2 = parseSave(JSON.stringify(stateMismatch), catalog);
-    expect(res2.ok).toBe(false);
-    if (!res2.ok) expect(res2.reason).toBe('CONTENT_VERSION_MISMATCH');
+    const split = JSON.parse(raw) as { contentVersion: string; state: GameState };
+    split.state.contentVersion = 'old-version';
+    const res2 = parseSave(JSON.stringify(split), catalog);
+    expect(res2.ok === false && res2.reason).toBe('CORRUPTED');
 
     const empty = parseSave(null, catalog);
     expect(empty.ok === false && empty.reason).toBe('EMPTY');
@@ -1080,5 +1082,83 @@ describe('存檔與版本', () => {
     );
     expect(expectSucceeded<StartBossResult>(fresh).attempt.contentVersion).toBe(catalog.contentVersion);
     expect(engine.getState().progress.mode).toBe('BOSS_FIGHT');
+  });
+});
+
+describe('內容版本升級（舊存檔遷移）', () => {
+  /** 把存檔改成「由前一個內容版本存的」。 */
+  function asPreviousVersion(state: GameState, savedAtMs: number): string {
+    const previous = CONTENT_UPGRADES.at(-1)!.from;
+    const file = JSON.parse(serializeSave(state, savedAtMs)) as { contentVersion: string; state: GameState };
+    file.contentVersion = previous;
+    file.state.contentVersion = previous;
+    return JSON.stringify(file);
+  }
+
+  it('升級表接得上目前內容版本（新增內容版本卻忘了加升級，這條會失敗）', () => {
+    expect(CONTENT_UPGRADES.at(-1)?.to).toBe(catalog.contentVersion);
+    for (const upgrade of CONTENT_UPGRADES) expect(upgradePath(upgrade.from, catalog.contentVersion)).not.toBeNull();
+    expect(upgradePath('a', 'c', [{ from: 'a', to: 'b', summary: '' }, { from: 'b', to: 'a', summary: '' }])).toBeNull();
+  });
+
+  it('沒有進行中 BOSS：只改內容版本，等級、經驗、金幣、古物、鑑定台、裝備、進度原樣保留', () => {
+    const engine = engineWith(atStage(MID_LEVEL, 3, 7, (state) => {
+      state.wallet.gold = 1234;
+      state.wallet.relics = 5;
+      state.wallet.benchLevel = 4;
+      state.player.xp = 77;
+    }));
+    runFor(engine, 0, 5_000);
+    const before = engine.exportState();
+    const loaded = parseSave(asPreviousVersion(before, 5_000), catalog);
+    if (!loaded.ok) throw new Error(loaded.message);
+    expect(loaded.migration).toMatchObject({ from: CONTENT_UPGRADES.at(-1)!.from, to: catalog.contentVersion, voidedBossAttemptId: null });
+    expect(loaded.state).toEqual(before);
+  });
+
+  it('BOSS 進行中：作廢（aborted、沒有獎勵），停在 BOSS 關刷怪，不會自動再挑戰，玩家手動召喚才開打', () => {
+    const startAt = 3_000;
+    const engine = engineWith(atBossStage(MID_LEVEL, 2));
+    const attempt = startBoss(engine, startAt);
+    runFor(engine, startAt, startAt + 10_000);
+    const before = engine.exportState();
+    expect(before.boss.active?.result).toBe('pending');
+
+    const loaded = parseSave(asPreviousVersion(before, startAt + 10_000), catalog);
+    if (!loaded.ok) throw new Error(loaded.message);
+    expect(loaded.migration?.voidedBossAttemptId).toBe(attempt.attemptId);
+    const migrated = loaded.state;
+    expect(migrated.boss.active).toBeNull();
+    expect(migrated.boss.history.at(-1)).toMatchObject({ attemptId: attempt.attemptId, result: 'aborted', resolvedAtMs: startAt + 10_000 });
+    expect(migrated.progress).toEqual({ ...before.progress, mode: 'FARM_BLOCKED' });
+    expect(migrated.wallet).toEqual(before.wallet);
+    expect(migrated.player).toEqual(before.player);
+    expect(migrated.items).toEqual(before.items);
+
+    const restored = new GameEngine({ catalog, nowMs: startAt + 20_000, state: migrated });
+    const later = runFor(restored, startAt + 20_000, startAt + 20_000 + BOSS_DURATION_MS * 2);
+    expect(later.some((event) => event.type === 'bossStarted')).toBe(false);
+    expect(restored.getState().progress.mapNumber).toBe(2);
+    expect(restored.getState().progress.mode).toBe('FARM_BLOCKED');
+
+    const now = startAt + 20_000 + BOSS_DURATION_MS * 2;
+    expect(startBoss(restored, now).contentVersion).toBe(catalog.contentVersion);
+    expect(restored.getState().progress.mode).toBe('BOSS_FIGHT');
+  });
+
+  it('存檔引用新內容沒有的東西 → 拒絕讀取並列出缺漏，不默默丟掉裝備', () => {
+    const state = fixture(atStage(MID_LEVEL, 1, 3));
+    const engine = new GameEngine({ catalog, nowMs: 0, state });
+    const exported = engine.exportState();
+    const anyItem = Object.values(exported.items)[0];
+    const broken = JSON.parse(asPreviousVersion(exported, 0)) as { state: GameState };
+    if (anyItem) broken.state.items[anyItem.id] = { ...anyItem, baseId: 'EQ999' };
+    else broken.state.player.currentJobId = 'JOB99';
+    const loaded = parseSave(JSON.stringify(broken), catalog);
+    expect(loaded.ok).toBe(false);
+    if (!loaded.ok) {
+      expect(loaded.reason).toBe('CONTENT_VERSION_MISMATCH');
+      expect(loaded.message).toMatch(anyItem ? /EQ999/ : /JOB99/);
+    }
   });
 });

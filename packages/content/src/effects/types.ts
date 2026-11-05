@@ -360,6 +360,12 @@ export type ProcPayload =
        * next*：存到下一次該類行動；nextSummonHit：下一次召喚物命中（沒有召喚物則改為下一次普攻）。
        */
       readonly timing: ProcTiming;
+      /**
+       * flat（預設）：coefBp 就是追加倍率。
+       * cardBase：coefBp 是「釋放這筆追加的那張牌」基礎倍率的比例（10000 = 100%），
+       * 讓重演跟著那張牌的強度走（同花迴響：下一張本體出牌重演 40%）；只能搭配 timing nextCard。
+       */
+      readonly coefBasis?: 'flat' | 'cardBase';
       /** timing 為 nextSkillId 時指定的技能。 */
       readonly skillId?: string;
       /** 可使用次數（殘影回刃 2 次、餘勁 3 次）；預設 1。再次觸發只補滿，不可囤積。 */

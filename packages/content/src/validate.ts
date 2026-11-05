@@ -157,6 +157,17 @@ export function validateContent(data: DesignData, catalog: ContentCatalog): Vali
       for (const skillId of referencedSkillIds(proc)) check(catalog.skills.has(skillId), `${base.id} 引用的技能不存在：${skillId}`);
     }
   }
+  // 「依那張牌的基礎倍率」只有在牌打出時才算得出來，所以只能接 nextCard。
+  const procOwners: { id: string; procs: readonly ProcDef[] }[] = [
+    ...[...catalog.passives.values()].flatMap((passive) => (passive.effect ? [{ id: passive.id, procs: passive.effect.procs }] : [])),
+    ...[...catalog.equipment.values()].flatMap((base) => (base.legend ? [{ id: base.id, procs: base.legend.procs }] : [])),
+  ];
+  for (const owner of procOwners) {
+    for (const proc of owner.procs) {
+      if (proc.payload.kind !== 'extraHit' || proc.payload.coefBasis !== 'cardBase') continue;
+      check(proc.payload.timing === 'nextCard', `${owner.id} ${proc.procId} 使用 cardBase 倍率，但時機不是 nextCard`);
+    }
+  }
 
   // 平衡調整清單不能有失效條目：設計倍率必須真的存在、調整後的倍率必須真的被實作。
   for (const adjustment of BALANCE_ADJUSTMENTS) {

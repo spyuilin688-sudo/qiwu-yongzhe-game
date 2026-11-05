@@ -61,9 +61,11 @@ function ConfirmLayer() {
   const { state, dispatch } = useUi();
   const confirm = state.confirm;
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const confirmRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!confirm) return;
-    cancelRef.current?.focus();
+    // 預設焦點放在不會造成後果的按鈕；只需確認的說明則放在唯一的按鈕上。
+    (confirm.acknowledgeOnly ? confirmRef : cancelRef).current?.focus();
     // 以捕獲階段先處理 Esc，避免底下的面板同時被關閉。
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
@@ -81,8 +83,11 @@ function ConfirmLayer() {
         <h2>{confirm.title}</h2>
         <p>{confirm.message}</p>
         <div className={primitiveStyles.confirmActions}>
-          <ActionButton ref={cancelRef} label="取消" variant="ghost" onClick={() => dispatch({ type: 'closeConfirm' })} />
+          {confirm.acknowledgeOnly ? null : (
+            <ActionButton ref={cancelRef} label="取消" variant="ghost" onClick={() => dispatch({ type: 'closeConfirm' })} />
+          )}
           <ActionButton
+            ref={confirmRef}
             label={confirm.confirmLabel}
             variant={confirm.tone === 'danger' ? 'danger' : 'primary'}
             onClick={() => {
@@ -231,13 +236,23 @@ function MilestoneHints() {
   return null;
 }
 
-/** 把宿主事件轉成介面反應：BOSS 結果、自動鑑定暫停、拒絕原因、換圖提示。 */
+/** 把宿主事件轉成介面反應：BOSS 結果、自動鑑定暫停、拒絕原因、換圖提示、存檔升級說明。 */
 function EventBridge() {
   const catalog = useCatalog();
+  const host = useHost();
   const { state: ui, dispatch } = useUi();
   const sheetOpen = ui.sheet !== null || ui.confirm !== null;
-  const { state: game } = useGame();
+  const { state: game, migrationNotice } = useGame();
   const reviewItemId = useGame().auto.reviewItemId;
+  useEffect(() => {
+    if (!migrationNotice) return;
+    // 說明較長且牽涉 BOSS 挑戰作廢，用需要點按的對話框而不是會自動消失的提示。
+    dispatch({
+      type: 'openConfirm',
+      confirm: { title: '存檔已升級', message: migrationNotice, confirmLabel: '知道了', tone: 'primary', acknowledgeOnly: true, onConfirm: () => undefined },
+    });
+    host.dismissMigrationNotice();
+  }, [migrationNotice, dispatch, host]);
   useEffect(() => {
     const deferred = ui.deferredReviewItemId;
     if (!deferred || sheetOpen) return;

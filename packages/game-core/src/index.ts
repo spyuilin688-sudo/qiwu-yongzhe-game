@@ -20,3 +20,4 @@ export * from './battle/types.ts';
 export * from './battle/BattleSim.ts';
 export * from './engine/GameEngine.ts';
 export * from './persistence/saveFile.ts';
+export * from './persistence/contentMigrations.ts';

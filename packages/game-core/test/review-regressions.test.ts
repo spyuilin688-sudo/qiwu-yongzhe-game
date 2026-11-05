@@ -224,21 +224,54 @@ describe('忠實度回歸：追加的目標', () => {
     for (const hit of followUps) expect(hit.targetUid).not.toBe(mainUid);
   });
 
-  it('同花迴響（PS028）：由飛牌湊成同花時，重演給下一張飛牌，不是同一次施放', () => {
-    const battle = sim(hero('JOB28', ['SK053', 'SK051'], { passiveIds: ['PS027', 'PS028'] }), stats({ basicIntervalMs: NO_BASICS_MS }));
-    const events = runUntil(battle, 60_000);
-    const cards = events.filter((event): event is Extract<BattleEvent, { type: 'cardPlayed' }> => event.type === 'cardPlayed');
-    const castSkillOf = new Map(
-      events.filter((event): event is Extract<BattleEvent, { type: 'skillCast' }> => event.type === 'skillCast').map((event) => [event.actionId, event.skillId]),
+  it('同花迴響（PS028）：重演給下一張本體出牌（連環牌擊、四象牌陣也算），倍率是那張牌基礎的 40%，不是湊成同花的同一次施放', () => {
+    // 命運魔術師預設不帶飛牌；舊實作只認飛牌，所以這條被動在預設配裝完全不發動。
+    const run = (passiveIds: string[]) =>
+      runUntil(sim(hero('JOB28', ['SK053', 'SK054'], { ultimateId: 'SK056', passiveIds }), stats({ attack: 100, basicIntervalMs: NO_BASICS_MS })), 60_000);
+    const withEcho = run(['PS027', 'PS028']);
+    const without = run(['PS027']);
+    const key = (hit: HitEvent) => `${hit.atMs}|${hit.targetUid}|${hit.actionId}|${hit.source}`;
+    const baseline = new Set(hitsOf(without, () => true).map(key));
+    const echoes = hitsOf(withEcho, (hit) => !baseline.has(key(hit)));
+    expect(echoes.length).toBeGreaterThan(1);
+    for (const echo of echoes) expect(echo.source).toBe('followUp');
+
+    const castOf = new Map(
+      withEcho.filter((event): event is Extract<BattleEvent, { type: 'skillCast' }> => event.type === 'skillCast').map((event) => [event.actionId, event.skillId]),
     );
-    const pairIndex = cards.findIndex((card, index) => index > 0 && cards[index - 1]!.suit === card.suit && castSkillOf.get(card.actionId) === 'SK051');
-    expect(pairIndex).toBeGreaterThan(0);
-    const pairAction = cards[pairIndex]!.actionId;
-    const echoesOnPairCast = hitsOf(events, (hit) => hit.source === 'followUp' && hit.actionId === pairAction);
-    expect(echoesOnPairCast).toEqual([]);
-    const nextFlyingCard = cards.slice(pairIndex + 1).find((card) => castSkillOf.get(card.actionId) === 'SK051');
-    expect(nextFlyingCard).toBeDefined();
-    expect(hitsOf(events, (hit) => hit.source === 'followUp' && hit.actionId === nextFlyingCard!.actionId).length).toBeGreaterThan(0);
+    const cards = withEcho.filter((event): event is Extract<BattleEvent, { type: 'cardPlayed' }> => event.type === 'cardPlayed');
+    // 依規則推算：湊成同花時存一筆（已有就不囤），之後「別的施放」打出的第一張牌領走。
+    const expectedEchoActions: number[] = [];
+    const seenActions = new Set<number>();
+    let storedBy: number | null = null;
+    let lastSuit: number | null = null;
+    let streak = 0;
+    for (const card of cards) {
+      if (!seenActions.has(card.actionId)) {
+        seenActions.add(card.actionId);
+        if (storedBy !== null && storedBy !== card.actionId) {
+          expectedEchoActions.push(card.actionId);
+          storedBy = null;
+        }
+      }
+      streak = lastSuit === card.suit ? streak + 1 : 1;
+      lastSuit = card.suit;
+      if (streak >= 2) {
+        streak = 0;
+        lastSuit = null;
+        storedBy ??= card.actionId;
+      }
+    }
+    expect(echoes.map((echo) => echo.actionId)).toEqual(expectedEchoActions);
+    for (const echo of echoes) expect(['SK054', 'SK056']).toContain(castOf.get(echo.actionId));
+
+    // 四象牌陣每張 2.20A、連環牌擊每張 1.20A：同為 40% 時，兩者重演的比例約 2.2 : 1.2。
+    const meanOf = (skillId: string) => {
+      const amounts = echoes.filter((echo) => castOf.get(echo.actionId) === skillId).map((echo) => echo.amount);
+      expect(amounts.length, `${skillId} 應該領到重演`).toBeGreaterThan(0);
+      return amounts.reduce((sum, value) => sum + value, 0) / amounts.length;
+    };
+    expect(meanOf('SK056') / meanOf('SK054')).toBeCloseTo(22 / 12, 0);
   });
 
   it('琥珀項鍊（EQ084）「下一次常規技能」：沒有直接傷害的常規技能（幻影、替身）也會釋放', () => {

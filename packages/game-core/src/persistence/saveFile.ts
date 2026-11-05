@@ -1,5 +1,6 @@
 import type { ContentCatalog } from '@qiwu/content';
 import type { GameState } from '../model/types.ts';
+import { migrateContentVersion, type ContentMigrationReport } from './contentMigrations.ts';
 
 /**
  * 原型本機存檔格式。正式服務時伺服器資料庫才是權威，前端快取只作顯示（規格 08「存檔與回復」）；
@@ -14,7 +15,8 @@ export interface SaveFile {
 }
 
 export type LoadResult =
-  | { readonly ok: true; readonly state: GameState }
+  /** migration：舊內容版本升級時的紀錄（同版本讀檔為 null）。 */
+  | { readonly ok: true; readonly state: GameState; readonly migration: ContentMigrationReport | null }
   | { readonly ok: false; readonly reason: 'EMPTY' | 'CORRUPTED' | 'SCHEMA_MISMATCH' | 'CONTENT_VERSION_MISMATCH'; readonly message: string };
 
 export function serializeSave(state: GameState, savedAtMs: number): string {
@@ -52,15 +54,15 @@ export function parseSave(raw: string | null, catalog: ContentCatalog): LoadResu
   if (file.schemaVersion !== 1 || file.state.schemaVersion !== 1) {
     return { ok: false, reason: 'SCHEMA_MISMATCH', message: '存檔結構版本不相容。' };
   }
-  if (file.contentVersion !== catalog.contentVersion || file.state.contentVersion !== catalog.contentVersion) {
-    return {
-      ok: false,
-      reason: 'CONTENT_VERSION_MISMATCH',
-      message: `存檔內容版本 ${file.contentVersion ?? '未知'} 與目前 ${catalog.contentVersion} 不同；原型尚未提供遷移。`,
-    };
+  if (file.contentVersion !== file.state.contentVersion) {
+    return { ok: false, reason: 'CORRUPTED', message: '存檔外層與內層的內容版本不一致。' };
   }
   const state = file.state as GameState;
   const missing = REQUIRED_KEYS.filter((key) => state[key] === undefined);
   if (missing.length > 0) return { ok: false, reason: 'CORRUPTED', message: `存檔缺少欄位：${missing.join(', ')}` };
-  return { ok: true, state };
+  if (state.contentVersion === catalog.contentVersion) return { ok: true, state, migration: null };
+
+  const migrated = migrateContentVersion(state, catalog, typeof file.savedAtMs === 'number' ? file.savedAtMs : 0);
+  if (!migrated.ok) return { ok: false, reason: 'CONTENT_VERSION_MISMATCH', message: migrated.message };
+  return { ok: true, state, migration: migrated.report };
 }

@@ -198,8 +198,8 @@ const PASSIVES: readonly PassiveEffectDef[] = [
       {
         procId: 'PS028_SUIT_ECHO',
         trigger: { kind: 'sameSuitTwice' },
-        // 重演飛牌基礎傷害 1.80A 的 40%。
-        payload: { kind: 'extraHit', coefBp: 7200, target: 'same', timing: 'nextSkillId', skillId: 'SK051' },
+        // 「下一次本體飛牌」＝下一張本體打出的牌（飛牌、連環牌擊、四象牌陣都算），重演那張牌基礎倍率的 40%。
+        payload: { kind: 'extraHit', coefBp: 4000, coefBasis: 'cardBase', target: 'same', timing: 'nextCard' },
       },
     ],
   },

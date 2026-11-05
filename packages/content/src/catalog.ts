@@ -182,7 +182,7 @@ export interface ContentCatalog {
 }
 
 /** 實作批次：只要效果定義或原型數值改變就遞增，讓存檔與挑戰能辨識版本。 */
-const IMPLEMENTATION_BATCH = 'proto.1';
+const IMPLEMENTATION_BATCH = 'proto.2';
 
 const MAIN_STAT_RULES: Readonly<Record<string, { stat: StatKey; formula: MainStatFormula }>> = {
   'W(L,Q)': { stat: 'FLAT_ATTACK', formula: 'W' },

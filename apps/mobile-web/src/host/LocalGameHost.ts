@@ -9,6 +9,7 @@ import {
   type BattleView,
   type Command,
   type CommandResponse,
+  type ContentMigrationReport,
   type DeepReadonly,
   type EngineEvent,
   type ErrorCode,
@@ -41,6 +42,8 @@ export interface AutoIdentifyStatus {
 export interface HostSnapshot {
   readonly status: HostStatus;
   readonly statusMessage: string | null;
+  /** 舊內容版本存檔升級後給玩家的一次性說明；顯示後呼叫 dismissMigrationNotice。 */
+  readonly migrationNotice: string | null;
   readonly storageAvailable: boolean;
   readonly suspended: boolean;
   readonly state: DeepReadonly<GameState>;
@@ -87,6 +90,7 @@ export class LocalGameHost {
   private engine: GameEngine | null = null;
   private status: HostStatus = 'booting';
   private statusMessage: string | null = null;
+  private migrationNotice: string | null = null;
   private snapshot: HostSnapshot;
   private stateSignature = '';
   private battleView: BattleView | null = null;
@@ -187,6 +191,7 @@ export class LocalGameHost {
       this.setStatus('loadError', loaded.message);
       return;
     }
+    this.migrationNotice = loaded.ok && loaded.migration ? migrationNoticeText(loaded.migration) : null;
     this.engine = new GameEngine({
       catalog: this.catalog,
       nowMs: now,
@@ -440,6 +445,12 @@ export class LocalGameHost {
     return () => this.battleListeners.delete(listener);
   };
 
+  dismissMigrationNotice(): void {
+    if (this.migrationNotice === null) return;
+    this.migrationNotice = null;
+    this.refreshSnapshots(false);
+  }
+
   onEvents(listener: (events: readonly HostEvent[]) => void): () => void {
     this.eventListeners.add(listener);
     return () => this.eventListeners.delete(listener);
@@ -476,6 +487,7 @@ export class LocalGameHost {
       this.autoInFlight ? 1 : 0,
       this.autoReviewItemId ?? '-',
       this.autoSoldCount,
+      this.migrationNotice ?? '-',
     ].join('|');
   }
 
@@ -483,6 +495,7 @@ export class LocalGameHost {
     return {
       status: this.status,
       statusMessage: this.statusMessage,
+      migrationNotice: this.migrationNotice,
       storageAvailable: this.storage.available,
       suspended: this.engine?.isSuspended() ?? false,
       state,
@@ -510,4 +523,9 @@ export class LocalGameHost {
       for (const listener of this.battleListeners) listener();
     }
   }
+}
+
+function migrationNoticeText(report: ContentMigrationReport): string {
+  const voided = report.voidedBossAttemptId ? '進行中的 BOSS 挑戰因改版作廢（沒有獎勵），請手動重新召喚。' : '';
+  return `存檔已從 ${report.from} 升級到 ${report.to}：${report.summaries.join('')}${voided}`;
 }

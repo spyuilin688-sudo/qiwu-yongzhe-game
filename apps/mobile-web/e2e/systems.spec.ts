@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { CONTENT_UPGRADES } from '@qiwu/game-core';
 import { fastForward, gameState, openGame } from './helpers.ts';
 
 test.use({ viewport: { width: 390, height: 844 } });
@@ -106,6 +107,42 @@ test('BOSS 挑戰中重新整理：依原截止時間結算，不重開 60 秒',
   await fastForward(page, 61_000);
   await expect(page.getByTestId('boss-result-sheet')).toBeVisible();
   expect((await gameState(page)).boss.history).toHaveLength(1);
+});
+
+test('舊內容版本存檔：BOSS 挑戰中改版後讀檔，挑戰作廢、停在 BOSS 關、需手動召喚，並提示玩家', async ({ page }) => {
+  await openGame(page, 'bossReady');
+  await page.getByTestId('summon-boss').click();
+  await page.getByTestId('start-boss').click();
+  await expect(page.getByTestId('boss-bar')).toBeVisible();
+  const started = await gameState(page);
+  // 重新整理時先存檔，再於遊戲啟動前把存檔改成「上一個內容版本存的」。
+  await page.addInitScript((previousVersion) => {
+    if (!sessionStorage.getItem('qiwu-downgrade')) return;
+    sessionStorage.removeItem('qiwu-downgrade');
+    const raw = localStorage.getItem('qiwu-yongzhe:save:v1');
+    if (!raw) return;
+    const file = JSON.parse(raw) as { contentVersion: string; state: { contentVersion: string } };
+    file.contentVersion = previousVersion;
+    file.state.contentVersion = previousVersion;
+    localStorage.setItem('qiwu-yongzhe:save:v1', JSON.stringify(file));
+  }, CONTENT_UPGRADES.at(-1)!.from);
+  await page.evaluate(() => sessionStorage.setItem('qiwu-downgrade', '1'));
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__qiwuDev));
+  const dialog = page.getByRole('alertdialog', { name: '存檔已升級' });
+  await expect(dialog).toContainText('BOSS 挑戰因改版作廢');
+  await expect(dialog.getByRole('button', { name: '取消' })).toHaveCount(0);
+  await dialog.getByRole('button', { name: '知道了' }).click();
+  await expect(dialog).toHaveCount(0);
+  const after = await gameState(page);
+  expect(after.boss.active).toBeNull();
+  expect(after.boss.history.at(-1)?.result).toBe('aborted');
+  expect(after.progress).toMatchObject({ mapNumber: started.progress.mapNumber, localStage: started.progress.localStage, mode: 'FARM_BLOCKED' });
+  expect(after.wallet.gold).toBe(started.wallet.gold);
+  expect(after.player.xp).toBe(started.player.xp);
+  await fastForward(page, 120_000);
+  expect((await gameState(page)).boss.active).toBeNull();
+  await expect(page.getByTestId('summon-boss')).toBeVisible();
 });
 
 test('存檔損壞：可在畫面上確認清除並重新開始', async ({ page }) => {

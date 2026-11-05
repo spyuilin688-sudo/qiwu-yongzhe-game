@@ -78,6 +78,17 @@ export function abortBossAttempt(draft: GameState, payload: CommandPayload<'abor
   return { attemptId: payload.attemptId, result: 'aborted' };
 }
 
+/**
+ * 內容改版讀檔時作廢進行中的挑戰：記為 aborted（沒有獎勵），停在本圖 BOSS 關刷怪，
+ * 下一次必須手動召喚；回傳被作廢的挑戰編號，沒有進行中的挑戰則回傳 null。
+ */
+export function voidActiveBossAttempt(draft: GameState, catalog: ServiceContext['catalog'], atMs: number): string | null {
+  const active = draft.boss.active;
+  if (!active || active.result !== 'pending') return null;
+  finishAttempt(draft, { catalog }, 'aborted', atMs, null);
+  return active.attemptId;
+}
+
 export interface BossResolution {
   attemptId: string;
   result: Exclude<BossResult, 'pending'>;

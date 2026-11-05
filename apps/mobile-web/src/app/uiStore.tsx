@@ -38,6 +38,8 @@ export interface ConfirmRequest {
   readonly confirmLabel: string;
   readonly tone: 'primary' | 'danger';
   readonly onConfirm: () => void;
+  /** 只需要玩家看過（例如存檔升級說明）：不顯示「取消」，只留確認鍵。 */
+  readonly acknowledgeOnly?: boolean;
 }
 
 export interface Toast {

@@ -76,12 +76,22 @@ interface ActiveProc {
 
 type StoredTiming = Exclude<ProcTiming, 'immediate' | 'afterAction'>;
 
+/** 釋放存起來的追加時，觸發行動提供的資訊。 */
+interface StoredRelease {
+  /** nextSkillId：這次施放的技能。 */
+  readonly skillId?: string;
+  /** nextCard：這張牌的基礎倍率（不含黑桃等花色加成），給 cardBase 的追加換算。 */
+  readonly cardBaseCoefBp?: number;
+}
+
 interface StoredExtraHit {
   readonly procId: string;
   readonly coefBp: number;
   readonly target: ProcTarget;
   readonly count: number | undefined;
   readonly fallbackMainCoefBp: number;
+  /** cardBase：coefBp 是釋放時那張牌基礎倍率的比例（同花迴響）。 */
+  readonly coefBasis: 'flat' | 'cardBase';
   readonly timing: StoredTiming;
   readonly skillId: string | null;
   /** 存入時的行動 ID：同一次行動不能領回自己存的追加（同花迴響由飛牌湊成對時，給的是下一張飛牌）。 */
@@ -909,7 +919,7 @@ export class BattleSim {
   }
 
   private onSummonHit(unitKind: UnitKind, target: EnemyState, actionId: number, now: number): void {
-    this.releaseStored('nextSummonHit', target, actionId, now + this.catalog.tuning.battle.minHitDelayMs, null);
+    this.releaseStored('nextSummonHit', target, actionId, now + this.catalog.tuning.battle.minHitDelayMs);
     for (const proc of this.procs) {
       const trigger = proc.def.trigger;
       if (trigger.kind === 'unitHitAfterBodyHit') {
@@ -1279,7 +1289,7 @@ export class BattleSim {
 
     this.gainOnBasicAttack();
     this.useChargedFollowUp(target, actionId, atMs, now);
-    this.releaseStored('nextBasic', target, actionId, atMs, null);
+    this.releaseStored('nextBasic', target, actionId, atMs);
     if (this.engagedUid !== target.uid) {
       this.engagedUid = target.uid;
       this.engagedSinceMs = now;
@@ -1514,11 +1524,11 @@ export class BattleSim {
     const origin: ProcOrigin = { actionId, atMs: ctx.atMs, endAtMs: lastHitAtMs + this.tickMs };
 
     // 「下一次絕招追加」對所有絕招生效（含沒有傷害段的機甲總動員）；常規技能只有直接傷害技能才釋放。
-    if (slot.ultimate) this.releaseStored('nextUltimate', main, actionId, ctx.atMs, null);
-    else this.releaseStored('nextRegularSkillAny', main, actionId, ctx.atMs, null);
+    if (slot.ultimate) this.releaseStored('nextUltimate', main, actionId, ctx.atMs);
+    else this.releaseStored('nextRegularSkillAny', main, actionId, ctx.atMs);
     if (ctx.hasDamage) {
-      if (!slot.ultimate) this.releaseStored('nextRegularSkill', main, actionId, ctx.atMs, null);
-      this.releaseStored('nextSkillId', main, actionId, ctx.atMs, skillId);
+      if (!slot.ultimate) this.releaseStored('nextRegularSkill', main, actionId, ctx.atMs);
+      this.releaseStored('nextSkillId', main, actionId, ctx.atMs, { skillId });
     }
     if (slot.ultimate) this.fireProcs('ultimateCast', now, main, origin);
     const singleTarget = (ctx.firstDamageTargetCount ?? this.aliveEnemies().length) === 1;
@@ -2005,7 +2015,7 @@ export class BattleSim {
     }
     if (!ctx.firstCardPlayed) {
       ctx.firstCardPlayed = true;
-      this.releaseStored('nextCard', target, ctx.actionId, atMs, null);
+      this.releaseStored('nextCard', target, ctx.actionId, atMs, { cardBaseCoefBp: step.coefBp });
     }
     if (suit === null) return;
     this.emit({ type: 'cardPlayed', atMs: ctx.now, suit, actionId: ctx.actionId });
@@ -2116,19 +2126,21 @@ export class BattleSim {
       target: payload.target,
       count: payload.count,
       fallbackMainCoefBp: payload.fallbackMainCoefBp ?? 0,
+      coefBasis: payload.coefBasis ?? 'flat',
       timing,
       skillId: payload.skillId ?? null,
       charges,
     });
   }
 
-  private releaseStored(timing: StoredTiming, target: EnemyState, actionId: number, atMs: number, skillId: string | null): void {
+  private releaseStored(timing: StoredTiming, target: EnemyState, actionId: number, atMs: number, release: StoredRelease = {}): void {
     const due = this.stored.filter(
-      (entry) => entry.timing === timing && entry.storedByActionId !== actionId && (timing !== 'nextSkillId' || entry.skillId === skillId),
+      (entry) => entry.timing === timing && entry.storedByActionId !== actionId && (timing !== 'nextSkillId' || entry.skillId === release.skillId),
     );
     if (due.length === 0) return;
     for (const entry of due) {
-      for (const hit of this.resolveProcTargets(entry.target, entry.count, entry.coefBp, entry.fallbackMainCoefBp, target)) {
+      const coefBp = entry.coefBasis === 'cardBase' ? scaleBp(release.cardBaseCoefBp ?? 0, entry.coefBp) : entry.coefBp;
+      for (const hit of this.resolveProcTargets(entry.target, entry.count, coefBp, entry.fallbackMainCoefBp, target)) {
         this.pushFollowUp(hit.target, hit.coefBp, actionId, atMs);
       }
       entry.charges -= 1;
