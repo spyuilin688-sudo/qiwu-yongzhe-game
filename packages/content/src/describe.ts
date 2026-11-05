@@ -273,6 +273,12 @@ export function describeAutoCast(rule: AutoCastRule, fallbackMs: number): string
       return `預定花色即將出現時施放${wait}`;
     case 'pendingSetSuit':
       return `切牌後優先${wait}`;
+    case 'clearingOr':
+      return `清怪時（2 名以上敵人）即施放；否則${describeAutoCast(rule.inner, fallbackMs)}`;
+    case 'bossWeaknessWindow':
+      return `打王時等 BOSS 弱點窗口${wait}；清怪時冷卻完成即施放`;
+    case 'mainLacksStatusBeforeConsumer':
+      return `主目標沒有${statusLabel(rule.statusId)}且${RESOURCE_LABELS[rule.resource]}達${rule.atLeast}（即將處決）時施放${wait}；沒帶處決技能時只看有無標記`;
   }
 }
 
@@ -284,10 +290,12 @@ function describeTrigger(trigger: ProcTrigger, name: SkillNameLookup): string {
       return `每${trigger.every}次本體常規技能施放`;
     case 'distinctRegularSequence':
       return `${trigger.length === 2 ? '兩' : '三'}種不同常規技能依序施放後`;
-    case 'skillCast':
-      return trigger.singleTargetOnly ? `${name(trigger.skillId)}只有一名目標時` : `施放${name(trigger.skillId)}後`;
+    case 'skillCast': {
+      const skills = trigger.skillIds.map(name).join('或');
+      return trigger.singleTargetOnly ? `${skills}只有一名目標時` : `施放${skills}後`;
+    }
     case 'skillCastConsumed':
-      return `${trigger.skillIds.map(name).join('或')}消耗至少${trigger.minConsumed}後`;
+      return `${trigger.skillIds.map(name).join('或')}消耗至少${trigger.minConsumed}${trigger.unit}後`;
     case 'skillCastRetained':
       return `${trigger.skillIds.map(name).join('或')}因被動保留層數後`;
     case 'skillEnded': {
@@ -327,7 +335,7 @@ function describeTrigger(trigger: ProcTrigger, name: SkillNameLookup): string {
     case 'buffChargesDepleted':
       return '刻印最後一次觸發時';
     case 'mainTargetDied':
-      return '主目標死亡時';
+      return '主目標被本體普攻或技能擊殺時（持續、召喚、追加擊殺不觸發）';
     case 'directSkillHitCleanTarget':
       return '本體直接技能首次命中無狀態目標時（每目標一次）';
     case 'dotFirstOnTarget':
@@ -376,6 +384,7 @@ function describePayload(payload: ProcPayload, name: SkillNameLookup): string {
         afterAction: '行動結束後追加',
         nextBasic: '下一次本體普攻追加',
         nextRegularSkill: '下一次常規直接技能追加',
+        nextRegularSkillAny: '下一次常規技能追加',
         nextUltimate: '下一次絕招追加',
         nextSkillId: `下一次${name(payload.skillId ?? '')}追加`,
         nextCard: '下一張牌追加',

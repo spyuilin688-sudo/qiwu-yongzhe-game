@@ -120,7 +120,7 @@ const PASSIVES: readonly PassiveEffectDef[] = [
     procs: [
       {
         procId: 'PS018_AFTERIMAGE',
-        trigger: { kind: 'skillCastConsumed', skillIds: ['SK036'], minConsumed: 5 },
+        trigger: { kind: 'skillCastConsumed', skillIds: ['SK036'], minConsumed: 5, unit: '點連擊點' },
         payload: { kind: 'extraHit', coefBp: 4500, target: 'same', timing: 'nextBasic', charges: 2 },
       },
     ],
@@ -165,7 +165,7 @@ const PASSIVES: readonly PassiveEffectDef[] = [
     procs: [
       {
         procId: 'PS025_AFTERFORCE',
-        trigger: { kind: 'skillCast', skillId: 'SK050' },
+        trigger: { kind: 'skillCast', skillIds: ['SK050'] },
         payload: { kind: 'extraHit', coefBp: 4000, target: 'same', timing: 'nextBasic', charges: 3 },
       },
     ],
@@ -213,7 +213,7 @@ const PASSIVES: readonly PassiveEffectDef[] = [
     procs: [
       {
         procId: 'PS030_ENCORE',
-        trigger: { kind: 'skillCast', skillId: 'SK060' },
+        trigger: { kind: 'skillCast', skillIds: ['SK060'] },
         payload: { kind: 'spawnUnit', unit: BASIC_PHANTOM },
       },
     ],
@@ -238,7 +238,7 @@ const PASSIVES: readonly PassiveEffectDef[] = [
     procs: [
       {
         procId: 'PS033_TEMPER',
-        trigger: { kind: 'skillCastConsumed', skillIds: ['SK063', 'SK066'], minConsumed: 1 },
+        trigger: { kind: 'skillCastConsumed', skillIds: ['SK063', 'SK066'], minConsumed: 1, unit: '層熱度' },
         payload: { kind: 'extraHit', coefBp: 5000, target: 'same', timing: 'nextBasic' },
       },
     ],
@@ -272,42 +272,55 @@ function legend(baseId: string, proc: Omit<ProcDef, 'procId'>): LegendEffectDef 
  */
 const LEGENDS: readonly LegendEffectDef[] = [
   // ── 一轉職業武器 ──
-  legend('EQ001', { trigger: { kind: 'skillCast', skillId: 'SK001' }, payload: { kind: 'extraHit', coefBp: 2500, target: 'same', timing: 'nextBasic' } }),
+  legend('EQ001', { trigger: { kind: 'skillCast', skillIds: ['SK001'] }, payload: { kind: 'extraHit', coefBp: 2500, target: 'same', timing: 'nextBasic' } }),
   {
     baseId: 'EQ002',
     procs: [],
     deathTransfer: { statusIds: ['SK002_ARMOR_BREAK'], kinds: 1, stackAmount: 0, durationFactorBp: 5000 },
   },
   legend('EQ003', {
-    trigger: { kind: 'skillCast', skillId: 'SK011' },
+    trigger: { kind: 'skillCast', skillIds: ['SK011'] },
     payload: { kind: 'extraHit', coefBp: 3000, target: 'same', timing: 'nextSkillId', skillId: 'SK012' },
   }),
   legend('EQ004', { trigger: { kind: 'skillKill', skillId: 'SK012' }, payload: { kind: 'extraHit', coefBp: 2500, target: 'same', timing: 'nextBasic' } }),
-  legend('EQ005', { trigger: { kind: 'skillCast', skillId: 'SK021' }, payload: { kind: 'extraHit', coefBp: 2000, target: 'otherOnly', timing: 'immediate' } }),
-  legend('EQ006', { trigger: { kind: 'skillCast', skillId: 'SK022' }, payload: { kind: 'extraHit', coefBp: 2500, target: 'same', timing: 'nextBasic' } }),
+  // 「命中時／命中後」：單段技能的最後一段實際命中才觸發；目標先死而落空時不觸發。
+  legend('EQ005', {
+    trigger: { kind: 'skillEnded', skillId: 'SK021', requireLastHitLanded: true },
+    payload: { kind: 'extraHit', coefBp: 2000, target: 'otherOnly', timing: 'immediate' },
+  }),
+  legend('EQ006', {
+    trigger: { kind: 'skillEnded', skillId: 'SK022', requireLastHitLanded: true },
+    payload: { kind: 'extraHit', coefBp: 2500, target: 'same', timing: 'nextBasic' },
+  }),
   legend('EQ007', {
     trigger: { kind: 'skillEnded', skillId: 'SK031', requireLastHitLanded: true },
     payload: { kind: 'extraHit', coefBp: 2500, target: 'otherOnly', timing: 'immediate' },
   }),
   legend('EQ008', { trigger: { kind: 'skillKill', skillId: 'SK032' }, payload: { kind: 'extraHit', coefBp: 2500, target: 'same', timing: 'nextBasic' } }),
-  legend('EQ009', { trigger: { kind: 'skillCast', skillId: 'SK041' }, payload: { kind: 'extraHit', coefBp: 2500, target: 'otherOnly', timing: 'immediate' } }),
+  legend('EQ009', {
+    trigger: { kind: 'skillEnded', skillId: 'SK041', requireLastHitLanded: true },
+    payload: { kind: 'extraHit', coefBp: 2500, target: 'otherOnly', timing: 'immediate' },
+  }),
   legend('EQ010', {
-    trigger: { kind: 'skillCast', skillId: 'SK042', singleTargetOnly: true },
+    trigger: { kind: 'skillCast', skillIds: ['SK042'], singleTargetOnly: true },
     payload: { kind: 'extraHit', coefBp: 3500, target: 'same', timing: 'immediate' },
   }),
-  legend('EQ011', { trigger: { kind: 'skillCast', skillId: 'SK051' }, payload: { kind: 'extraHit', coefBp: 2500, target: 'otherOnly', timing: 'immediate' } }),
+  legend('EQ011', {
+    trigger: { kind: 'skillEnded', skillId: 'SK051', requireLastHitLanded: true },
+    payload: { kind: 'extraHit', coefBp: 2500, target: 'otherOnly', timing: 'immediate' },
+  }),
   legend('EQ012', {
     trigger: { kind: 'skillKill', skillId: 'SK052' },
     payload: { kind: 'extraHit', coefBp: 2500, target: 'same', timing: 'nextSkillId', skillId: 'SK051' },
   }),
-  legend('EQ013', { trigger: { kind: 'skillCast', skillId: 'SK061' }, payload: { kind: 'extraHit', coefBp: 3000, target: 'same', timing: 'nextBasic' } }),
+  legend('EQ013', { trigger: { kind: 'skillCast', skillIds: ['SK061'] }, payload: { kind: 'extraHit', coefBp: 3000, target: 'same', timing: 'nextBasic' } }),
   legend('EQ014', {
-    trigger: { kind: 'skillCast', skillId: 'SK062', singleTargetOnly: true },
+    trigger: { kind: 'skillCast', skillIds: ['SK062'], singleTargetOnly: true },
     payload: { kind: 'extraHit', coefBp: 3500, target: 'same', timing: 'immediate' },
   }),
   // ── 劍士系 ──
   legend('EQ015', {
-    trigger: { kind: 'skillCastConsumed', skillIds: ['SK004'], minConsumed: 3 },
+    trigger: { kind: 'skillCastConsumed', skillIds: ['SK004'], minConsumed: 3, unit: '層戰意' },
     payload: { kind: 'extraHit', coefBp: 4000, target: 'othersEach', count: 2, timing: 'immediate' },
   }),
   legend('EQ016', {
@@ -319,9 +332,9 @@ const LEGENDS: readonly LegendEffectDef[] = [
     payload: { kind: 'extraHit', coefBp: 6000, target: 'upToEach', count: 3, timing: 'immediate' },
   }),
   { baseId: 'EQ018', procs: [], singleEnemyCastBonus: { skillId: 'SK003', pctBp: 2500 } },
-  legend('EQ019', { trigger: { kind: 'skillCast', skillId: 'SK007' }, payload: { kind: 'extraHit', coefBp: 3000, target: 'same', timing: 'nextBasic' } }),
+  legend('EQ019', { trigger: { kind: 'skillCast', skillIds: ['SK007'] }, payload: { kind: 'extraHit', coefBp: 3000, target: 'same', timing: 'nextBasic' } }),
   legend('EQ020', {
-    trigger: { kind: 'skillCastConsumed', skillIds: ['SK008'], minConsumed: 2 },
+    trigger: { kind: 'skillCastConsumed', skillIds: ['SK008'], minConsumed: 2, unit: '層破陣' },
     payload: { kind: 'extraHit', coefBp: 5000, target: 'main', timing: 'afterAction' },
   }),
   legend('EQ021', {
@@ -329,7 +342,7 @@ const LEGENDS: readonly LegendEffectDef[] = [
     payload: { kind: 'extraHit', coefBp: 5000, target: 'otherOnly', timing: 'immediate' },
   }),
   legend('EQ022', {
-    trigger: { kind: 'skillCast', skillId: 'SK010' },
+    trigger: { kind: 'skillCast', skillIds: ['SK010'] },
     payload: { kind: 'extraHit', coefBp: 7000, target: 'same', timing: 'nextSkillId', skillId: 'SK007' },
   }),
   // ── 弓手系 ──
@@ -338,44 +351,45 @@ const LEGENDS: readonly LegendEffectDef[] = [
     trigger: { kind: 'statusExpired', statusId: 'WEAK_POINT' },
     payload: { kind: 'extraHit', coefBp: 3500, target: 'same', timing: 'immediate' },
   }),
-  legend('EQ025', { trigger: { kind: 'skillCast', skillId: 'SK016' }, payload: { kind: 'extraHit', coefBp: 8000, target: 'main', timing: 'afterAction' } }),
+  legend('EQ025', { trigger: { kind: 'skillCast', skillIds: ['SK016'] }, payload: { kind: 'extraHit', coefBp: 8000, target: 'main', timing: 'afterAction' } }),
   legend('EQ026', { trigger: { kind: 'skillKill', skillId: 'SK015' }, payload: { kind: 'extraHit', coefBp: 4000, target: 'main', timing: 'immediate' } }),
-  legend('EQ027', { trigger: { kind: 'skillCast', skillId: 'SK018' }, payload: { kind: 'extraHit', coefBp: 3500, target: 'same', timing: 'nextBasic' } }),
+  legend('EQ027', { trigger: { kind: 'skillCast', skillIds: ['SK018'] }, payload: { kind: 'extraHit', coefBp: 3500, target: 'same', timing: 'nextBasic' } }),
   legend('EQ028', {
     trigger: { kind: 'unitHitOnTargetWithStatus', unitKind: 'beast', statusId: 'PREY_MARK', every: 4 },
     payload: { kind: 'extraHit', coefBp: 3000, target: 'same', timing: 'immediate' },
   }),
   legend('EQ029', {
-    trigger: { kind: 'skillCast', skillId: 'SK019', singleTargetOnly: true },
+    trigger: { kind: 'skillCast', skillIds: ['SK019'], singleTargetOnly: true },
     payload: { kind: 'extraHit', coefBp: 10000, target: 'same', timing: 'afterAction' },
   }),
   legend('EQ030', {
-    trigger: { kind: 'skillCast', skillId: 'SK018' },
+    // 獸王號令本身「立即完成一次協同攻擊」，也算號令期間的協同攻擊（增益在施放第一步就套用）。
+    trigger: { kind: 'skillCast', skillIds: ['SK018', 'SK020'] },
     payload: { kind: 'extraHit', coefBp: 7000, target: 'othersEach', count: 2, timing: 'afterAction' },
     requireBuff: 'BEAST_COMMAND',
     oncePerBuff: true,
   }),
   // ── 法師系 ──
   legend('EQ031', { trigger: { kind: 'skillEnded', skillId: 'SK023' }, payload: { kind: 'extraHit', coefBp: 3500, target: 'main', timing: 'immediate' } }),
-  legend('EQ032', { trigger: { kind: 'skillCast', skillId: 'SK024' }, payload: { kind: 'extraHit', coefBp: 3000, target: 'same', timing: 'nextBasic' } }),
+  legend('EQ032', { trigger: { kind: 'skillCast', skillIds: ['SK024'] }, payload: { kind: 'extraHit', coefBp: 3000, target: 'same', timing: 'nextBasic' } }),
   legend('EQ033', {
-    trigger: { kind: 'skillCast', skillId: 'SK026' },
+    trigger: { kind: 'skillCast', skillIds: ['SK026'] },
     payload: { kind: 'extraHit', coefBp: 8000, target: 'same', timing: 'nextSkillId', skillId: 'SK021' },
   }),
   legend('EQ034', {
-    trigger: { kind: 'skillCastConsumed', skillIds: ['SK024'], minConsumed: 2 },
+    trigger: { kind: 'skillCastConsumed', skillIds: ['SK024'], minConsumed: 2, unit: '種印記' },
     payload: { kind: 'extraHit', coefBp: 6000, target: 'main', timing: 'afterAction' },
   }),
   legend('EQ035', {
-    trigger: { kind: 'skillCast', skillId: 'SK027', singleTargetOnly: true },
+    trigger: { kind: 'skillCast', skillIds: ['SK027'], singleTargetOnly: true },
     payload: { kind: 'extraHit', coefBp: 4000, target: 'same', timing: 'immediate' },
   }),
   legend('EQ036', {
-    trigger: { kind: 'skillCastConsumed', skillIds: ['SK028'], minConsumed: 3 },
+    trigger: { kind: 'skillCastConsumed', skillIds: ['SK028'], minConsumed: 3, unit: '層寒霜' },
     payload: { kind: 'extraHit', coefBp: 4500, target: 'otherOnly', timing: 'afterAction' },
   }),
   legend('EQ037', {
-    trigger: { kind: 'skillCast', skillId: 'SK030' },
+    trigger: { kind: 'skillCast', skillIds: ['SK030'] },
     payload: { kind: 'extraHit', coefBp: 8000, target: 'main', timing: 'nextSkillId', skillId: 'SK029' },
   }),
   legend('EQ038', {
@@ -393,7 +407,7 @@ const LEGENDS: readonly LegendEffectDef[] = [
     deathTransfer: { statusIds: ['EXPOSE_MARK'], kinds: 1, stackAmount: 0, durationFactorBp: 5000 },
   },
   legend('EQ041', {
-    trigger: { kind: 'skillCastConsumed', skillIds: ['SK036'], minConsumed: 5 },
+    trigger: { kind: 'skillCastConsumed', skillIds: ['SK036'], minConsumed: 5, unit: '點連擊點' },
     payload: { kind: 'extraHit', coefBp: 6000, target: 'othersEach', count: 2, timing: 'immediate' },
   }),
   legend('EQ042', { trigger: { kind: 'skillEnded', skillId: 'SK035' }, payload: { kind: 'extraHit', coefBp: 5000, target: 'main', timing: 'immediate' } }),
@@ -403,18 +417,18 @@ const LEGENDS: readonly LegendEffectDef[] = [
   }),
   legend('EQ044', { trigger: { kind: 'skillEnded', skillId: 'SK038' }, payload: { kind: 'extraHit', coefBp: 3000, target: 'same', timing: 'nextBasic' } }),
   legend('EQ045', {
-    trigger: { kind: 'skillCast', skillId: 'SK040' },
+    trigger: { kind: 'skillCast', skillIds: ['SK040'] },
     payload: { kind: 'extraHit', coefBp: 7000, target: 'same', timing: 'nextSkillId', skillId: 'SK039' },
   }),
   legend('EQ046', { trigger: { kind: 'skillCastRetained', skillIds: ['SK040'] }, payload: { kind: 'copyDot', statusId: 'POISON', toOthers: 1 } }),
   // ── 祭司系 ──
   legend('EQ047', {
-    trigger: { kind: 'skillCast', skillId: 'SK044' },
+    trigger: { kind: 'skillCast', skillIds: ['SK044'] },
     payload: { kind: 'extraHit', coefBp: 3500, target: 'otherOnly', timing: 'nextSkillId', skillId: 'SK041' },
   }),
   legend('EQ048', { trigger: { kind: 'buffExpired', buffId: 'HYMN' }, payload: { kind: 'extraHit', coefBp: 4000, target: 'same', timing: 'nextBasic' } }),
   legend('EQ049', {
-    trigger: { kind: 'skillCastConsumed', skillIds: ['SK046'], minConsumed: 3 },
+    trigger: { kind: 'skillCastConsumed', skillIds: ['SK046'], minConsumed: 3, unit: '層聖印' },
     payload: { kind: 'extraHit', coefBp: 7000, target: 'same', timing: 'nextSkillId', skillId: 'SK041' },
   }),
   legend('EQ050', { trigger: { kind: 'skillEnded', skillId: 'SK045' }, payload: { kind: 'extraHit', coefBp: 5000, target: 'otherOnly', timing: 'immediate' } }),
@@ -423,40 +437,40 @@ const LEGENDS: readonly LegendEffectDef[] = [
     payload: { kind: 'extraHit', coefBp: 3500, target: 'otherOnly', timing: 'immediate' },
   }),
   legend('EQ052', {
-    trigger: { kind: 'skillCast', skillId: 'SK048', singleTargetOnly: true },
+    trigger: { kind: 'skillCast', skillIds: ['SK048'], singleTargetOnly: true },
     payload: { kind: 'extraHit', coefBp: 4000, target: 'same', timing: 'immediate' },
   }),
   legend('EQ053', { trigger: { kind: 'skillEnded', skillId: 'SK049' }, payload: { kind: 'extraHit', coefBp: 6000, target: 'same', timing: 'nextBasic' } }),
   legend('EQ054', {
-    trigger: { kind: 'skillCastConsumed', skillIds: ['SK050'], minConsumed: 5 },
+    trigger: { kind: 'skillCastConsumed', skillIds: ['SK050'], minConsumed: 5, unit: '層氣脈' },
     payload: { kind: 'extraHit', coefBp: 8000, target: 'othersEach', count: 2, timing: 'immediate' },
   }),
   // ── 小丑系 ──
   legend('EQ055', { trigger: { kind: 'skillEnded', skillId: 'SK054' }, payload: { kind: 'extraHit', coefBp: 3500, target: 'main', timing: 'immediate' } }),
-  legend('EQ056', { trigger: { kind: 'skillCast', skillId: 'SK053' }, payload: { kind: 'extraHit', coefBp: 3000, target: 'otherOnly', timing: 'nextCard' } }),
+  legend('EQ056', { trigger: { kind: 'skillCast', skillIds: ['SK053'] }, payload: { kind: 'extraHit', coefBp: 3000, target: 'otherOnly', timing: 'nextCard' } }),
   legend('EQ057', { trigger: { kind: 'skillEnded', skillId: 'SK056' }, payload: { kind: 'extraHit', coefBp: 8000, target: 'main', timing: 'immediate' } }),
   { baseId: 'EQ058', procs: [], setSuitEffectBonusBp: 2500 },
-  legend('EQ059', { trigger: { kind: 'skillCast', skillId: 'SK057' }, payload: { kind: 'extraHit', coefBp: 3000, target: 'main', timing: 'immediate' } }),
+  legend('EQ059', { trigger: { kind: 'skillCast', skillIds: ['SK057'] }, payload: { kind: 'extraHit', coefBp: 3000, target: 'main', timing: 'immediate' } }),
   legend('EQ060', {
-    trigger: { kind: 'skillCast', skillId: 'SK058', singleTargetOnly: true },
+    trigger: { kind: 'skillCast', skillIds: ['SK058'], singleTargetOnly: true },
     payload: { kind: 'extraHit', coefBp: 4000, target: 'main', timing: 'immediate' },
   }),
   legend('EQ061', {
-    trigger: { kind: 'skillCastConsumed', skillIds: ['SK060'], minConsumed: 2 },
+    trigger: { kind: 'skillCastConsumed', skillIds: ['SK060'], minConsumed: 2, unit: '個單位' },
     payload: { kind: 'extraHit', coefBp: 7000, target: 'same', timing: 'nextSkillId', skillId: 'SK051' },
   }),
   { baseId: 'EQ062', procs: [], unitFirstAttackExtra: { skillId: 'SK059', coefBp: 4500, target: 'same' } },
   // ── 工匠系 ──
   legend('EQ063', {
-    trigger: { kind: 'skillCastConsumed', skillIds: ['SK063'], minConsumed: 3 },
+    trigger: { kind: 'skillCastConsumed', skillIds: ['SK063'], minConsumed: 3, unit: '層熱度' },
     payload: { kind: 'extraHit', coefBp: 4000, target: 'otherOnly', timing: 'immediate' },
   }),
   legend('EQ064', {
-    trigger: { kind: 'skillCast', skillId: 'SK064', singleTargetOnly: true },
+    trigger: { kind: 'skillCast', skillIds: ['SK064'], singleTargetOnly: true },
     payload: { kind: 'extraHit', coefBp: 4000, target: 'same', timing: 'immediate' },
   }),
   legend('EQ065', {
-    trigger: { kind: 'skillCast', skillId: 'SK066' },
+    trigger: { kind: 'skillCast', skillIds: ['SK066'] },
     payload: {
       kind: 'spawnUnit',
       unit: {
@@ -502,7 +516,7 @@ const LEGENDS: readonly LegendEffectDef[] = [
   legend('EQ077', { trigger: { kind: 'basicAttackCount', every: 5 }, payload: { kind: 'extraHit', coefBp: 2500, target: 'same', timing: 'immediate' } }),
   legend('EQ078', {
     trigger: { kind: 'basicCrit' },
-    payload: { kind: 'extraHit', coefBp: 2500, target: 'same', timing: 'nextRegularSkill' },
+    payload: { kind: 'extraHit', coefBp: 2500, target: 'same', timing: 'nextRegularSkillAny' },
     internalCooldownMs: 3000,
   }),
   legend('EQ079', { trigger: { kind: 'basicAttackCount', every: 6 }, payload: { kind: 'extraHit', coefBp: 3500, target: 'same', timing: 'nextSummonHit' } }),
@@ -514,7 +528,7 @@ const LEGENDS: readonly LegendEffectDef[] = [
   legend('EQ081', { trigger: { kind: 'basicKill' }, payload: { kind: 'extraHit', coefBp: 2500, target: 'same', timing: 'nextBasic' } }),
   legend('EQ082', { trigger: { kind: 'distinctRegularSequence', length: 3 }, payload: { kind: 'extraHit', coefBp: 5000, target: 'main', timing: 'nextUltimate' } }),
   legend('EQ083', { trigger: { kind: 'dotFirstOnTarget' }, payload: { kind: 'extraHit', coefBp: 2500, target: 'same', timing: 'immediate' } }),
-  legend('EQ084', { trigger: { kind: 'sameTargetBasicCount', count: 6 }, payload: { kind: 'extraHit', coefBp: 3500, target: 'same', timing: 'nextRegularSkill' } }),
+  legend('EQ084', { trigger: { kind: 'sameTargetBasicCount', count: 6 }, payload: { kind: 'extraHit', coefBp: 3500, target: 'same', timing: 'nextRegularSkillAny' } }),
   legend('EQ085', {
     trigger: { kind: 'skillEnded', ultimate: true },
     payload: { kind: 'extraHit', coefBp: 5000, target: 'otherOnly', fallbackMainCoefBp: 2500, timing: 'immediate' },
@@ -527,7 +541,7 @@ const LEGENDS: readonly LegendEffectDef[] = [
   }),
   legend('EQ088', {
     trigger: { kind: 'sameTargetDuration', durationMs: 8000 },
-    payload: { kind: 'extraHit', coefBp: 4000, target: 'same', timing: 'nextRegularSkill' },
+    payload: { kind: 'extraHit', coefBp: 4000, target: 'same', timing: 'nextRegularSkillAny' },
     internalCooldownMs: 8000,
   }),
 ];

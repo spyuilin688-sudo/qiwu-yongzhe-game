@@ -10,3 +10,4 @@ export * from './encounters.ts';
 export * from './defaultLoadouts.ts';
 export type * from './effects/types.ts';
 export * from './effects/balanceAdjustments.ts';
+export * from './legendCompatibility.ts';

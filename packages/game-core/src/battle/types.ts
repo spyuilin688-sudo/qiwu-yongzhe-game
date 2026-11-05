@@ -148,6 +148,8 @@ export interface UnitState {
   firstAttackExtra: { readonly coefBp: number; readonly target: 'same' | 'otherOnly' } | null;
   /** 下一次攻擊的追加係數（銅管手砲），用完歸零。 */
   pendingExtraCoefBp: number;
+  /** 下一次攻擊的傷害加成（協同校準），用完歸零。 */
+  pendingRoundBonusBp: number;
 }
 
 export interface BuffState {
@@ -159,6 +161,8 @@ export interface BuffState {
   charges: number;
   /** 本次增益期間已觸發過的「每次增益一次」效果。 */
   firedProcIds: string[];
+  /** 攻擊間隔增益（超頻）施放時已在場、因此受影響的單位。 */
+  affectedUnitUids: number[];
 }
 
 export type UnitRemovedReason = 'expired' | 'replaced' | 'resolved' | 'consumed';

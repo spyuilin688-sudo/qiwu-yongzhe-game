@@ -429,8 +429,15 @@
   display: block;
 }
 
+/* 字體放大時先減裝飾：列表與職業樹的小圖隱藏，文字欄取得全寬（規格：頁面擁擠先減裝飾而非縮字）。 */
 :global(html[data-text-scale='1.5']) .itemArt,
-:global(html[data-text-scale='2']) .itemArt {
+:global(html[data-text-scale='2']) .itemArt,
+:global(html[data-text-scale='1.5']) .rowArt,
+:global(html[data-text-scale='2']) .rowArt,
+:global(html[data-text-scale='1.5']) .jobArt,
+:global(html[data-text-scale='2']) .jobArt,
+:global(html[data-text-scale='1.5']) .skillTitleWithIcon > svg,
+:global(html[data-text-scale='2']) .skillTitleWithIcon > svg {
   display: none;
 }
 

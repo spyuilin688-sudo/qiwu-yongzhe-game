@@ -197,16 +197,19 @@
   pointer-events: none;
 }
 
-/* 冷卻秒數置中於圖示上（名稱在底部），兩者不重疊。 */
+/* 冷卻秒數置中於圖示上（名稱在底部），兩者不重疊；深色底確保在淺色圖上也可讀。 */
 .skillTimer {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -62%);
   z-index: 2;
+  padding: 0 0.3em;
+  border-radius: 999px;
+  background: var(--c-pop-bg);
   font-size: var(--font-m);
+  line-height: 1.3;
   color: var(--c-timer);
-  text-shadow: 0 1px 2px var(--c-black);
 }
 
 .skillWaiting {
@@ -305,8 +308,7 @@
 }
 
 .equipIcon {
-  display: flex;
-  height: 22px;
+  display: inline-flex;
   align-items: center;
   color: var(--c-text-dim);
 }
@@ -316,9 +318,13 @@
 }
 
 .equipSlot {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   font-size: 0.6875rem;
   line-height: 1.1;
   color: var(--c-text-dim);
+  white-space: nowrap;
 }
 
 .equipInfo {
@@ -582,6 +588,23 @@
   height: auto;
   min-height: var(--skill-button);
   flex-direction: column;
+}
+
+/* 字體放大時先減裝飾：隱藏技能圖，名稱恢復多行、不裁切（規格：放大至 200% 文字不裁切）。 */
+:global(html[data-text-scale='1.5']) .skillArt,
+:global(html[data-text-scale='2']) .skillArt {
+  display: none;
+}
+
+:global(html[data-text-scale='1.5']) .skillArt + .skillName,
+:global(html[data-text-scale='2']) .skillArt + .skillName {
+  align-self: auto;
+  background: none;
+  padding: 0;
+  font-size: 0.6875rem;
+  -webkit-line-clamp: unset;
+  display: block;
+  overflow: visible;
 }
 
 :global(html[data-text-scale='1.5']) .skillTimer,

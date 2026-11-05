@@ -127,13 +127,16 @@
   color: var(--suit-black);
 }
 
+/* 召喚物排在角色背後：由下往上每欄最多 2 個，再往左換欄，總高不超過角色，不會頂到 BOSS 血條。 */
 .units {
   position: absolute;
-  left: -36px;
+  right: calc(100% - 6px);
   bottom: 0;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: column-reverse;
+  flex-wrap: wrap-reverse;
+  max-height: 58px;
+  gap: 2px;
 }
 
 .unit {
@@ -151,13 +154,13 @@
   position: absolute;
   right: -4px;
   bottom: -2px;
-  min-width: 14px;
-  padding: 0 2px;
-  border-radius: 7px;
+  min-width: 1.6em;
+  padding: 0 0.25em;
+  border-radius: 999px;
   background: var(--c-pop-bg);
   color: var(--c-text);
   font-size: 0.5625rem;
-  line-height: 14px;
+  line-height: 1.5;
   text-align: center;
 }
 
@@ -174,6 +177,10 @@
 
 .zone > svg {
   display: block;
+}
+
+.viewport[data-summon='true'] .zone {
+  top: 61%;
 }
 
 /* ── 敵人 ── */
@@ -197,7 +204,7 @@
   }
 }
 
-/* 一般怪物填滿所在欄位（約 13.5% 寬），最大 56px；三隻並排時不互相重疊。 */
+/* 一般怪物填滿所在欄位（約 13.5% 寬），最大 56px；三隻並排時不互相重疊。小首領與 BOSS 另由下方規則放大。 */
 .enemyBody {
   width: 100%;
   max-width: 56px;
@@ -215,10 +222,12 @@
 
 .enemyLarge .enemyBody {
   width: 88px;
+  max-width: 100%;
 }
 
 .enemy[data-enemy-kind='boss'] .enemyBody {
   width: 112px;
+  max-width: 100%;
 }
 
 .enemyAdd .enemyBody {
@@ -364,11 +373,6 @@
   top: 55%;
 }
 
-.viewport[data-summon='true'] .backdrop {
-  background:
-    radial-gradient(ellipse at 70% 20%, var(--battle-sun), transparent 60%),
-    linear-gradient(180deg, var(--battle-sky-top) 0%, var(--battle-sky-bottom) 52%, var(--battle-ground) 52%, var(--battle-ground-deep) 100%);
-}
 
 .bossTimer {
   font-weight: 800;

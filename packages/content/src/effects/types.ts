@@ -248,7 +248,18 @@ export type AutoCastRule =
   | { readonly kind: 'requiresUnitPreferStatus'; readonly unitKind: UnitKind; readonly statusId: string }
   | { readonly kind: 'nextSuitIsNotPreferred' }
   | { readonly kind: 'nextSuitIsPreferred' }
-  | { readonly kind: 'pendingSetSuit' };
+  | { readonly kind: 'pendingSetSuit' }
+  /**
+   * 「清怪或 X」：場上 2 名以上敵人（清怪中）即成立，否則看內層條件（打王、只剩一隻時）。
+   * 例：追星箭「清怪或標記後」、連鎖閃電「清怪或缺雷印」、毒霧「清怪或毒層不足」。
+   */
+  | { readonly kind: 'clearingOr'; readonly inner: AutoCastRule }
+  /** 打王時等 BOSS 弱點窗口（易傷循環）；非 BOSS 戰或該 BOSS 沒有易傷循環時直接成立（萬劍歸流）。 */
+  | { readonly kind: 'bossWeaknessWindow' }
+  /**
+   * 主目標沒有指定狀態，且「即將消耗」：角色資源已達 atLeast；配置中沒有消耗該資源的技能時只看狀態（破綻標記「處決前且無標記」）。
+   */
+  | { readonly kind: 'mainLacksStatusBeforeConsumer'; readonly statusId: string; readonly resource: ResourceId; readonly atLeast: number };
 
 export interface SkillEffectDef {
   readonly skillId: string;
@@ -263,10 +274,13 @@ export type ProcTrigger =
   | { readonly kind: 'basicAttackCount'; readonly every: number }
   | { readonly kind: 'regularSkillCastCount'; readonly every: number }
   | { readonly kind: 'distinctRegularSequence'; readonly length: number }
-  /** 指定技能施放；singleTargetOnly：該技能第一個傷害步驟只選到 1 名目標時才觸發。 */
-  | { readonly kind: 'skillCast'; readonly skillId: string; readonly singleTargetOnly?: boolean }
-  /** 指定技能施放且實際消耗達 minConsumed 以上（資源、層數、印記種類、毒層或單位數）。 */
-  | { readonly kind: 'skillCastConsumed'; readonly skillIds: readonly string[]; readonly minConsumed: number }
+  /** 指定技能之一施放；singleTargetOnly：該技能第一個傷害步驟只選到 1 名目標時才觸發。 */
+  | { readonly kind: 'skillCast'; readonly skillIds: readonly string[]; readonly singleTargetOnly?: boolean }
+  /**
+   * 指定技能施放且實際消耗達 minConsumed 以上（資源、層數、印記種類、毒層或單位數）。
+   * unit 是文案用的計量單位（「層寒霜」「種印記」），避免只顯示「消耗至少 3」。
+   */
+  | { readonly kind: 'skillCastConsumed'; readonly skillIds: readonly string[]; readonly minConsumed: number; readonly unit: string }
   /** 消耗時因被動保留了層數（霜痕）。 */
   | { readonly kind: 'skillCastRetained'; readonly skillIds: readonly string[] }
   /**
@@ -319,7 +333,10 @@ export type ProcTiming =
   | 'immediate'
   | 'afterAction'
   | 'nextBasic'
+  /** 下一次常規「直接傷害」技能（旅人軟帽「常規直接技能」）。 */
   | 'nextRegularSkill'
+  /** 下一次任何常規技能（含召喚、增益技能；銀扣護手、琥珀項鍊、王冠印戒「常規技能」）。 */
+  | 'nextRegularSkillAny'
   | 'nextUltimate'
   | 'nextSkillId'
   | 'nextCard'

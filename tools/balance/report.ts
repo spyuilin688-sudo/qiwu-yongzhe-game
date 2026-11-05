@@ -4,7 +4,7 @@ import { identifyXp, sellPrice } from '@qiwu/game-core';
 import { investmentStats, median, simulateBoss, simulateFarm, type Investment } from './simulate.ts';
 
 /**
- * 原型平衡報告（規格第 10 章「至少列四張表」）。執行：node tools/balance/report.ts [輸出路徑]
+ * 原型平衡報告（規格第 10 章「至少列四張表」）。執行：npm run balance（Node 22.12～22.17 需 --experimental-strip-types，指令已帶）
  * 只在本機跑；結果寫成 Markdown，數字全部來自實際模擬，不是推估。
  *
  * 假設（N，記錄在報告開頭）：

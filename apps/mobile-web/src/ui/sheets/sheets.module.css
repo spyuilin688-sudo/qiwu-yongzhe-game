@@ -201,3 +201,10 @@
   border: 1px solid var(--q);
   background: color-mix(in srgb, var(--q) 12%, var(--c-surface-2));
 }
+
+:global(html[data-text-scale='1.5']) .artHeader > svg,
+:global(html[data-text-scale='2']) .artHeader > svg,
+:global(html[data-text-scale='1.5']) .itemArt,
+:global(html[data-text-scale='2']) .itemArt {
+  display: none;
+}

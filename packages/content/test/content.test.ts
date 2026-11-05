@@ -6,6 +6,9 @@ import {
   parseDesignData,
   skillSelectionRule,
   defaultSkillIds,
+  describeLegend,
+  legendInactiveReason,
+  passiveIdsForJob,
   validateContent,
 } from '../src/index.ts';
 
@@ -63,5 +66,38 @@ describe('內容資料自動檢查', () => {
       const elites = map.stageIds.map((id) => catalog.stages.get(id)!).filter((stage) => stage.type === 'elite');
       expect(elites.map((stage) => stage.eliteTemplate?.label)).toEqual(['厚殼', '蓄勢', '裂甲', '反應核心', '耐久外殼']);
     }
+  });
+});
+
+describe('傳說特效在目前配置是否啟用（共用部位要標示未啟用）', () => {
+  const catalog = loadDefaultCatalog();
+  const loadout = (jobId: string, skillIds: string[]) => ({
+    skillIds,
+    ultimateId: skillSelectionRule(catalog, jobId).ultimate?.id ?? null,
+    passiveIds: [...passiveIdsForJob(catalog, jobId)],
+  });
+  const legendOf = (baseId: string) => catalog.equipment.get(baseId)!.legend!;
+
+  it('由絕招觸發的路線傳說不會因為絕招不在常規欄而被誤判未啟用', () => {
+    expect(legendInactiveReason(catalog, legendOf('EQ022'), loadout('JOB05', ['SK001', 'SK007', 'SK008']))).toBeNull();
+  });
+
+  it('「下一次常規技能」在只有召喚技能的配置仍可啟用；需要機甲的傳說在沒有機甲時未啟用', () => {
+    expect(legendInactiveReason(catalog, legendOf('EQ084'), loadout('JOB30', ['SK057', 'SK058', 'SK059']))).toBeNull();
+    expect(legendInactiveReason(catalog, legendOf('EQ069'), loadout('JOB34', ['SK061', 'SK067', 'SK068']))).toContain('機甲');
+  });
+
+  it('需要狀態來源的傳說：沒帶掠食標記時狼牙骨笛未啟用，帶了就啟用', () => {
+    expect(legendInactiveReason(catalog, legendOf('EQ028'), loadout('JOB09', ['SK011', 'SK018']))).toContain('掠食標記');
+    expect(legendInactiveReason(catalog, legendOf('EQ028'), loadout('JOB09', ['SK017', 'SK018']))).toBeNull();
+  });
+
+  it('沒有絕招的二轉配置：絕招類共用傳說未啟用', () => {
+    expect(legendInactiveReason(catalog, legendOf('EQ085'), loadout('JOB02', ['SK001', 'SK003', 'SK004']))).toBe('需要三轉絕招');
+  });
+
+  it('消耗門檻的文案寫出計量單位', () => {
+    expect(describeLegend(legendOf('EQ036'))).toContain('消耗至少3層寒霜');
+    expect(describeLegend(legendOf('EQ034'))).toContain('消耗至少2種印記');
   });
 });

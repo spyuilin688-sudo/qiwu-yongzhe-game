@@ -3,7 +3,7 @@ import { BattleSim } from '@qiwu/game-core';
 import { heroFor, investmentStats } from './simulate.ts';
 
 /**
- * 單一路線的傷害來源拆解（平衡調整用）。執行：node tools/balance/breakdown.ts JOB03 JOB28 …
+ * 單一路線的傷害來源拆解（平衡調整用）。執行：npm run balance:breakdown -- JOB03 JOB28 …
  * 固定第 10 圖第 29 關、Lv100 同投入、刷怪配置 3 分鐘；輸出各技能／來源占總傷害比例與擊殺數。
  */
 const catalog = loadDefaultCatalog();

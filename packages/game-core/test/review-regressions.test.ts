@@ -164,3 +164,85 @@ describe('審查回歸：多段技能不跨波', () => {
     for (const hit of skillHits) expect(waveOfUid.get(hit.targetUid)).toBe(waveOfAction.get(hit.actionId));
   });
 });
+
+// ───────────── 第二輪內容忠實度審查（逐職業系）的回歸測試 ─────────────
+
+/** 第 12 圖第 25 關：單一小首領（高血量），用來觀察只有一名敵人時的施放條件。 */
+const SINGLE_ELITE = getStageAt(catalog, 12, 25);
+
+function eliteSim(h: HeroLoadoutSnapshot, s: CombatStatsSnapshot): BattleSim {
+  return new BattleSim({ catalog, seed: 777, stats: s, hero: h, encounter: { kind: 'stage', stage: SINGLE_ELITE } });
+}
+
+describe('忠實度回歸：觸發條件', () => {
+  it('獸王號角（EQ030）：號令本身的協同攻擊也算，沒帶協同撲擊也會觸發', () => {
+    const followUps = (legendBaseIds: string[]) => {
+      const battle = sim(hero('JOB10', [], { ultimateId: 'SK020', passiveIds: ['PS009'], legendBaseIds }), stats({ basicIntervalMs: NO_BASICS_MS }));
+      return hitsOf(runUntil(battle, 30_000), (hit) => hit.source === 'followUp').length;
+    };
+    expect(followUps([])).toBe(0);
+    expect(followUps(['EQ030'])).toBeGreaterThan(0);
+  });
+
+  it('橡木短杖（EQ005）：火球落空（目標先被普攻擊殺）時不觸發火星', () => {
+    const battle = sim(hero('JOB11', ['SK021'], { passiveIds: [], legendBaseIds: ['EQ005'] }), stats({ attack: 100_000 }), WEAK_STAGE);
+    const events = runUntil(battle, 20_000);
+    expect(hitsOf(events, (hit) => hit.skillId === 'SK021')).toEqual([]);
+    expect(hitsOf(events, (hit) => hit.source === 'followUp')).toEqual([]);
+  });
+
+  it('「清怪或毒層不足」（SK038）：只有一名敵人且已滿 5 層毒時會等待，而不是冷卻好就丟', () => {
+    const battle = eliteSim(hero('JOB19', ['SK037', 'SK038']), stats({ basicIntervalMs: 500 }));
+    let waited = false;
+    runUntil(battle, 40_000, () => {
+      const slot = battle.view().hero.skills.find((skill) => skill.skillId === 'SK038');
+      if (slot && slot.remainingMs === 0 && slot.waitingForCondition) waited = true;
+    });
+    expect(waited).toBe(true);
+  });
+
+  it('影襲（SK033）：配置裡沒有消耗連擊點的技能時，不會因「連擊未滿」每次白等 3 秒', () => {
+    const battle = sim(hero('JOB17', ['SK033']), stats());
+    const casts = runUntil(battle, 40_000)
+      .filter((event) => event.type === 'skillCast' && event.skillId === 'SK033')
+      .map((event) => event.atMs);
+    const gaps = casts.slice(1).map((atMs, index) => atMs - casts[index]!);
+    expect(gaps.length).toBeGreaterThan(3);
+    for (const gap of gaps) expect(gap).toBe(catalog.skills.get('SK033')!.cooldownMs);
+  });
+});
+
+describe('忠實度回歸：追加的目標', () => {
+  it('星核墜飾（EQ085）：絕招結束後的 0.50A 打主目標以外的敵人', () => {
+    // 零度終章對 3 名敵人各一段，最後一段落在第 3 名；「另一目標」仍要相對主目標，而不是相對最後一段。
+    const battle = sim(hero('JOB15', [], { ultimateId: 'SK030', passiveIds: [], legendBaseIds: ['EQ085'] }), stats({ basicIntervalMs: NO_BASICS_MS }));
+    const events = runUntil(battle, 3000);
+    const firstWave = events.find((event): event is Extract<BattleEvent, { type: 'waveSpawned' }> => event.type === 'waveSpawned')!;
+    const mainUid = Math.min(...firstWave.uids);
+    const followUps = hitsOf(events, (hit) => hit.source === 'followUp');
+    expect(followUps.length).toBeGreaterThan(0);
+    for (const hit of followUps) expect(hit.targetUid).not.toBe(mainUid);
+  });
+
+  it('同花迴響（PS028）：由飛牌湊成同花時，重演給下一張飛牌，不是同一次施放', () => {
+    const battle = sim(hero('JOB28', ['SK053', 'SK051'], { passiveIds: ['PS027', 'PS028'] }), stats({ basicIntervalMs: NO_BASICS_MS }));
+    const events = runUntil(battle, 60_000);
+    const cards = events.filter((event): event is Extract<BattleEvent, { type: 'cardPlayed' }> => event.type === 'cardPlayed');
+    const castSkillOf = new Map(
+      events.filter((event): event is Extract<BattleEvent, { type: 'skillCast' }> => event.type === 'skillCast').map((event) => [event.actionId, event.skillId]),
+    );
+    const pairIndex = cards.findIndex((card, index) => index > 0 && cards[index - 1]!.suit === card.suit && castSkillOf.get(card.actionId) === 'SK051');
+    expect(pairIndex).toBeGreaterThan(0);
+    const pairAction = cards[pairIndex]!.actionId;
+    const echoesOnPairCast = hitsOf(events, (hit) => hit.source === 'followUp' && hit.actionId === pairAction);
+    expect(echoesOnPairCast).toEqual([]);
+    const nextFlyingCard = cards.slice(pairIndex + 1).find((card) => castSkillOf.get(card.actionId) === 'SK051');
+    expect(nextFlyingCard).toBeDefined();
+    expect(hitsOf(events, (hit) => hit.source === 'followUp' && hit.actionId === nextFlyingCard!.actionId).length).toBeGreaterThan(0);
+  });
+
+  it('琥珀項鍊（EQ084）「下一次常規技能」：沒有直接傷害的常規技能（幻影、替身）也會釋放', () => {
+    const battle = sim(hero('JOB30', ['SK057', 'SK058', 'SK059'], { passiveIds: [], legendBaseIds: ['EQ084'] }), stats());
+    expect(hitsOf(runUntil(battle, 30_000), (hit) => hit.source === 'followUp').length).toBeGreaterThan(0);
+  });
+});

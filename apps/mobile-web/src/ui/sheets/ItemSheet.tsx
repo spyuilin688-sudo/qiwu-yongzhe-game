@@ -1,4 +1,4 @@
-import { describeLegend, skillNameLookup } from '@qiwu/content';
+import { describeLegend, legendInactiveReason, passiveIdsForJob, skillNameLookup } from '@qiwu/content';
 import {
   assertCanEquip,
   availabilityOf,
@@ -55,7 +55,14 @@ export function ItemSheet({ itemId, mode, identify, onClose }: { itemId: string;
   const sellBlock = sold ? null : sellBlockReason(state, item.id);
   const price = sellPriceOf({ catalog }, item);
   const loadout = readLoadout(state, catalog, state.player.currentJobId, view);
-  const legendInactive = item.hasLegendEffect && base.legend ? legendInactiveReason(base.legend.procs, loadout.skillIds, loadout.ultimateId) : null;
+  const legendInactive =
+    item.hasLegendEffect && base.legend
+      ? legendInactiveReason(catalog, base.legend, {
+          skillIds: loadout.skillIds,
+          ultimateId: loadout.ultimateId,
+          passiveIds: passiveIdsForJob(catalog, state.player.currentJobId),
+        })
+      : null;
 
   const act = async (action: () => Promise<boolean>) => {
     setBusy(true);
@@ -239,17 +246,4 @@ function sellBlockShort(code: string): string {
     default:
       return '不可出售';
   }
-}
-
-function legendInactiveReason(
-  procs: readonly { trigger: { kind: string; skillId?: string } }[],
-  skillIds: readonly string[],
-  ultimateId: string | null,
-): string | null {
-  for (const proc of procs) {
-    if (proc.trigger.kind === 'skillCast' && proc.trigger.skillId && !skillIds.includes(proc.trigger.skillId)) return '觸發技能不在此配置';
-    if (proc.trigger.kind === 'ultimateCast' && !ultimateId) return '目前沒有絕招';
-    if ((proc.trigger.kind === 'distinctRegularSequence' || proc.trigger.kind === 'directSkillCrit') && skillIds.length === 0) return '目前沒有常規技能';
-  }
-  return null;
 }

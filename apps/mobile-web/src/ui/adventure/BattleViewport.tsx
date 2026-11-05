@@ -12,7 +12,7 @@ import styles from './battle.module.css';
 /** 戰場構圖（規格 07）：角色腳點在寬 24%；敵人依 62%、76%、90% 排列，最多 3 敵。 */
 const ENEMY_X = [62, 76, 90] as const;
 /**
- * 戰場每 50ms 依快照重繪；向量圖本身與戰況無關（只依職業、怪物、地圖），
+ * 模擬每 50ms 一刻、戰場畫面約每 100ms 依快照重繪；向量圖本身與戰況無關（只依職業、怪物、地圖），
  * 以 memo 包裝讓 React 跳過未變動的 SVG 樹，避免每刻重建數百個節點。
  */
 const BackdropArt = memo(MapBackdrop);
@@ -23,8 +23,8 @@ const UnitPortrait = memo(UnitArt);
 
 /** 角色圖寬度（viewBox 64×80）；與 .heroBody 尺寸一致。 */
 const HERO_ART_WIDTH = 56;
-/** 角色身旁召喚物圖寬度（viewBox 40×40）。 */
-const UNIT_ART_SIZE = 30;
+/** 角色身旁召喚物圖寬度（viewBox 40×40）；兩個疊起來不高於角色（見 .units）。 */
+const UNIT_ART_SIZE = 26;
 /** 每張地圖 6 個小區、每區 5 關；第 6 區（26～30 關）為 BOSS 王庭。 */
 const STAGES_PER_ZONE = 5;
 
@@ -32,7 +32,7 @@ function zoneIndexOf(localStage: number): number {
   return Math.floor((localStage - 1) / STAGES_PER_ZONE);
 }
 
-/** 花色符號只是輔助，旁邊一律附文字（下一張）並在 aria-label 給完整花色名。 */
+/** 花色符號只是輔助：畫面顯示「下一張」＋符號，螢幕閱讀器讀隱藏文字中的完整花色名。 */
 const SUIT_GLYPHS = ['♥', '♦', '♣', '♠'] as const;
 const BOSS_BODY_X = 76;
 const FLOAT_LIFETIME_MS = 800;
@@ -144,24 +144,28 @@ export function BattleViewport() {
           </span>
         ) : null}
         {resources.length > 0 || view?.hero.cards ? (
-          <div className={styles.resourcePips} aria-label="角色資源">
+          <div className={styles.resourcePips} role="group" aria-label="角色資源">
             {resources.map(([id, value]) => (
               <span key={id}>
                 {RESOURCE_LABELS[id]} {value}
               </span>
             ))}
             {view?.hero.cards ? (
-              <span className={styles.nextSuit} aria-label={`下一張牌：${SUIT_NAMES[view.hero.cards.nextSuit]}${view.hero.cards.setPending ? '（已切牌）' : ''}`}>
+              <span className={styles.nextSuit}>
                 下一張
                 <span aria-hidden="true" data-suit={view.hero.cards.nextSuit}>
                   {SUIT_GLYPHS[view.hero.cards.nextSuit]}
+                </span>
+                <span className="visually-hidden">
+                  {SUIT_NAMES[view.hero.cards.nextSuit]}
+                  {view.hero.cards.setPending ? '（已切牌）' : ''}
                 </span>
               </span>
             ) : null}
           </div>
         ) : null}
         {companions.length > 0 ? (
-          <div className={styles.units} aria-label="召喚物">
+          <div className={styles.units} role="group" aria-label="召喚物">
             {companions.map((unit) => (
               <span
                 key={unit.uid}

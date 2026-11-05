@@ -10,8 +10,9 @@ import { useEffectiveLoadoutView } from './SkillBar.tsx';
 
 /** 古物等狀態頻繁更新時，裝備圖不變就不重繪。 */
 const EquipArt = memo(EquipIcon);
-const EQUIP_ICON_SIZE = 22;
-const SLOT_ICON_SIZE = 18;
+/** 圖示與部位名同列，維持格高 48px（規格裝備區 116 高）。 */
+const EQUIP_ICON_SIZE = 18;
+const SLOT_ICON_SIZE = 14;
 const SlotArt = memo(SlotIcon);
 
 /** 八個裝備格（UI-A07）：2 列 × 4 格；部位與品質以文字顯示。短螢幕時收合為 60 高摘要列。 */
@@ -58,10 +59,12 @@ export function EquipmentGrid() {
               }
               data-slot={slot}
             >
-              <span className={styles.equipIcon} aria-hidden="true">
-                {item ? <EquipArt typeName={baseOf(catalog, item).typeName} slot={slot} size={EQUIP_ICON_SIZE} /> : <SlotArt slot={slot} size={SLOT_ICON_SIZE} />}
+              <span className={styles.equipSlot}>
+                <span className={styles.equipIcon} aria-hidden="true">
+                  {item ? <EquipArt typeName={baseOf(catalog, item).typeName} slot={slot} size={EQUIP_ICON_SIZE} /> : <SlotArt slot={slot} size={SLOT_ICON_SIZE} />}
+                </span>
+                {label}
               </span>
-              <span className={styles.equipSlot}>{label}</span>
               {item ? (
                 <span className={styles.equipInfo}>
                   <span className={styles.equipQuality}>{qualityShort(catalog, item.qualityId)}</span>

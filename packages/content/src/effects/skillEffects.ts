@@ -104,7 +104,7 @@ const DEFS: readonly SkillEffectDef[] = [
         distributeTotal: true,
       },
     ],
-    autoCast: { kind: 'hasEnemy' },
+    autoCast: { kind: 'bossWeaknessWindow' },
     generatesResource: false,
   },
   // ── 破陣騎士 JOB04 ──
@@ -192,7 +192,7 @@ const DEFS: readonly SkillEffectDef[] = [
   {
     skillId: 'SK015',
     steps: [{ type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 7000, hits: 4, hitIntervalMs: 150, retarget: 'rotate' }],
-    autoCast: { kind: 'hasEnemy' },
+    autoCast: { kind: 'clearingOr', inner: { kind: 'mainTargetHasStatusId', statusId: 'WEAK_POINT' } },
     generatesResource: true,
   },
   {
@@ -286,7 +286,7 @@ const DEFS: readonly SkillEffectDef[] = [
       { type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 15000 },
       { type: 'applyStatus', targets: 'sameAsPreviousDamage', status: { kind: 'mark', statusId: 'THUNDER_MARK', label: '雷印', durationMs: 8000 } },
     ],
-    autoCast: { kind: 'hasEnemy' },
+    autoCast: { kind: 'clearingOr', inner: { kind: 'mainTargetLacksStatusId', statusId: 'THUNDER_MARK', refreshBelowMs: 0 } },
     generatesResource: true,
   },
   {
@@ -420,14 +420,14 @@ const DEFS: readonly SkillEffectDef[] = [
         status: { kind: 'damageTakenFor', statusId: 'EXPOSE_MARK', label: '破綻標記', pctBp: 2500, durationMs: 8000, skillTags: ['處決'] },
       },
     ],
-    autoCast: { kind: 'mainTargetLacksStatusId', statusId: 'EXPOSE_MARK', refreshBelowMs: 0 },
+    autoCast: { kind: 'mainLacksStatusBeforeConsumer', statusId: 'EXPOSE_MARK', resource: 'COMBO', atLeast: 4 },
     generatesResource: true,
   },
   // ── 影舞者 JOB18 ──
   {
     skillId: 'SK035',
     steps: [{ type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 8000, hits: 4, hitIntervalMs: 150, retarget: 'rotate' }],
-    autoCast: { kind: 'hasEnemy' },
+    autoCast: { kind: 'clearingOr', inner: { kind: 'selfResourceBelow', resource: 'COMBO', amount: 5 } },
     generatesResource: true,
   },
   {
@@ -459,7 +459,7 @@ const DEFS: readonly SkillEffectDef[] = [
       { type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 8000 },
       { type: 'applyStatus', targets: 'sameAsPreviousDamage', status: POISON_2 },
     ],
-    autoCast: { kind: 'hasEnemy' },
+    autoCast: { kind: 'clearingOr', inner: { kind: 'targetStacksBelow', statusId: 'POISON', amount: 5 } },
     generatesResource: true,
   },
   // ── 劇毒使徒 JOB20 ──
@@ -530,7 +530,7 @@ const DEFS: readonly SkillEffectDef[] = [
       { type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 10000, hits: 3, hitIntervalMs: 200, retarget: 'rotate' },
       { type: 'applyStatus', targets: { kind: 'main' }, status: SEAL_1 },
     ],
-    autoCast: { kind: 'hasEnemy' },
+    autoCast: { kind: 'clearingOr', inner: { kind: 'targetStacksBelow', statusId: 'SEAL', amount: 3 } },
     generatesResource: true,
   },
   {

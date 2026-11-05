@@ -26,7 +26,8 @@ const COEF_PATTERN = /\d+\.\d{2}A/g;
 function referencedSkillIds(proc: ProcDef): string[] {
   const ids: string[] = [];
   const trigger = proc.trigger;
-  if (trigger.kind === 'skillCast' || trigger.kind === 'skillKill') ids.push(trigger.skillId);
+  if (trigger.kind === 'skillKill') ids.push(trigger.skillId);
+  if (trigger.kind === 'skillCast') ids.push(...trigger.skillIds);
   if (trigger.kind === 'skillEnded' && trigger.skillId) ids.push(trigger.skillId);
   if (trigger.kind === 'skillCastConsumed' || trigger.kind === 'skillCastRetained') ids.push(...trigger.skillIds);
   const payload = proc.payload;

@@ -22,8 +22,8 @@
     "validate:content": "vitest run packages/content",
     "e2e": "npm run e2e -w @qiwu/mobile-web",
     "check": "npm run typecheck && npm run validate:content && npm run test",
-    "balance": "node tools/balance/report.ts docs/BALANCE_REPORT.md",
-    "balance:breakdown": "node tools/balance/breakdown.ts"
+    "balance": "node --experimental-strip-types tools/balance/report.ts docs/BALANCE_REPORT.md",
+    "balance:breakdown": "node --experimental-strip-types tools/balance/breakdown.ts"
   },
   "devDependencies": {
     "@types/node": "22.20.5",

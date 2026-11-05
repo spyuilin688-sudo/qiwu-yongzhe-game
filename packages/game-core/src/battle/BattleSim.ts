@@ -84,6 +84,8 @@ interface StoredExtraHit {
   readonly fallbackMainCoefBp: number;
   readonly timing: StoredTiming;
   readonly skillId: string | null;
+  /** 存入時的行動 ID：同一次行動不能領回自己存的追加（同花迴響由飛牌湊成對時，給的是下一張飛牌）。 */
+  readonly storedByActionId: number | null;
   charges: number;
 }
 
@@ -236,7 +238,6 @@ export class BattleSim {
   private resourceBasicCounters: Partial<Record<ResourceId, number>> = {};
   private focusTargetUid: number | null = null;
   private stored: StoredExtraHit[] = [];
-  private unitRoundBonus: { unitKind: UnitKind; pctBp: number; remaining: number } | null = null;
   private readonly unitPartBonus = new Map<string, number>();
   private readonly actions = new Map<number, ActionTrack>();
   private cards: CardState = emptyCards();
@@ -292,7 +293,6 @@ export class BattleSim {
       for (const unit of this.units) this.emit({ type: 'unitRemoved', atMs: this.timeMs, kind: unit.kind, uid: unit.uid, reason: 'replaced' });
       this.units = [];
       this.buffs = [];
-      this.unitRoundBonus = null;
       this.unitPartBonus.clear();
       this.cards = emptyCards();
     }
@@ -395,11 +395,12 @@ export class BattleSim {
     this.stored = this.stored.filter((entry) => activeProcIds.has(entry.procId));
     const partBonusSkills = new Set(procDefs.flatMap((def) => (def.payload.kind === 'nextSkillUnitPartBonus' ? [def.payload.skillId] : [])));
     for (const skillId of [...this.unitPartBonus.keys()]) if (!partBonusSkills.has(skillId)) this.unitPartBonus.delete(skillId);
-    const roundBonus = this.unitRoundBonus;
-    if (roundBonus && !procDefs.some((def) => def.payload.kind === 'nextUnitRoundBonus' && def.payload.unitKind === roundBonus.unitKind)) {
-      this.unitRoundBonus = null;
+    const keepsRoundBonus = procDefs.some((def) => def.payload.kind === 'nextUnitRoundBonus');
+    const keepsRoundExtra = procDefs.some((def) => def.payload.kind === 'nextUnitRoundExtra');
+    for (const unit of this.units) {
+      if (!keepsRoundBonus) unit.pendingRoundBonusBp = 0;
+      if (!keepsRoundExtra) unit.pendingExtraCoefBp = 0;
     }
-    if (!procDefs.some((def) => def.payload.kind === 'nextUnitRoundExtra')) for (const unit of this.units) unit.pendingExtraCoefBp = 0;
     if (!this.kit.suits) this.cards = emptyCards();
   }
 
@@ -700,12 +701,9 @@ export class BattleSim {
       if (unit.intervalMs <= 0 || unit.nextAttackAtMs > now || unit.nextAttackAtMs > unit.expiresAtMs) continue;
       const targets = this.selectTargets(unit.attackTargets);
       if (targets.length === 0) continue;
-      let roundBonus = 0;
-      if (unit.damageSource === 'summon' && this.unitRoundBonus && this.unitRoundBonus.unitKind === unit.kind && this.unitRoundBonus.remaining > 0) {
-        roundBonus = this.unitRoundBonus.pctBp;
-        this.unitRoundBonus.remaining -= 1;
-        if (this.unitRoundBonus.remaining === 0) this.unitRoundBonus = null;
-      }
+      // 協同校準：觸發當下在場的砲台各自的下一發加成，用掉即清除（不是共用次數）。
+      const roundBonus = unit.pendingRoundBonusBp;
+      unit.pendingRoundBonusBp = 0;
       const actionId = this.newActionId();
       for (const target of targets) {
         this.pushHit({
@@ -736,7 +734,10 @@ export class BattleSim {
         unit.pendingExtraCoefBp = 0;
       }
       unit.attacksMade += 1;
-      const overclock = this.buffs.find((buff) => buff.effect.kind === 'unitAttackIntervalMult' && buff.effect.unitKind === unit.kind);
+      // 超頻只作用於施放當下已在場的砲台（規格「現有砲台」）；之後新架設的不受影響。
+      const overclock = this.buffs.find(
+        (buff) => buff.effect.kind === 'unitAttackIntervalMult' && buff.effect.unitKind === unit.kind && buff.affectedUnitUids.includes(unit.uid),
+      );
       const interval =
         overclock?.effect.kind === 'unitAttackIntervalMult' ? scaleBp(unit.intervalMs, overclock.effect.multBp) : unit.intervalMs;
       unit.nextAttackAtMs = now + interval;
@@ -822,7 +823,8 @@ export class BattleSim {
   }
 
   private fireSkillEnded(track: ActionTrack, now: number): void {
-    const reference = this.enemyByUid(track.lastTargetUid) ?? this.mainTarget();
+    // 最後一段打到的目標可能已死；仍以它為參照，讓「另一目標」排除它而不是排除新的主目標。
+    const reference = this.enemies.find((enemy) => enemy.uid === track.lastTargetUid) ?? this.mainTarget();
     const origin: ProcOrigin = { actionId: track.actionId, atMs: now + this.catalog.tuning.battle.minHitDelayMs };
     this.fireMatching(
       (trigger) =>
@@ -1342,6 +1344,8 @@ export class BattleSim {
           (step.type === 'applyStatus' && step.status.statusId === statusId) ||
           (step.type === 'selfBuff' && step.effect.kind === 'basicAppliesStatus' && step.effect.status.statusId === statusId),
       );
+    const consumesResource = (resource: ResourceId): boolean =>
+      steps.some((step) => step.type === 'damage' && step.consume?.from === 'selfResource' && step.consume.resource === resource);
     switch (rule.kind) {
       case 'pendingSetSuit':
         return steps.some((step) => step.type === 'playCards' && step.mode === 'setNext');
@@ -1351,6 +1355,11 @@ export class BattleSim {
         return appliesStatus(rule.statusId);
       case 'targetMarkKindsAtLeast':
         return rule.statusIds.filter((statusId) => appliesStatus(statusId)).length >= rule.amount;
+      // 「資源未滿時優先」只有配置裡有消耗該資源的技能才有意義（影刃刺客沒有絕招時連擊點會一直停在 5）。
+      case 'selfResourceBelow':
+        return consumesResource(rule.resource);
+      case 'clearingOr':
+        return this.loadoutCanProduce(rule.inner);
       default:
         return true;
     }
@@ -1393,15 +1402,18 @@ export class BattleSim {
         return (this.resources[rule.resource] ?? 0) < rule.amount;
       case 'selfBuffAbsent':
         return !this.buffs.some((buff) => buff.buffId === rule.buffId);
+      // 「少於上限或最舊者即將結束」只看最舊的那一個；較新的單位快到期不會讓最舊者被提前替換。
       case 'unitsBelowCapOrOldestExpiring': {
-        const units = this.units.filter((unit) => unit.kind === rule.unitKind);
+        const units = this.units
+          .filter((unit) => unit.kind === rule.unitKind)
+          .sort((a, b) => a.spawnedAtMs - b.spawnedAtMs || a.uid - b.uid);
         if (units.length < rule.below) return true;
-        return units.some((unit) => unit.expiresAtMs - now <= rule.oldestRemainingAtMostMs);
+        return units[0]!.expiresAtMs - now <= rule.oldestRemainingAtMostMs;
       }
       case 'groupBelowCapOrOldestExpiring': {
         const units = this.groupUnits(rule.capGroup);
         if (units.length < rule.below) return true;
-        return units.some((unit) => unit.expiresAtMs - now <= rule.oldestRemainingAtMostMs);
+        return units[0]!.expiresAtMs - now <= rule.oldestRemainingAtMostMs;
       }
       case 'groupCountAtLeast':
         return this.groupUnits(rule.capGroup).length >= rule.amount;
@@ -1417,7 +1429,32 @@ export class BattleSim {
         return this.kit.suits !== null && this.nextSuit() === this.kit.suits.preferredSuit;
       case 'pendingSetSuit':
         return this.cards.setPending;
+      case 'clearingOr':
+        return this.aliveEnemies().length >= 2 || (this.loadoutCanProduce(rule.inner) ? this.softConditionMet(rule.inner, now) : true);
+      case 'bossWeaknessWindow':
+        return this.bossWeaknessWindowOpen(now);
+      case 'mainLacksStatusBeforeConsumer': {
+        if (main && findStatus(main, rule.statusId)) return false;
+        const consumerEquipped = this.skillSlots.some((slot) =>
+          slot.skill.effect?.steps.some((step) => step.type === 'damage' && step.consume?.from === 'selfResource' && step.consume.resource === rule.resource),
+        );
+        return !consumerEquipped || (this.resources[rule.resource] ?? 0) >= rule.atLeast;
+      }
     }
+  }
+
+  /** 非 BOSS 戰、或 BOSS 沒有易傷循環時永遠成立；否則只在易傷窗口內成立（等待上限仍是 3 秒）。 */
+  private bossWeaknessWindowOpen(now: number): boolean {
+    const boss = this.boss;
+    if (!boss) return true;
+    const cycles = boss.mechanics.filter((mechanic) => mechanic.kind === 'vulnerabilityCycle');
+    if (cycles.length === 0) return true;
+    return cycles.some((mechanic) => {
+      if (mechanic.kind !== 'vulnerabilityCycle') return false;
+      if (mechanic.active && (now < mechanic.active.fromMs || now >= mechanic.active.toMs)) return false;
+      const offset = now % mechanic.cycleMs;
+      return offset >= mechanic.windowFromMs && offset < mechanic.windowToMs;
+    });
   }
 
   private castSkill(slot: SkillSlot, now: number, main: EnemyState): void {
@@ -1478,6 +1515,7 @@ export class BattleSim {
 
     // 「下一次絕招追加」對所有絕招生效（含沒有傷害段的機甲總動員）；常規技能只有直接傷害技能才釋放。
     if (slot.ultimate) this.releaseStored('nextUltimate', main, actionId, ctx.atMs, null);
+    else this.releaseStored('nextRegularSkillAny', main, actionId, ctx.atMs, null);
     if (ctx.hasDamage) {
       if (!slot.ultimate) this.releaseStored('nextRegularSkill', main, actionId, ctx.atMs, null);
       this.releaseStored('nextSkillId', main, actionId, ctx.atMs, skillId);
@@ -1502,7 +1540,7 @@ export class BattleSim {
           }
           break;
         case 'skillCast':
-          if (trigger.skillId === skillId && (!trigger.singleTargetOnly || singleTarget)) this.triggerProc(proc, now, main, origin);
+          if (trigger.skillIds.includes(skillId) && (!trigger.singleTargetOnly || singleTarget)) this.triggerProc(proc, now, main, origin);
           break;
         case 'skillCastConsumed':
           if (trigger.skillIds.includes(skillId) && ctx.consumedTotal >= trigger.minConsumed) this.triggerProc(proc, now, main, origin);
@@ -1732,16 +1770,25 @@ export class BattleSim {
 
   private applySelfBuff(step: SelfBuffStep, now: number): void {
     const extraMs = this.kit.buffDurationBonus.filter((bonus) => bonus.buffId === step.buffId).reduce((sum, bonus) => sum + bonus.addMs, 0);
-    const wasActive = this.buffs.some((buff) => buff.buffId === step.buffId);
+    const previous = this.buffs.find((buff) => buff.buffId === step.buffId);
     this.buffs = this.buffs.filter((buff) => buff.buffId !== step.buffId);
     const effect = step.effect;
     const charges = effect.kind === 'chargedFollowUp' ? effect.charges : effect.kind === 'suitBoost' ? 1 : 0;
-    this.buffs.push({ buffId: step.buffId, label: step.label, expiresAtMs: now + step.durationMs + extraMs, effect, charges, firedProcIds: [] });
-    // 續期只延長時間；已在超頻中的下一發不再重複縮短。
-    if (effect.kind !== 'unitAttackIntervalMult' || wasActive) return;
-    // 超頻立即作用於下一發：已排程的下一次攻擊依新間隔重新計算。
+    const alreadyAffected = previous?.affectedUnitUids ?? [];
+    const present = effect.kind === 'unitAttackIntervalMult' ? this.units.filter((unit) => unit.kind === effect.unitKind).map((unit) => unit.uid) : [];
+    this.buffs.push({
+      buffId: step.buffId,
+      label: step.label,
+      expiresAtMs: now + step.durationMs + extraMs,
+      effect,
+      charges,
+      firedProcIds: [],
+      affectedUnitUids: [...new Set([...alreadyAffected, ...present])],
+    });
+    if (effect.kind !== 'unitAttackIntervalMult') return;
+    // 超頻立即作用於下一發：新納入的砲台把已排程的下一次攻擊依新間隔重新計算；續期時已在超頻中的不再重複縮短。
     for (const unit of this.units) {
-      if (unit.kind !== effect.unitKind) continue;
+      if (!present.includes(unit.uid) || alreadyAffected.includes(unit.uid)) continue;
       unit.nextAttackAtMs = now + scaleBp(unit.nextAttackAtMs - now, effect.multBp);
     }
   }
@@ -1778,7 +1825,7 @@ export class BattleSim {
 
   // ───────────── 召喚單位 ─────────────
 
-  private addUnit(input: Omit<UnitState, 'uid' | 'spawnedAtMs' | 'nextAttackAtMs' | 'attacksMade' | 'pendingExtraCoefBp'>): UnitState {
+  private addUnit(input: Omit<UnitState, 'uid' | 'spawnedAtMs' | 'nextAttackAtMs' | 'attacksMade' | 'pendingExtraCoefBp' | 'pendingRoundBonusBp'>): UnitState {
     const unit: UnitState = {
       ...input,
       uid: this.nextUid,
@@ -1786,6 +1833,7 @@ export class BattleSim {
       nextAttackAtMs: input.intervalMs > 0 ? this.timeMs + input.intervalMs : Number.POSITIVE_INFINITY,
       attacksMade: 0,
       pendingExtraCoefBp: 0,
+      pendingRoundBonusBp: 0,
     };
     this.nextUid += 1;
     this.units.push(unit);
@@ -2004,7 +2052,10 @@ export class BattleSim {
   private applyPayload(procId: string, payload: ProcPayload, now: number, target: EnemyState | null, origin?: ProcOrigin): void {
     switch (payload.kind) {
       case 'nextUnitRoundBonus':
-        this.unitRoundBonus = { unitKind: payload.unitKind, pctBp: payload.pctBp, remaining: payload.maxUnits };
+        // 下一輪：觸發當下在場的同種單位，最多 maxUnits 座各自的下一發加成（不疊加，只取高）。
+        for (const unit of this.units.filter((candidate) => candidate.kind === payload.unitKind).slice(0, payload.maxUnits)) {
+          unit.pendingRoundBonusBp = Math.max(unit.pendingRoundBonusBp, payload.pctBp);
+        }
         return;
       case 'nextUnitRoundExtra':
         for (const unit of this.units) if (unit.kind === payload.unitKind) unit.pendingExtraCoefBp = payload.coefBp;
@@ -2038,15 +2089,20 @@ export class BattleSim {
         return;
       }
       case 'nextSummonHit':
-        this.storeExtraHit(procId, payload, this.hasSummonUnit() ? 'nextSummonHit' : 'nextBasic');
+        this.storeExtraHit(procId, payload, this.hasSummonUnit() ? 'nextSummonHit' : 'nextBasic', origin?.actionId ?? null);
         return;
       default:
-        this.storeExtraHit(procId, payload, payload.timing);
+        this.storeExtraHit(procId, payload, payload.timing, origin?.actionId ?? null);
     }
   }
 
   /** 同一來源最多存一筆；再次觸發只把次數補滿，不可囤積。 */
-  private storeExtraHit(procId: string, payload: Extract<ProcPayload, { kind: 'extraHit' }>, timing: StoredTiming): void {
+  private storeExtraHit(
+    procId: string,
+    payload: Extract<ProcPayload, { kind: 'extraHit' }>,
+    timing: StoredTiming,
+    storedByActionId: number | null,
+  ): void {
     const charges = payload.charges ?? 1;
     const existing = this.stored.find((entry) => entry.procId === procId);
     if (existing) {
@@ -2054,6 +2110,7 @@ export class BattleSim {
       return;
     }
     this.stored.push({
+      storedByActionId,
       procId,
       coefBp: payload.coefBp,
       target: payload.target,
@@ -2066,7 +2123,9 @@ export class BattleSim {
   }
 
   private releaseStored(timing: StoredTiming, target: EnemyState, actionId: number, atMs: number, skillId: string | null): void {
-    const due = this.stored.filter((entry) => entry.timing === timing && (timing !== 'nextSkillId' || entry.skillId === skillId));
+    const due = this.stored.filter(
+      (entry) => entry.timing === timing && entry.storedByActionId !== actionId && (timing !== 'nextSkillId' || entry.skillId === skillId),
+    );
     if (due.length === 0) return;
     for (const entry of due) {
       for (const hit of this.resolveProcTargets(entry.target, entry.count, entry.coefBp, entry.fallbackMainCoefBp, target)) {
@@ -2086,7 +2145,9 @@ export class BattleSim {
   ): { target: EnemyState; coefBp: number }[] {
     const main = this.mainTarget();
     const anchor = reference?.alive ? reference : main;
-    const others = this.aliveEnemies().filter((enemy) => enemy.uid !== anchor?.uid);
+    // 「另一目標」排除觸發行動打到的那一隻（即使已死）；有「無其他目標則主目標」的效果（星核墜飾）是相對主目標而言。
+    const excludedUid = fallbackMainCoefBp > 0 ? main?.uid : (reference?.uid ?? main?.uid);
+    const others = this.aliveEnemies().filter((enemy) => enemy.uid !== excludedUid);
     const each = (targets: readonly EnemyState[]) => targets.map((target) => ({ target, coefBp }));
     switch (rule) {
       case 'same':
