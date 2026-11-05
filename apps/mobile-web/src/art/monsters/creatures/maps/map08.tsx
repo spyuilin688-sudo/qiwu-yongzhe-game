@@ -10,8 +10,11 @@ export const MAP08_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
     <>
       <Shadow x={34} w={42} />
       <Detail d="M44 56v3M38 56v3.5M31 55v3.5" w={1.8} />
-      <path d={circles([[46.5, 50, 6], [38.5, 48.6, 7], [30, 47, 7.6]])} fill={k.paint('#e8703a')} />
-      <path d={circles([[46.5, 47, 1.3], [38.5, 45, 1.4], [30.5, 43, 1.4]])} fill={P.ember} stroke="none" />
+      {/* 體節分開畫、由尾到頭疊：合成單一路徑時每圈描邊都會透出來，小尺寸看起來像「0()」字樣。 */}
+      <circle cx={47} cy={50.5} r={6} fill={k.paint('#e8703a')} />
+      <circle cx={38.5} cy={48.8} r={7.2} fill={k.paint('#ee7c3e')} />
+      <circle cx={29.5} cy={47.2} r={7.8} fill={k.paint('#f28444')} />
+      <path d={circles([[48, 47.5, 1.3], [39.5, 45, 1.4], [30.5, 43, 1.4]])} fill={P.ember} stroke="none" />
       <path d={flame(20.5, 35, 5.2, 14)} fill={k.paint(P.lava)} />
       <path d={flame(20.5, 34.5, 2.4, 7.5)} fill={P.ember} stroke="none" />
       <circle cx={19} cy={42} r={9} fill={k.paint('#f08a4a')} />
@@ -56,11 +59,13 @@ export const MAP08_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
         <path d={circles([[30, 40.5, 3.2], [36.5, 39.5, 3.4], [42.5, 41.5, 2.8]])} fill={k.paint(P.coal)} strokeWidth={1.6} />
         <Detail d="M35.5 38l1.6 2.4M29.4 39.6l1.4 1.8" color={P.ember} w={1.3} />
         <ellipse cx={34} cy={50.5} rx={8} ry={2} fill="#f2a070" stroke="none" />
-        <ellipse cx={17} cy={44} rx={8} ry={6} fill={skin} />
-        <Detail d="M10 47.2Q14 49.2 18.5 47.2" w={1.5} />
-        <Eye x={14} y={42} r={2.3} />
-        <Eye x={19.6} y={41.6} r={2.3} />
-        <Blush x={20.5} y={46.4} rx={1.7} />
+        {/* 頭部刻意放大：蜥蜴身形扁長，戰場約 36px 時頭太小就只剩一條橘線。 */}
+        <ellipse cx={17} cy={43} rx={9.2} ry={7.2} fill={skin} />
+        <Shine x={13} y={38.6} rx={2.4} ry={1.1} rotate={-15} />
+        <Detail d="M9 46.8Q13.5 49.2 18.5 46.8" w={1.5} />
+        <Eye x={13.6} y={41.6} r={2.7} />
+        <Eye x={20} y={41.2} r={2.7} />
+        <Blush x={21.4} y={46.2} rx={1.8} />
       </>
     );
   },

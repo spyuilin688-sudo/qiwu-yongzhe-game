@@ -13,7 +13,7 @@ export const FIELD: Readonly<Record<SkillFamily, Tone>> = {
   sword: { base: '#4f80bb', shade: '#2d4f86', light: '#8db6e6' },
   bow: { base: '#5c9a48', shade: '#386a2b', light: '#9bd07a' },
   mage: { base: '#6e51ad', shade: '#432e78', light: '#a78bdb' },
-  rogue: { base: '#4c4870', shade: '#2a2843', light: '#7f7aab' },
+  rogue: { base: '#4a5066', shade: '#272a38', light: '#808aa6' },
   priest: { base: '#2f8f8a', shade: '#1b5e5b', light: '#6cc7be' },
   jester: { base: '#c94552', shade: '#8a2633', light: '#f2838b' },
   artisan: { base: '#b8673a', shade: '#7a3f1f', light: '#ea9e6a' },

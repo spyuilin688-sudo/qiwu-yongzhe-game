@@ -46,10 +46,12 @@ export const MAP03_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
       <Shine x={44} y={31.5} rx={2} ry={1.1} rotate={30} opacity={0.6} />
       <Detail d="M14 40Q11 34 7 33M18 39.5Q17 33 14.5 31" w={1.5} />
       <path d={circles([[7, 33, 1.6], [14.5, 31, 1.6]])} fill={P.copper} strokeWidth={1.2} />
-      <circle cx={17} cy={46} r={7.2} fill={k.paint('#9aa3b0')} />
-      <Eye x={14} y={45.5} r={2.4} />
-      <Eye x={19.8} y={45.5} r={2.4} />
-      <Smile x={16.5} y={49.6} w={2.8} depth={1.2} />
+      {/* 頭用暖青銅色而非灰色：灰頭配兩顆大黑眼在 48px 會被讀成骷髏。 */}
+      <circle cx={17} cy={46} r={7.4} fill={k.paint('#e8b27a')} />
+      <Eye x={14} y={45} r={2.5} />
+      <Eye x={19.8} y={45} r={2.5} />
+      <Blush x={12.4} y={49} rx={1.6} />
+      <Smile x={16.8} y={49.4} w={2.8} depth={1.2} />
     </>
   ),
 

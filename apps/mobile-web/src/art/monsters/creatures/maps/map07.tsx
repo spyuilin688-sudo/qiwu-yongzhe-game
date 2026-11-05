@@ -31,7 +31,7 @@ export const MAP07_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
     );
   },
 
-  /** 冰帽鳥：頭頂結了一頂冰晶帽的藍色小鳥。 */
+  /** 冰帽鳥：頭頂結了一頂圓冰帽、帽緣掛著小冰柱的藍色小鳥。 */
   'MON-07-2': (k) => (
     <>
       <Shadow x={33} w={28} />
@@ -40,8 +40,11 @@ export const MAP07_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
       <circle cx={33} cy={42} r={12.5} fill={k.paint(P.bird)} />
       <ellipse cx={29} cy={46.5} rx={7} ry={7} fill={P.snow} stroke="none" />
       <path d={leaf(35, 42, 11, 8, 15)} fill={k.paint(P.iceDeep)} strokeWidth={1.6} />
-      <path d="M20 32L22 22L26 28L30 17.5L33.5 27L38 21L39.5 31.5Z" fill={k.paint(P.ice)} />
-      <Detail d="M29.6 20.5L30.4 27" color={COMMON.white} w={1.2} />
+      {/* 圓頂冰帽＋帽緣冰柱＋冰球：尖刺狀冰帽會被讀成王冠，而王冠是小首領專用的身分符號。 */}
+      <circle cx={30} cy={20} r={2.8} fill={k.paint(P.snow)} strokeWidth={1.6} />
+      <path d="M20.5 32.5C20 25.5 24.5 21.5 30 21.5C35.5 21.5 40 25.5 39.5 32Z" fill={k.paint(P.ice)} />
+      <path d="M21.6 32.4l1.3 3.6l1.3 -3.6ZM26.2 32.2l1.2 2.8l1.2 -2.8ZM32.6 32.1l1.2 3.2l1.2 -3.2ZM36.6 32l1.1 2.5l1.1 -2.5Z" fill={P.ice} strokeWidth={1.1} />
+      <Detail d="M23.6 28.5Q25 24.6 28.8 23.6" color={COMMON.white} w={1.3} />
       <path d="M21.5 38.5L15 41.4L21.5 44.2Z" fill={P.beak} strokeWidth={1.5} />
       <Eye x={25} y={38} r={2.5} />
       <Eye x={31} y={38.4} r={2.4} />

@@ -17,8 +17,8 @@ export const MAP11_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
         <Leg x={47} top={50} w={5} fill={leg} />
         <path d={leaves([[41, 33, 15, 8, -62], [44, 35, 12, 7, -28]])} fill={k.paint(P.sky)} strokeWidth={1.6} />
         <path d={ring(36, 41, 12, 15.5, 10, 0, 'round')} fill={k.paint(P.cloud)} />
-        <path d={leaf(24.5, 35, 7, 4.6, 200)} fill={k.paint(P.face)} strokeWidth={1.4} />
-        <ellipse cx={19.5} cy={40} rx={7} ry={8} fill={k.paint(P.face)} />
+        <path d={leaf(24.5, 35, 7, 4.6, 200)} fill={k.paint(P.faceSoft)} strokeWidth={1.4} />
+        <ellipse cx={19.5} cy={40} rx={7} ry={8} fill={k.paint(P.faceSoft)} />
         <path d={ring(22, 32, 3.4, 5, 6, 0, 'round')} fill={k.paint(P.cloud)} strokeWidth={1.5} />
         <Eye x={17} y={39.4} r={2.4} />
         <Eye x={22.4} y={39.4} r={2.4} />

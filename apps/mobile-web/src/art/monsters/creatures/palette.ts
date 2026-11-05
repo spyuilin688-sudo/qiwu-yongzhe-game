@@ -107,6 +107,8 @@ export const MAP05 = {
   camel: '#d8a868',
   well: '#a89a86',
   glass: '#5fd0d8',
+  /** 沙狐盜首的毛色：比沙鼠一族更橘，同圖兩種獸才不會混在一起。 */
+  fox: '#e39350',
 } as const;
 
 export const MAP06 = {
@@ -187,6 +189,8 @@ export const MAP11 = {
   blue: '#5a8fd8',
   feather: '#7fc0a8',
   face: '#8a7a9a',
+  /** 普通雲翼羊的淺臉：深臉配黑豆眼在 48px 會糊成一團，淺一階才看得到眼神。 */
+  faceSoft: '#bcaed0',
   horn: '#d8c09a',
   griffin: '#d8a35a',
   stone: '#b8b4aa',

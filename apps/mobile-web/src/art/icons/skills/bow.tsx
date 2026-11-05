@@ -82,7 +82,7 @@ export const BOW_GLYPHS: Readonly<Record<string, SkillGlyph>> = {
   /** 協同撲擊：獸爪三道抓痕與獵人的箭交叉，同一目標兩段攻擊。 */
   SK018: () => (
     <>
-      <path d={[crescent(26, 6.6, 9, 33, 3.4, 2.8), crescent(32, 9, 15, 37, 3.4, 2.8), crescent(38, 11.6, 21, 40.6, 3.4, 2.8)].join('')} fill={FX.fur.light} />
+      <path d={[crescent(25, 6, 8, 33, 4, 4.4), crescent(31.6, 8.4, 14.6, 37, 4, 4.4), crescent(38, 11, 21.4, 40.6, 4, 4.4)].join('')} fill={FX.fur.light} />
       <Arrow x1={8.6} y1={11.6} x2={41} y2={34} fletch={FX.mark} />
     </>
   ),
@@ -91,9 +91,9 @@ export const BOW_GLYPHS: Readonly<Record<string, SkillGlyph>> = {
   SK019: () => (
     <>
       <Beam d={strokes([[4.6, 32, 10.6, 32], [6, 38, 13, 38], [4.6, 22, 8.6, 22]])} color={FX.white} width={1.2} />
-      <path d={shape(WOLF, 17.6, 19, 0.92)} fill={FX.fur.shade} />
+      <path d={shape(WOLF, 15, 16.4, 0.92)} fill={FX.fur.shade} />
       <path d={shape(WOLF, 26, 29, 1.18)} fill={FX.fur.base} />
-      <path d={dots([[28.4, 26.2, 1.1], [19.4, 16.8, 0.9]])} fill={FX.cardInk} stroke="none" />
+      <path d={dots([[28.4, 26.2, 1.1], [16.8, 14.2, 0.9]])} fill={FX.cardInk} stroke="none" />
     </>
   ),
 

@@ -34,7 +34,7 @@ export const BALANCE_ADJUSTMENTS: readonly BalanceAdjustment[] = [
   {
     skillId: 'SK019',
     designToken: '2.20A',
-    tunedToken: '1.60A',
+    tunedToken: '1.50A',
     reason: '獸王獵手常駐戰獸＋範圍招，清怪比中位數高約 17%（協同撲擊不再白等標記後更高）。',
   },
   {

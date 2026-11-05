@@ -100,7 +100,9 @@ export const MAP01_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
         <path d="M12 33Q13.5 39 16.5 35.5Z" fill={COMMON.ruby} strokeWidth={1.4} />
         <ellipse cx={21} cy={19.5} rx={15} ry={3.8} fill={k.paint(P.straw)} />
         <path d="M13.5 19.5Q13.5 9.5 21 9.5Q28.5 9.5 28.5 19.5Z" fill={k.paint(P.straw)} />
-        <path d="M13.7 16.5Q21 18.5 28.3 16.5L28.4 19.4Q21 21 13.6 19.4Z" fill={COMMON.ruby} strokeWidth={1.4} />
+        {/* 帽帶刻意用草綠＋插一支麥穗：「草帽＋紅帽帶」是知名作品的招牌，必須避開。 */}
+        <path d="M13.7 16.5Q21 18.5 28.3 16.5L28.4 19.4Q21 21 13.6 19.4Z" fill={P.leafDeep} strokeWidth={1.4} />
+        <path d={leaves([[25.5, 17.5, 8, 2.4, -58], [25.5, 17.5, 6.5, 2, -88]])} fill={P.straw} strokeWidth={1.2} />
         <Detail d="M9 20Q11 21 13 20.8M29 20.8Q31 21 33 20" color="#a8823a" w={1.1} />
         <AngryEye x={16.5} y={26} r={3} inner="left" />
         <Shine x={23} y={25} rx={2.2} ry={1.3} />

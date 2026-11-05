@@ -1,4 +1,4 @@
-import { dots, ellipse, polar, shape, sparkle, star, strokes } from './geometry.ts';
+import { dots, ellipse, leaf, polar, shape, sparkle, star, strokes } from './geometry.ts';
 import { Beam, Glint, TEMPLATE, at, type SkillGlyph } from './kit.tsx';
 import { FX } from './palette.ts';
 
@@ -20,12 +20,14 @@ function snowflakeArms(cx: number, cy: number, r: number, branch: number): strin
   return parts.join('');
 }
 
-/** 六片尖瓣（寒晶綻放）：rotate 為整朵花的起始角度。 */
-function petals(r: number, size: number, length: number, angles: readonly number[]): string {
-  return angles.map((deg) => {
-    const [x, y] = polar(24, 24, r, deg);
-    return shape(TEMPLATE.diamond, x, y, size, length, deg + 90);
-  }).join('');
+/** 寒晶綻放的花瓣：圓潤的梭形瓣（不是尖刺），一圈排開才像花而不像雪花。 */
+function petals(r: number, length: number, width: number, angles: readonly number[]): string {
+  return angles
+    .map((deg) => {
+      const [x, y] = polar(24, 24, r, deg);
+      return leaf(x, y, length, width, deg);
+    })
+    .join('');
 }
 
 /** 法師系（紫底）：元素術士走火、冰、雷與引爆，冰咒師一線全以冰晶的不同形態區分。 */
@@ -125,11 +127,11 @@ export const MAGE_GLYPHS: Readonly<Record<string, SkillGlyph>> = {
     </>
   ),
 
-  /** 寒晶綻放：冰晶像花一樣綻開六片尖瓣。 */
+  /** 寒晶綻放：冰晶像花一樣綻開五片圓瓣，瓣間再冒出小晶瓣。 */
   SK029: () => (
     <>
-      <path d={petals(9, 4, 9.4, [-90, 30, 150])} fill={FX.ice.base} />
-      <path d={petals(8.2, 3.4, 8, [-30, 90, 210])} fill={FX.ice.light} />
+      <path d={petals(9.6, 15, 9.6, [-90, -18, 54, 126, 198])} fill={FX.ice.base} />
+      <path d={petals(8.4, 8.4, 4.4, [-54, 18, 90, 162, 234])} fill={FX.ice.light} strokeWidth={1.3} />
       <circle cx="24" cy="24" r="3.8" fill={FX.white} strokeWidth={1.4} />
       <path d={dots([[9, 12, 1.1], [39, 12, 1.1], [24, 42, 1.1]])} fill={FX.white} stroke="none" />
     </>

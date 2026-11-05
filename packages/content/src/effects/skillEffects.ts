@@ -234,7 +234,7 @@ const DEFS: readonly SkillEffectDef[] = [
   // ── 獸王獵手 JOB10 ──
   {
     skillId: 'SK019',
-    steps: [{ type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 16000 }],
+    steps: [{ type: 'damage', targets: { kind: 'upTo', count: 3 }, coefBp: 15000 }],
     autoCast: { kind: 'hasEnemy' },
     generatesResource: true,
   },

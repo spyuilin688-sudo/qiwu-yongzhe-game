@@ -66,7 +66,7 @@ export const ROGUE_GLYPHS: Readonly<Record<string, SkillGlyph>> = {
   /** 影襲：三道紫色暗影爪斬劃過，下方三枚連擊點。 */
   SK033: () => (
     <>
-      <path d={[crescent(27, 5.6, 9, 31, 3.6, 3.2), crescent(33, 8, 15, 35, 3.8, 3.4), crescent(39, 11, 21, 38, 3.6, 3.2)].join('')} fill={FX.shadow.base} />
+      <path d={[crescent(26, 5.6, 8, 31, 4.4, 4.8), crescent(32.6, 8, 14.6, 35, 4.6, 5), crescent(39, 11, 21, 38, 4.4, 4.8)].join('')} fill={FX.shadow.base} />
       <Glint d="M24 10Q16 19 13 27M30.4 12.6Q22 22 19 31" color={FX.shadow.light} />
       <path d={[at(TEMPLATE.diamond, 9.6, 38.4, 2.8), at(TEMPLATE.diamond, 15, 38.4, 2.8), at(TEMPLATE.diamond, 20.4, 38.4, 2.8)].join('')} fill={FX.gold.base} strokeWidth={1.2} />
     </>
@@ -136,15 +136,16 @@ export const ROGUE_GLYPHS: Readonly<Record<string, SkillGlyph>> = {
     </>
   ),
 
-  /** 蔓毒之刃：刀刃上長出毒藤，把毒滴傳到另外兩個目標。 */
+  /** 蔓毒之刃：刀尖一顆大毒滴分裂成兩顆，沿虛線傳給其他敵人。 */
   SK039: () => (
     <>
-      <Beam d="M23 21Q29 13 36.4 12.6M25 27Q33 28.6 36.4 36" color={FX.venom.base} width={2} />
-      <path d={[at(TEMPLATE.diamond, 30.6, 14.6, 2.6, 30, 1), at(TEMPLATE.diamond, 31.4, 30.6, 2.6, -40, 1)].join('')} fill={FX.venom.light} strokeWidth={1.2} />
-      <path d={[at(TEMPLATE.drop, 39, 11.4, 2.8), at(TEMPLATE.drop, 38.6, 38.4, 2.8)].join('')} fill={FX.venom.base} strokeWidth={1.4} />
-      <Place x={16.6} y={30} angle={45} scale={1.05}>
+      <Beam d="M27 16Q34 10.6 38.6 14M28.6 24Q36 26 38 33.4" color={FX.venom.light} width={1.4} dash="2.4 2" />
+      <path d={[at(TEMPLATE.drop, 39.4, 17.4, 3), at(TEMPLATE.drop, 38, 37.6, 3)].join('')} fill={FX.venom.base} strokeWidth={1.4} />
+      <Place x={14.6} y={31.4} angle={45} scale={1.05}>
         <Dagger />
       </Place>
+      <path d={at(TEMPLATE.drop, 25.4, 20.4, 5.4)} fill={FX.venom.base} />
+      <Glint d="M23.4 21.6Q23.4 19.4 25 18" color={FX.venom.light} width={1.4} />
     </>
   ),
 

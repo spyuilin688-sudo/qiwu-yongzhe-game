@@ -491,7 +491,7 @@ const LEGENDS: readonly LegendEffectDef[] = [
     payload: { kind: 'extraHit', coefBp: 2500, target: 'otherOnly', timing: 'nextBasic' },
     internalCooldownMs: 3000,
   }),
-  legend('EQ073', { trigger: { kind: 'ultimateCast' }, payload: { kind: 'extraHit', coefBp: 5000, target: 'same', timing: 'nextBasic' } }),
+  legend('EQ073', { trigger: { kind: 'skillEnded', ultimate: true }, payload: { kind: 'extraHit', coefBp: 5000, target: 'same', timing: 'nextBasic' } }),
   legend('EQ074', { trigger: { kind: 'distinctRegularSequence', length: 2 }, payload: { kind: 'extraHit', coefBp: 2500, target: 'same', timing: 'nextBasic' } }),
   legend('EQ075', {
     trigger: { kind: 'armorBreakApplied' },

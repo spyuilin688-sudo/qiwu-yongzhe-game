@@ -53,18 +53,18 @@ export const MAP02_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
     );
   },
 
-  /** 黏糖怪：融化的糖漿團，肚子裡還卡著一顆糖果。 */
+  /** 黏糖怪：融化的糖漿團，頂端捲起一撮糖漿尖，身上黏滿彩色糖粒。 */
   'MON-02-3': (k) => (
     <>
       <Shadow w={40} />
       <ellipse cx={32} cy={58.4} rx={19} ry={3} fill={k.paint(P.amber)} />
-      <path d={leaf(31, 28, 9, 6, -62)} fill={k.paint(P.syrup)} strokeWidth={1.8} />
+      {/* 頂端是往後捲的糖漿尖，不用水滴形：水滴尖會讓整體讀成一口鐘。 */}
+      <path d="M24 31C25 25 31 21.5 37.5 22.5C34 24 33 27 35.5 30Z" fill={k.paint(P.syrup)} strokeWidth={1.8} />
       <path d={gumdrop(32, 58, 17, 31)} fill={k.paint(P.syrup)} />
       <path d="M15.6 47Q14.5 52.5 16.6 54.5Q18.6 52.5 17.6 47ZM46.6 45Q45.6 49.5 47.4 51Q49 49.5 48.2 45Z" fill={P.syrup} strokeWidth={1.4} />
-      <g opacity={0.85}>
-        <path d="M37 48l-3.2 -2.6v5.2ZM44.5 48l3.2 -2.6v5.2Z" fill={P.cream} strokeWidth={1.2} />
-        <ellipse cx={40.7} cy={48} rx={3.8} ry={2.8} fill={P.berry} strokeWidth={1.4} />
-      </g>
+      {/* 黏在身上的糖粒：換掉原本的包裝糖，那個剪影小尺寸會被看成一條魚。 */}
+      <Detail d={strokes([[39, 34, 41.5, 35.5], [44, 41, 45, 43.5], [38.5, 51.5, 41, 50.5]])} color={P.berry} w={2} />
+      <Detail d={strokes([[43, 35.5, 44.5, 37.5], [40.5, 44.5, 43, 45.5], [44.5, 49, 45.5, 51]])} color={P.cream} w={2} />
       <Shine x={22} y={34} rx={4} ry={2} rotate={-40} />
       <circle cx={18.5} cy={40.5} r={1.3} fill={COMMON.white} opacity={0.7} stroke="none" />
       <Eye x={24.5} y={41} r={2.8} />
@@ -157,7 +157,8 @@ export const MAP02_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
       <Shadow x={36} w={36} float />
       <path d={leaves([[33, 27, 18, 11, -105], [37, 28, 17, 10, -58]])} fill={k.paint(P.wing)} opacity={0.92} strokeWidth={1.6} />
       <path d={leaf(33, 38, 27, 20, 30)} fill={k.paint(P.wasp)} />
-      <Detail d={strokes([[45.4, 40, 41, 47.6], [50.2, 43.6, 46.8, 49.6]])} color={P.stripe} w={3} />
+      {/* 橫紋要貫穿整個腹部（垂直於腹軸）才讀得出「胡蜂」；短紋只會像一片紅葉。 */}
+      <Detail d={strokes([[38.9, 50.4, 46.7, 36.9], [43.2, 52.8, 50.9, 39.4], [48.5, 53.3, 54, 43.8]])} color={P.stripe} w={3.2} />
       <path d="M54.5 50.5L61 55L56 51.2Z" fill={P.stripe} strokeWidth={1.4} />
       <Detail d="M28 41l-2 6M33 42l1 6" w={1.6} />
       <circle cx={30} cy={35} r={6.6} fill={k.paint(P.stripe)} />

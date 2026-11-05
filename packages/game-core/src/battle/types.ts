@@ -96,10 +96,13 @@ export type HitTargeting =
   /** 命中時依「主目標、其餘生成序」輪替存活目標，第 index 段打第 index % n 名。 */
   | { readonly mode: 'rotate'; readonly index: number };
 
-/** 命中後才執行的附帶效果（確保「傷害後加層」順序）。 */
+/**
+ * 命中後才執行的附帶效果（確保「傷害後加層」順序）。targetUid 省略時套用在被命中的目標；
+ * 指定時（輪替技能對主目標加層）在攜帶它的那一段結算後套用到該目標一次。
+ */
 export type HitRider =
-  | { readonly kind: 'status'; readonly spec: StatusSpec }
-  | { readonly kind: 'copyDot'; readonly statusId: string; readonly toOthers: number };
+  | { readonly kind: 'status'; readonly spec: StatusSpec; readonly targetUid?: number }
+  | { readonly kind: 'copyDot'; readonly statusId: string; readonly toOthers: number; readonly targetUid?: number };
 
 export interface PendingHit {
   atMs: number;
@@ -122,6 +125,8 @@ export interface PendingHit {
   tracked: boolean;
   /** 原目標死亡時可依優先序重新選目標一次（餘箭追獵）。 */
   retargetOnce: boolean;
+  /** 推入時的波次序號；重新選目標的命中只在同一波內有效。 */
+  waveSerial: number;
 }
 
 export interface UnitState {

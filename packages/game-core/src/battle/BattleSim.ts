@@ -221,6 +221,8 @@ export class BattleSim {
   private events: BattleEvent[] = [];
 
   private waveIndex = 0;
+  /** 每生成一波 +1；會重新選目標的命中只在施放時的那一波內有效（不保留到下一波）。 */
+  private waveSerial = 0;
   private nextWaveAtMs: number | null = 0;
   private stageCleared = false;
   private waveFirstBasicPending = false;
@@ -383,7 +385,22 @@ export class BattleSim {
     this.procs = procDefs.map(
       (def) => previousProcs.get(def.procId) ?? { def, counter: 0, sequence: [], lastTriggeredAtMs: Number.NEGATIVE_INFINITY },
     );
+    this.pruneRemovedEffects(procDefs);
     this.ensureCompanion();
+  }
+
+  /** 卸下傳說或換配置後，已存起來的追加與加成只保留仍有來源的部分（不能帶著舊裝備的效果）。 */
+  private pruneRemovedEffects(procDefs: readonly ProcDef[]): void {
+    const activeProcIds = new Set(procDefs.map((def) => def.procId));
+    this.stored = this.stored.filter((entry) => activeProcIds.has(entry.procId));
+    const partBonusSkills = new Set(procDefs.flatMap((def) => (def.payload.kind === 'nextSkillUnitPartBonus' ? [def.payload.skillId] : [])));
+    for (const skillId of [...this.unitPartBonus.keys()]) if (!partBonusSkills.has(skillId)) this.unitPartBonus.delete(skillId);
+    const roundBonus = this.unitRoundBonus;
+    if (roundBonus && !procDefs.some((def) => def.payload.kind === 'nextUnitRoundBonus' && def.payload.unitKind === roundBonus.unitKind)) {
+      this.unitRoundBonus = null;
+    }
+    if (!procDefs.some((def) => def.payload.kind === 'nextUnitRoundExtra')) for (const unit of this.units) unit.pendingExtraCoefBp = 0;
+    if (!this.kit.suits) this.cards = emptyCards();
   }
 
   private addStaticModifiers(kit: HeroKit, mods: StaticModifiers): void {
@@ -598,6 +615,7 @@ export class BattleSim {
       }
     }
     this.enemies = spawned;
+    this.waveSerial += 1;
     this.waveFirstBasicPending = true;
     this.emit({
       type: 'waveSpawned',
@@ -746,11 +764,13 @@ export class BattleSim {
 
   private resolveHit(hit: PendingHit, now: number): void {
     let landedOn: EnemyState | null = null;
+    // 會重新選目標的命中不能打到下一波（規格：無活目標則銷毀，不保留到下一場）。
+    const sameWave = hit.waveSerial === this.waveSerial;
     switch (hit.targeting.mode) {
       case 'fixed': {
         let target = this.enemyByUid(hit.targeting.uid) ?? null;
         // 目標已死：此段落空，不把空箭轉向主目標（規格：一般技能不補足空段）；餘箭追獵可重選一次。
-        if (!target && hit.retargetOnce) target = this.mainTarget();
+        if (!target && hit.retargetOnce && sameWave) target = this.mainTarget();
         if (target) {
           this.strike(hit, target, hit.coefBp, now);
           landedOn = target;
@@ -758,14 +778,14 @@ export class BattleSim {
         break;
       }
       case 'reacquire': {
-        const targets = this.selectTargets(hit.targeting.rule);
+        const targets = sameWave ? this.selectTargets(hit.targeting.rule) : [];
         const coef = hit.targeting.distribute && targets.length > 0 ? hit.coefBp / targets.length : hit.coefBp;
         for (const target of targets) this.strike(hit, target, coef, now);
         landedOn = targets[0] ?? null;
         break;
       }
       case 'rotate': {
-        const rotation = this.rotationList();
+        const rotation = sameWave ? this.rotationList() : [];
         const target = rotation.length > 0 ? rotation[hit.targeting.index % rotation.length]! : null;
         if (target) {
           this.strike(hit, target, hit.coefBp, now);
@@ -774,7 +794,20 @@ export class BattleSim {
         break;
       }
     }
+    this.applyTargetedRiders(hit, now);
     if (hit.tracked) this.onTrackedHitResolved(hit, landedOn, now);
+  }
+
+  /** 指定目標的附帶效果（輪替／重選目標技能的「對主目標加層」）：在攜帶它的那一段結算後套用一次。 */
+  private applyTargetedRiders(hit: PendingHit, now: number): void {
+    const fromBody = BODY_ACTION_SOURCES.has(hit.source);
+    for (const rider of hit.riders) {
+      if (rider.targetUid === undefined) continue;
+      const target = this.enemyByUid(rider.targetUid);
+      if (!target) continue;
+      if (rider.kind === 'status') this.applyStatusFrom(target, rider.spec, hit.stats, now, fromBody);
+      else this.copyDotTo(target, rider.statusId, rider.toOthers, now, fromBody);
+    }
   }
 
   private onTrackedHitResolved(hit: PendingHit, landedOn: EnemyState | null, now: number): void {
@@ -810,6 +843,8 @@ export class BattleSim {
       if (crit) critMultBp = hit.stats.critMultBp;
     }
     const hadStatuses = target.statuses.length > 0;
+    // 「命中帶狀態的目標」以命中前的狀態判斷：同一下才掛上的狀態不算（信標、第 5 層毒）。
+    const statusesBefore = new Map(target.statuses.map((status) => [status.statusId, status.kind === 'dotStack' ? status.poison.length : status.stacks]));
     const bonusBp = hit.bonusKeys.reduce((sum, key) => sum + hit.stats.bonusBp[key], 0) + hit.bonusPctBp;
     const amount = this.calculateDamage({
       attack: hit.stats.attack,
@@ -833,14 +868,15 @@ export class BattleSim {
 
     if (target.alive) {
       for (const rider of hit.riders) {
+        if (rider.targetUid !== undefined) continue;
         if (rider.kind === 'status') this.applyStatusFrom(target, rider.spec, hit.stats, now, isBodyAction);
         else this.copyDotTo(target, rider.statusId, rider.toOthers, now, isBodyAction);
       }
     }
     if (hit.source === 'summon' && hit.unitKind) this.onSummonHit(hit.unitKind, target, hit.actionId, now);
-    if (hit.tracked && killed) this.onTrackedKill(hit, target, now);
     if (!isBodyAction) return;
     // 只有本體直接行動會觸發被動／裝備；追加、持續、召喚傷害一律不觸發（一層追加鏈）。
+    if (hit.tracked && killed) this.onTrackedKill(hit, target, now);
     if (crit) this.fireProcs(hit.source === 'basic' ? 'basicCrit' : 'directSkillCrit', now, target);
     if (killed && hit.source === 'basic') this.fireProcs('basicKill', now, target);
     if (hit.source !== 'basic' && !hadStatuses && !target.cleanHitBonusUsed) {
@@ -851,9 +887,9 @@ export class BattleSim {
       const trigger = proc.def.trigger;
       if (trigger.kind !== 'bodyHitOnTargetWithStatus') continue;
       if (trigger.basicOnly && hit.source !== 'basic') continue;
-      const status = findStatus(target, trigger.statusId);
-      if (!status) continue;
-      if (trigger.minStacks !== undefined && stackCount(target, trigger.statusId, now) < trigger.minStacks) continue;
+      const stacksBefore = statusesBefore.get(trigger.statusId);
+      if (stacksBefore === undefined) continue;
+      if (trigger.minStacks !== undefined && stacksBefore < trigger.minStacks) continue;
       if (trigger.every !== undefined) {
         proc.counter += 1;
         if (proc.counter % trigger.every !== 0) continue;
@@ -1041,7 +1077,7 @@ export class BattleSim {
       rewardPoints: enemy.rewardPoints,
     });
     if (boss && enemy.kind === 'add' && enemy.mechanicIndex !== null) this.onAddDestroyed(enemy, now);
-    this.onEnemyKilled(enemy, wasMain, now);
+    this.onEnemyKilled(enemy, wasMain && BODY_ACTION_SOURCES.has(source), now);
     return true;
   }
 
@@ -1071,8 +1107,12 @@ export class BattleSim {
     }
   }
 
-  /** 擊殺後的角色規則：專注保留、狀態轉移、主目標死亡觸發。轉移與觸發都只發生一次。 */
-  private onEnemyKilled(enemy: EnemyState, wasMain: boolean, now: number): void {
+  /**
+   * 擊殺後的角色規則：專注保留、狀態轉移（任何來源的擊殺都適用）、主目標死亡觸發。
+   * mainKilledByBody：只有本體直接行動擊殺主目標才觸發「主目標死亡」效果；
+   * 追加、持續、召喚、機制擊殺不觸發，避免追加擊殺再觸發追加（一層追加鏈）。
+   */
+  private onEnemyKilled(enemy: EnemyState, mainKilledByBody: boolean, now: number): void {
     if (this.focusTargetUid === enemy.uid) {
       this.focusTargetUid = null;
       for (const rule of this.kit.resourceRules) {
@@ -1093,7 +1133,7 @@ export class BattleSim {
         moved += 1;
       }
     }
-    if (wasMain) this.fireProcs('mainTargetDied', now, next);
+    if (mainKilledByBody) this.fireProcs('mainTargetDied', now, next);
   }
 
   private registerBodyAction(target: EnemyState, actionId: number, now: number): void {
@@ -1436,8 +1476,10 @@ export class BattleSim {
     if (trackedHits.length > 0) this.actions.set(actionId, track);
     const origin: ProcOrigin = { actionId, atMs: ctx.atMs, endAtMs: lastHitAtMs + this.tickMs };
 
+    // 「下一次絕招追加」對所有絕招生效（含沒有傷害段的機甲總動員）；常規技能只有直接傷害技能才釋放。
+    if (slot.ultimate) this.releaseStored('nextUltimate', main, actionId, ctx.atMs, null);
     if (ctx.hasDamage) {
-      this.releaseStored(slot.ultimate ? 'nextUltimate' : 'nextRegularSkill', main, actionId, ctx.atMs, null);
+      if (!slot.ultimate) this.releaseStored('nextRegularSkill', main, actionId, ctx.atMs, null);
       this.releaseStored('nextSkillId', main, actionId, ctx.atMs, skillId);
     }
     if (slot.ultimate) this.fireProcs('ultimateCast', now, main, origin);
@@ -1525,6 +1567,14 @@ export class BattleSim {
       firstHit.riders = [...firstHit.riders, rider];
       return;
     }
+    // 輪替／重選目標技能沒有鎖定該目標的命中：掛在本行動第一段，結算時對指定目標套用（傷害後加層）。
+    const firstTracked = this.hits
+      .filter((hit) => hit.actionId === ctx.actionId && hit.tracked)
+      .sort((a, b) => a.atMs - b.atMs || a.seq - b.seq)[0];
+    if (firstTracked) {
+      firstTracked.riders = [...firstTracked.riders, { ...rider, targetUid: target.uid }];
+      return;
+    }
     if (rider.kind === 'status') this.applyStatusFrom(target, rider.spec, ctx.stats, ctx.now, true);
     else this.copyDotTo(target, rider.statusId, rider.toOthers, ctx.now, true);
   }
@@ -1543,7 +1593,7 @@ export class BattleSim {
     const hits = step.hits ?? 1;
     const interval = step.hitIntervalMs ?? 0;
     const firstAtMs = ctx.atMs + (step.delayMs ?? 0);
-    const base: Omit<PendingHit, 'seq' | 'atMs' | 'coefBp' | 'targeting'> = {
+    const base: Omit<PendingHit, 'seq' | 'atMs' | 'coefBp' | 'targeting' | 'waveSerial'> = {
       actionId: ctx.actionId,
       source: unitPart ? 'summon' : ctx.source,
       stats: ctx.stats,
@@ -1682,11 +1732,13 @@ export class BattleSim {
 
   private applySelfBuff(step: SelfBuffStep, now: number): void {
     const extraMs = this.kit.buffDurationBonus.filter((bonus) => bonus.buffId === step.buffId).reduce((sum, bonus) => sum + bonus.addMs, 0);
+    const wasActive = this.buffs.some((buff) => buff.buffId === step.buffId);
     this.buffs = this.buffs.filter((buff) => buff.buffId !== step.buffId);
     const effect = step.effect;
     const charges = effect.kind === 'chargedFollowUp' ? effect.charges : effect.kind === 'suitBoost' ? 1 : 0;
     this.buffs.push({ buffId: step.buffId, label: step.label, expiresAtMs: now + step.durationMs + extraMs, effect, charges, firedProcIds: [] });
-    if (effect.kind !== 'unitAttackIntervalMult') return;
+    // 續期只延長時間；已在超頻中的下一發不再重複縮短。
+    if (effect.kind !== 'unitAttackIntervalMult' || wasActive) return;
     // 超頻立即作用於下一發：已排程的下一次攻擊依新間隔重新計算。
     for (const unit of this.units) {
       if (unit.kind !== effect.unitKind) continue;
@@ -2133,8 +2185,8 @@ export class BattleSim {
     return id;
   }
 
-  private pushHit(hit: Omit<PendingHit, 'seq'>): void {
-    this.hits.push({ ...hit, seq: this.nextHitSeq });
+  private pushHit(hit: Omit<PendingHit, 'seq' | 'waveSerial'>): void {
+    this.hits.push({ ...hit, seq: this.nextHitSeq, waveSerial: this.waveSerial });
     this.nextHitSeq += 1;
   }
 

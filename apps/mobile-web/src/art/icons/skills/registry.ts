@@ -1,5 +1,11 @@
+import { ARTISAN_GLYPHS } from './artisan.tsx';
+import { BOW_GLYPHS } from './bow.tsx';
+import { JESTER_GLYPHS } from './jester.tsx';
 import type { SkillGlyph } from './kit.tsx';
+import { MAGE_GLYPHS } from './mage.tsx';
 import type { SkillFamily } from './palette.ts';
+import { PRIEST_GLYPHS } from './priest.tsx';
+import { ROGUE_GLYPHS } from './rogue.tsx';
 import { SWORD_GLYPHS } from './sword.tsx';
 
 export interface SkillIconSpec {
@@ -19,6 +25,12 @@ export const ULTIMATE_SKILL_IDS: ReadonlySet<string> = new Set([
 
 const FAMILY_GLYPHS: readonly (readonly [SkillFamily, Readonly<Record<string, SkillGlyph>>])[] = [
   ['sword', SWORD_GLYPHS],
+  ['bow', BOW_GLYPHS],
+  ['mage', MAGE_GLYPHS],
+  ['rogue', ROGUE_GLYPHS],
+  ['priest', PRIEST_GLYPHS],
+  ['jester', JESTER_GLYPHS],
+  ['artisan', ARTISAN_GLYPHS],
 ];
 
 const SPECS: ReadonlyMap<string, SkillIconSpec> = new Map(

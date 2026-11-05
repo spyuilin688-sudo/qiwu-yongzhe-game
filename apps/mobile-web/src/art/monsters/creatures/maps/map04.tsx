@@ -103,7 +103,8 @@ export const MAP04_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
         <Detail d="M27 28.5L32 27L37 28.5" w={1.3} />
         <ellipse cx={32} cy={12.5} rx={14.5} ry={3} fill={straw} />
         <path d="M25 12.5Q25 3 32 3Q39 3 39 12.5Z" fill={k.paint('#c4a04a')} />
-        <Detail d="M25.4 10H38.6" color={P.cloth} w={1.6} />
+        {/* 帽帶用霧鎮薰衣草紫，避免和第 1 圖草帽雞長撞色，也避開「草帽紅帶」的既有作品招牌。 */}
+        <Detail d="M25.4 10H38.6" color={P.lavender} w={1.8} />
         <AngryEye x={28} y={20} r={2.6} iris={P.lantern} inner="right" />
         <AngryEye x={35.5} y={20} r={2.6} iris={P.lantern} inner="left" />
         <Detail d="M26 25L28 26.5L30 25L32 26.5L34 25L36 26.5" w={1.2} />

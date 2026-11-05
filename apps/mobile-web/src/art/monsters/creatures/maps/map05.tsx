@@ -1,7 +1,7 @@
 import type { CreatureDesign } from '../kit.tsx';
-import { COMMON, MAP05 as P } from '../palette.ts';
+import { COMMON, INK, MAP05 as P } from '../palette.ts';
 import { AngryEye, Blush, Crown, Detail, Eye, Leg, Limbs, Mouth, Shadow, Shine } from '../parts.tsx';
-import { circles, gumdrop, leaf, leaves, strokes } from '../shapes.ts';
+import { circles, leaf, leaves, strokes } from '../shapes.ts';
 
 /** 第 5 圖 砂海商路：沙金、赤陶、綠松石與商旅紅布，駱駝商隊走過的路。 */
 export const MAP05_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
@@ -56,21 +56,28 @@ export const MAP05_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
     );
   },
 
-  /** 流砂精：會走動的流沙坑，頭頂的漩渦把沙粒往上噴。 */
+  /** 流砂精：會走動的小沙丘，丘脊不停被風吹散成沙粒。 */
   'MON-05-3': (k) => (
     <>
-      <Shadow w={44} />
-      <path d={circles([[29.5, 27, 1.2], [35, 23.5, 1], [39.5, 28, 1.1], [33, 19.5, 0.9], [26.5, 22.5, 0.8], [41, 22, 0.8]])} fill={P.sand} stroke="none" />
-      <path d={gumdrop(32, 58.5, 21, 26)} fill={k.paint(P.dune)} />
-      <ellipse cx={34} cy={35.5} rx={9} ry={2.8} fill="#a8783a" strokeWidth={1.4} />
-      <Detail d="M30 35.6Q34 33.6 37.5 35.4Q35 37 33 36" color="#7a5226" w={1.2} />
-      <Detail d="M14 53Q24 48 30 51Q36 54 47 49.5M18.5 44.5Q26 41 32 43" color="#b8873a" w={1.5} />
-      <Shine x={19} y={39} rx={3.4} ry={1.5} rotate={-35} />
-      <Eye x={24} y={44.5} r={2.8} />
-      <Eye x={33} y={44.5} r={2.8} />
-      <Blush x={20} y={49.5} />
-      <Blush x={37} y={49.5} />
-      <Mouth x={28.5} y={49} w={3.6} h={1.7} />
+      <Shadow w={48} />
+      {/*
+        低而寬的新月沙丘＋短而尖的丘脊：圓頂配頂部橢圓會被讀成麵包，
+        高聳的捲尖又像便便表情符號，所以高度壓在身寬一半以下。
+      */}
+      <path d={circles([[50.5, 26, 1.3], [54.5, 24, 1.1], [53, 20.5, 0.9], [58, 22, 0.9], [57, 27.5, 0.8], [61, 25, 0.6]])} fill={P.sand} stroke="none" />
+      <path
+        d="M9 57.5C9 48 17 40 28 37.5C36 35.5 42 33 46.5 28C47.5 30.5 49 33.5 50.5 36.5C54 42 56 50 55 55.5C54.5 58 52 58.5 48 58.5H14C10.5 58.5 9 58.2 9 57.5Z"
+        fill={k.paint(P.dune)}
+      />
+      {/* 波浪風紋＋細沙點：只有直線紋路時，楔形身體會被看成一塊蛋糕。 */}
+      <Detail d="M39 40Q41.5 37.6 44 39.4T49 39M39 48Q42 45.4 45.5 47.4T52 47M13 54.5Q16.5 51.8 20 53.6T27 53.4" color="#b8873a" w={1.5} />
+      <path d={circles([[37, 44, 0.7], [44, 43.5, 0.6], [48.5, 52.5, 0.7], [33.5, 55, 0.6], [42, 55.5, 0.7], [50.5, 43, 0.5], [16, 49.5, 0.6]])} fill="#a8783a" stroke="none" />
+      <Shine x={20} y={41} rx={3.4} ry={1.5} rotate={-35} />
+      <Eye x={23.5} y={45} r={2.8} />
+      <Eye x={32} y={45} r={2.8} />
+      <Blush x={19.5} y={50} />
+      <Blush x={36.5} y={50} />
+      <Mouth x={28} y={49.5} w={3.6} h={1.7} />
     </>
   ),
 
@@ -106,29 +113,38 @@ export const MAP05_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
     );
   },
 
-  /** 風砂盜首：纏頭巾、蒙面巾的沙盜頭子，彎刀指向商隊。 */
+  /**
+   * 風砂盜首：大耳沙狐當上了沙盜頭子，蒙眼布被風吹得獵獵作響，彎刀指向商隊。
+   * 刻意畫成動物而非纏頭巾的人類：人形沙漠盜匪容易落入族裔刻板印象（港灣的人形怪也改成海藻膚色）。
+   */
   'ELT-05-2': (k) => {
-    const skin = k.paint('#c88a5a');
+    const fur = k.paint(P.fox);
+    const cream = P.turban;
     return (
       <>
         <Shadow w={48} />
         <Detail d="M8 58Q18 54 28 58Q40 62 54 56" color={P.sand} w={1.8} opacity={0.8} />
         <path d="M36 27Q53 31 59 51Q51 48 47 53Q43 47 38 51Z" fill={k.paint(P.clothRed)} />
+        <path d={leaf(40, 47, 21, 8, -38)} fill={fur} />
+        <path d={leaf(50.5, 40.5, 8.6, 3.6, -38)} fill={cream} strokeWidth={1.4} />
         <Leg x={26} top={47} w={6.5} fill={k.paint('#5a4a6a')} />
         <Leg x={37} top={47} w={6.5} fill={k.paint('#5a4a6a')} />
-        <path d="M20 30Q19 50 24 50H40Q44 50 43 30Q41 25 32 25Q22 25 20 30Z" fill={k.paint(P.turban)} />
+        <path d="M20 30Q19 50 24 50H40Q44 50 43 30Q41 25 32 25Q22 25 20 30Z" fill={k.paint(cream)} />
         <rect x={19.5} y={39.5} width={24} height={4.6} rx={2} fill={P.clothRed} strokeWidth={1.6} />
         <path d="M16 40Q4 37 1.5 26Q8 32.5 17 36Z" fill={k.paint(COMMON.steel)} strokeWidth={1.6} />
         <rect x={15} y={36.4} width={4} height={4.4} rx={1} fill={COMMON.gold} strokeWidth={1.2} />
-        <circle cx={19} cy={40} r={2.8} fill={skin} />
-        <circle cx={31} cy={18} r={9.5} fill={skin} />
-        <path d="M21 19.5Q31 26 41 19.5L40.5 26Q31 30.5 21.5 26Z" fill={k.paint(P.turquoise)} />
-        <path d="M20 15.5Q20 4 31 4Q42 4 42 15.5Q31 11.5 20 15.5Z" fill={k.paint(P.turban)} />
-        <Detail d="M22 11Q30 7.5 40 10.5" color="#c8b48a" w={1.3} />
-        <path d={leaf(27.5, 8.5, 8, 3.4, -115)} fill={P.turquoise} strokeWidth={1.3} />
-        <circle cx={27.5} cy={10} r={2} fill={COMMON.ruby} strokeWidth={1.2} />
-        <AngryEye x={26.5} y={17} r={2.6} inner="right" />
-        <AngryEye x={34} y={17} r={2.6} inner="left" />
+        <circle cx={19} cy={40} r={2.8} fill={fur} />
+        <path d={leaves([[26, 13, 11, 5, -112], [35.5, 12, 11, 5, -68]])} fill={fur} />
+        <path d={leaves([[26, 13, 7.5, 2.4, -112], [35.5, 12, 7.5, 2.4, -68]])} fill={COMMON.blush} stroke="none" />
+        <circle cx={31} cy={19.5} r={9} fill={fur} />
+        <ellipse cx={27} cy={24.5} rx={5.4} ry={3.2} fill={cream} stroke="none" />
+        <path d={leaf(25.5, 22, 10.5, 3.8, 172)} fill={k.paint(cream)} strokeWidth={1.6} />
+        <circle cx={15.4} cy={23.3} r={1.7} fill={INK} stroke="none" />
+        {/* 蒙眼布是「盜」的辨識符號；布尾往後飄，同時交代「風砂」。 */}
+        <path d={leaves([[39.5, 16.5, 10, 2.8, -12], [39.5, 17.5, 8.5, 2.4, 22]])} fill={k.paint(P.turquoise)} strokeWidth={1.4} />
+        <path d="M21.6 15.6Q31 12.4 40.6 15.2L40.2 20.8Q31 18.4 22 21.2Z" fill={k.paint(P.turquoise)} />
+        <AngryEye x={26.6} y={18.4} r={2.5} inner="right" />
+        <AngryEye x={33.8} y={18} r={2.5} inner="left" />
       </>
     );
   },

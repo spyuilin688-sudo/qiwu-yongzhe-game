@@ -24,7 +24,7 @@ export const RANGED_DESIGNS: Readonly<Record<string, EquipDesign>> = {
   短弓: (p) => (
     <Diagonal mid={24}>
       <BowString d="M30 6V42" />
-      <path d="M29 5Q5 24 29 43L31 41.4Q12 24 31 6.6Z" fill={p.split(MAT.greenWood)} />
+      <path d="M29 5Q4.6 24 29 43L31 41.4Q13.4 24 31 6.6Z" fill={p.split(MAT.greenWood)} />
       <rect x="15.4" y="20.4" width="7.4" height="7.2" rx="1.6" fill={MAT.leather.base} />
       <Ink d={strokes([[15.8, 22.8, 22.4, 22.8], [15.8, 25.2, 22.4, 25.2]])} width={1} />
       <path d={leaf(12.6, 18.2, 8, 3.6, -125)} fill={MAT.emerald.base} strokeWidth={1.5} />

@@ -27,7 +27,7 @@ export const MAP10_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
     );
   },
 
-  /** 夜光花精：花瓣在夜裡發出青光的小花精，莖就是它唯一的腳。 */
+  /** 夜光花精：五尖星形的夜花，花心在夜裡發出青光，莖就是它唯一的腳。 */
   'MON-10-2': (k) => (
     <>
       <Shadow w={24} />
@@ -35,8 +35,10 @@ export const MAP10_DESIGNS: Readonly<Record<string, CreatureDesign>> = {
       <Limbs d="M32 38V58" color={P.leaf} w={2.4} />
       <path d={leaves([[32, 53, 10, 5.5, 200], [32, 49, 10, 5.5, -20]])} fill={k.paint(P.leaf)} strokeWidth={1.6} />
       <Detail d="M28 60Q32 57 36 60" w={1.6} />
-      <path d={ring(32, 26, 7, 15, 6, -90, 'round')} fill={k.paint('#9ff0f0')} />
-      <circle cx={32} cy={26} r={7.5} fill={k.paint(P.star)} />
+      {/* 五尖星形花瓣＋冷光花心：圓瓣黃花配笑臉是常見的既有角色造型，改成星墜花園獨有的星花。 */}
+      <path d={ring(32, 26, 7.5, 16, 5, -90, 'point')} fill={k.paint(P.violet)} />
+      <path d={ring(32, 26, 6.5, 11, 5, -54, 'point')} fill={k.paint('#9ff0f0')} strokeWidth={1.5} />
+      <circle cx={32} cy={26} r={7.5} fill={k.paint('#fff2b8')} />
       <Eye x={29.4} y={25.6} r={2} />
       <Eye x={34.6} y={25.6} r={2} />
       <Blush x={27.5} y={29} rx={1.5} />
