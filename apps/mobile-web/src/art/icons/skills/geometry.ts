@@ -7,6 +7,7 @@
 export const fmt = (value: number): string => String(Math.round(value * 100) / 100);
 
 const TOKEN = /[MLQCZ]|-?\d*\.?\d+/g;
+const UNSUPPORTED = /[AHVSTahvstmlqcz]/;
 
 /**
  * 把以單位座標（約 -1..1）寫成的範本路徑，平移／縮放／旋轉到指定位置。
@@ -14,6 +15,8 @@ const TOKEN = /[MLQCZ]|-?\d*\.?\d+/g;
  * 用座標換算而非 transform，描邊粗細才不會跟著縮放而忽粗忽細。
  */
 export function shape(template: string, cx: number, cy: number, sx: number, sy: number = sx, rotateDeg = 0): string {
+  // 範本若混入 H／V／A 或相對座標，數字配對會錯位、畫出亂線；直接報錯，測試期就能抓到。
+  if (UNSUPPORTED.test(template)) throw new Error(`shape() 範本只支援絕對座標 M/L/Q/C/Z：${template.slice(0, 24)}…`);
   const rad = (rotateDeg * Math.PI) / 180;
   const cos = Math.cos(rad);
   const sin = Math.sin(rad);
