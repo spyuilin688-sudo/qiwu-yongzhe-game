@@ -197,9 +197,10 @@
   }
 }
 
+/* 一般怪物填滿所在欄位（約 13.5% 寬），最大 56px；三隻並排時不互相重疊。 */
 .enemyBody {
-  width: 48px;
-  max-width: 100%;
+  width: 100%;
+  max-width: 56px;
   filter: drop-shadow(0 2px 2px var(--shade-45));
 }
 

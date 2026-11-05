@@ -1,8 +1,8 @@
-import { SLOT_IDS, loadDefaultCatalog } from '@qiwu/content';
+import { SLOT_IDS, UNIT_KINDS, loadDefaultCatalog } from '@qiwu/content';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { FAMILY_KEYS, Gallery, UI_ICON_NAMES } from '../Gallery.tsx';
-import { AddArt, EquipIcon, HeroArt, JobEmblem, MapBackdrop, MonsterArt, SkillIcon, SlotIcon, UiIcon, heroLookFor } from '../index.ts';
+import { AddArt, EquipIcon, HeroArt, JobEmblem, MapBackdrop, MonsterArt, SkillIcon, SlotIcon, UiIcon, UnitArt, heroLookFor } from '../index.ts';
 
 const catalog = loadDefaultCatalog();
 
@@ -19,6 +19,15 @@ describe('原創 SVG 美術：全部資產可渲染', () => {
   it('怪物、小首領、BOSS 與副目標', () => {
     for (const monster of catalog.monsters.values()) expectSvg(renderToStaticMarkup(<MonsterArt monsterId={monster.id} size={64} />));
     for (const map of catalog.maps.values()) expectSvg(renderToStaticMarkup(<AddArt mapNumber={map.number} size={48} />));
+  });
+  it('召喚物與區域：每種單位都有圖，且是不含血條文字的裝飾圖', () => {
+    for (const kind of UNIT_KINDS) {
+      const markup = renderToStaticMarkup(<UnitArt kind={kind} size={30} />);
+      expectSvg(markup);
+      expect(markup).toContain('viewBox="0 0 40 40"');
+      expect(markup).toContain('aria-hidden="true"');
+    }
+    expect(renderToStaticMarkup(<UnitArt kind="beast" title="戰獸" />)).toContain('<title>戰獸</title>');
   });
   it('12 張地圖背景', () => {
     for (const map of catalog.maps.values()) expectSvg(renderToStaticMarkup(<MapBackdrop mapNumber={map.number} />));

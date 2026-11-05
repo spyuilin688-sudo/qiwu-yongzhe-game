@@ -131,8 +131,17 @@ export const MIDDLE_SCENES: readonly (readonly [number, SceneDesign])[] = [
           )}
           {zone.isCourt ? (
             <>
-              <circle cx={196} cy={140} r={50} fill={k.glow(P.coral, 0.45)} />
-              <path d="M160 178L166 130L174 146L182 116L190 140L196 108L204 140L212 118L220 146L228 130L232 178Z" fill={P.coral} stroke={P.post} strokeWidth={1.4} opacity={0.85} />
+              <circle cx={196} cy={150} r={46} fill={k.glow(P.coral, 0.3)} />
+              {/* 分枝珊瑚剪影：圓頭粗線一筆畫完，比尖刺多邊形更像珊瑚，也不會在勇者與 BOSS 之間形成高對比的紅色尖塊。 */}
+              <path
+                d="M196 178V154M196 162L182 146L178 136M182 146L190 136M196 158L210 142L206 134M210 142L220 136M170 178V166L162 156M170 168L178 158M224 178V164L232 154M224 168L216 158"
+                fill="none"
+                stroke={P.coral}
+                strokeWidth={5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={0.6}
+              />
             </>
           ) : null}
           <path d="M-10 178L-10 112Q20 102 46 114Q64 124 72 178Z" fill={P.cliff} />
@@ -186,16 +195,26 @@ export const MIDDLE_SCENES: readonly (readonly [number, SceneDesign])[] = [
       return (
         <>
           {sky(k, [[0, P.skyTop], [0.65, P.skyMid], [1, P.skyLow]])}
-          <circle cx={290} cy={54} r={70} fill={k.glow(P.flake, 0.35)} />
+          {/* 天光放在左上：敵人頭頂（x 240～350、y≈100）是傷害飄字的位置，不能有亮斑。 */}
+          <circle cx={110} cy={28} r={64} fill={k.glow(P.flake, 0.22)} />
           <path d={ridge(back)} fill={P.midMount} opacity={0.45} />
           <path d={ridge(far)} fill={P.farMount} />
-          <path d={snowCaps(far, 16)} fill={P.snowCap} opacity={0.9} />
+          <path d={snowCaps(far, 16)} fill={P.snowCap} opacity={0.8} />
           {zone.isCourt ? (
             <>
-              <circle cx={272 + s} cy={62} r={34} fill={k.glow(P.ice, 0.6)} />
-              <path d={`M${264 + s} 58a4 5 0 1 0 8 0a4 5 0 1 0 -8 0ZM${273 + s} 59a3.6 4.4 0 1 0 7.2 0a3.6 4.4 0 1 0 -7.2 0Z`} fill={P.ice} stroke={P.pineDeep} strokeWidth={1} />
-              <path d={`M${254 + s} 60Q${256 + s} 74 ${272 + s} 74Q${288 + s} 74 ${290 + s} 60Q${272 + s} 66 ${254 + s} 60Z`} fill={P.twig} stroke={P.pineDeep} strokeWidth={1.2} />
-              <path d={`M${258 + s} 64L${286 + s} 66M${262 + s} 70L${282 + s} 68`} stroke={P.pineDeep} strokeWidth={1} opacity={0.7} />
+              <circle cx={272 + s} cy={60} r={34} fill={k.glow(P.ice, 0.5)} />
+              {/*
+                王庭：主峰尖長出一頂冰冠（呼應「白冠」霜鵬）。冠底比山尖寬一點、壓在稜線上，
+                看得出是長在山上；之前放鳥巢，遠山太尖撐不住，縮小後像小船飄在天上。
+              */}
+              <path
+                d={`M${256 + s} 82L${259 + s} 60L${265 + s} 70L${272 + s} 42L${279 + s} 70L${285 + s} 58L${289 + s} 82Q${272 + s} 76 ${256 + s} 82Z`}
+                fill={P.ice}
+                stroke={P.pineDeep}
+                strokeWidth={1.2}
+                strokeLinejoin="round"
+              />
+              <path d={`M${272 + s} 48L${271 + s} 72M${259.5 + s} 64L${260 + s} 77`} stroke={P.flake} strokeWidth={1.4} strokeLinecap="round" opacity={0.8} />
             </>
           ) : null}
           <path d={hills(152, 12, 2.4, 0.6 + zone.index * 0.9)} fill={P.midMount} />

@@ -7,30 +7,34 @@ import { DETAIL, MAT, type Tone } from './palette.ts';
  * 同類武器靠刀身寬度、護手造型與握柄顏色區分，縮到 48px 仍一眼看出是哪一種。
  */
 export const BLADE_DESIGNS: Readonly<Record<string, EquipDesign>> = {
-  /** 見習鐵劍：最樸素的直劍，黃銅護手、皮革握柄。 */
+  /** 見習鐵劍：最樸素的寬刃短直劍，平直黃銅護手、皮革握柄；刃寬拉到 11，22px 格子裡仍是一把劍而非一條線。 */
   鐵劍: (p) => (
-    <Diagonal mid={26.5}>
-      <path d="M24 1L28 6.5V33H20V6.5Z" fill={p.split(MAT.iron)} />
-      <Ink d="M24 8V30" width={1.1} color={MAT.iron.shade} />
-      <Shine d="M21.9 8.5V30" color={MAT.iron.light} />
-      <rect x="14.5" y="32.5" width="19" height="4.5" rx="2.2" fill={p.split(MAT.brass)} />
-      <rect x="21.5" y="37" width="5" height="10" rx="1.6" fill={MAT.leather.base} />
-      <Ink d={strokes([[21.8, 40.4, 26.2, 40.4], [21.8, 43.7, 26.2, 43.7]])} />
-      <circle cx="24" cy="49.5" r="3" fill={p.ball(MAT.brass)} />
+    <Diagonal mid={26.6}>
+      <path d="M24 1L29.6 7V32H18.4V7Z" fill={p.split(MAT.iron)} />
+      <Ink d="M24 8.4V29.4" width={1.3} color={MAT.iron.shade} />
+      <Shine d="M20.8 8.6V29.6" color={MAT.iron.light} width={1.6} />
+      <rect x="13" y="31.4" width="22" height="5.4" rx="2.4" fill={p.split(MAT.brass)} />
+      <rect x="21" y="36.8" width="6" height="9.6" rx="1.8" fill={MAT.leather.base} />
+      <Ink d={strokes([[21.3, 40, 26.7, 40], [21.3, 43.2, 26.7, 43.2]])} />
+      <circle cx="24" cy="48.8" r="3.4" fill={p.ball(MAT.brass)} />
     </Diagonal>
   ),
 
-  /** 劍鞘：空鞘，鞘口露出暗色開口，黃銅口環、腰箍與鞘尾。 */
+  /**
+   * 劍鞘：收著劍的紅皮鞘，劍柄（護手、握柄、柄頭）露在鞘口外。
+   * 只畫空鞘時縮小後像鞭炮或口紅，露出劍柄才一眼讀成「劍鞘」。
+   */
   劍鞘: (p) => (
-    <Diagonal mid={26}>
-      <path d="M19.4 9H28.6L27.6 42Q24 47 20.4 42Z" fill={p.split(MAT.redLeather)} />
-      <Shine d="M21.4 12V36" color={MAT.redLeather.light} />
-      <rect x="18" y="3" width="12" height="7" rx="2" fill={p.split(MAT.brass)} />
-      <rect x="20.4" y="4.8" width="7.2" height="2.4" rx="1.2" fill={DETAIL.hollow} strokeWidth={1.2} />
-      <rect x="18.8" y="22" width="10.4" height="4.2" rx="1.6" fill={p.split(MAT.brass)} />
-      <circle cx="24" cy="24.1" r="1.4" fill={MAT.ruby.base} strokeWidth={1.1} />
-      <path d="M20 37.6H28L27.6 42.4Q24 48.6 20.4 42.4Z" fill={p.split(MAT.brass)} />
-      <path d="M28.8 23Q34 24.5 31.4 29" fill="none" stroke={MAT.leather.shade} strokeWidth={2.2} />
+    <Diagonal mid={25.2}>
+      <path d="M18.4 31L19.4 6.4Q24 -1 28.6 6.4L29.6 31Z" fill={p.split(MAT.redLeather)} />
+      <Shine d="M21.4 9.4V27.4" color={MAT.redLeather.light} width={1.6} />
+      <path d="M19.4 7.4Q24 -1 28.6 7.4L24 10.8Z" fill={p.split(MAT.brass)} />
+      <path d="M29.6 14.4Q35.4 16 32.4 21.4" fill="none" stroke={MAT.leather.shade} strokeWidth={2.4} />
+      <rect x="17.6" y="26.6" width="12.8" height="4.8" rx="1.6" fill={p.split(MAT.brass)} />
+      <rect x="13.6" y="31.4" width="20.8" height="4.6" rx="2.2" fill={p.split(MAT.iron)} />
+      <rect x="21.2" y="36" width="5.6" height="9.2" rx="1.6" fill={MAT.darkWood.base} />
+      <Ink d={strokes([[21.5, 39, 26.5, 39], [21.5, 42, 26.5, 42]])} width={1.1} />
+      <circle cx="24" cy="47.8" r="3.1" fill={p.ball(MAT.brass)} />
     </Diagonal>
   ),
 
@@ -48,33 +52,35 @@ export const BLADE_DESIGNS: Readonly<Record<string, EquipDesign>> = {
     </Diagonal>
   ),
 
-  /** 單手劍：細長刀身配金色捲邊護手、藍布握柄與紅寶石柄頭，比鐵劍華麗。 */
+  /** 單手劍：較長的騎士劍，刃心一道鐵脊、上翹的金色翼形護手嵌藍寶石，藍布握柄配紅寶石柄頭；比鐵劍華麗。 */
   單手劍: (p) => (
-    <Diagonal mid={26.5}>
-      <path d="M24 2L27 6V33H21V6Z" fill={p.split(MAT.steel)} />
-      <Ink d="M24 7.5V30.5" width={1} color={MAT.steel.shade} />
-      <path d="M13.5 31.8Q15.5 34 18.5 33H29.5Q32.5 34 34.5 31.8Q35.4 37 30 37H18Q12.6 37 13.5 31.8Z" fill={p.split(MAT.gold)} />
-      <circle cx="24" cy="35" r="1.9" fill={MAT.sapphire.base} strokeWidth={1.2} />
-      <rect x="22" y="37" width="4" height="9" rx="1.4" fill={MAT.blueCloth.base} />
-      <Ink d={strokes([[22.3, 40, 25.7, 40], [22.3, 43, 25.7, 43]])} width={1} />
-      <circle cx="24" cy="48.6" r="2.8" fill={p.ball(MAT.ruby)} />
+    <Diagonal mid={25.6}>
+      <path d="M24 0L28.8 5.6V31H19.2V5.6Z" fill={p.split(MAT.steel)} />
+      <path d="M24 4.6L25.5 7.2V28.6H22.5V7.2Z" fill={MAT.steel.shade} strokeWidth={1.1} />
+      <Shine d="M20.9 8V28.4" color={MAT.steel.light} />
+      <path d="M11.4 28.4Q13.4 32.2 18 31.8H30Q34.6 32.2 36.6 28.4Q38.4 36.6 31 36.6H17Q9.6 36.6 11.4 28.4Z" fill={p.split(MAT.gold)} />
+      <circle cx="24" cy="34.2" r="2.3" fill={p.ball(MAT.sapphire)} strokeWidth={1.3} />
+      <rect x="21.4" y="36.6" width="5.2" height="9.4" rx="1.6" fill={MAT.blueCloth.base} />
+      <Ink d={strokes([[21.7, 39.6, 26.3, 39.6], [21.7, 42.8, 26.3, 42.8]])} width={1.1} />
+      <circle cx="24" cy="48.6" r="3.2" fill={p.ball(MAT.ruby)} />
       <Shine d="M22.2 47.4L23 46.8" color={MAT.ruby.light} width={1.2} />
     </Diagonal>
   ),
 
-  /** 匕首：蛇牙般彎曲的單刃，刃心一道毒綠溝槽，S 形護手。 */
+  /** 匕首：蛇牙般彎曲的寬單刃，刃心一道毒綠溝槽，S 形護手。 */
   匕首: (p) => (
-    <Diagonal mid={25}>
-      <path d="M27.4 2Q31 15 28 31H20.4Q21 16 27.4 2Z" fill={p.split(MAT.steel)} />
-      <Ink d="M25.8 10Q26.6 19 25.2 28" width={1.6} color={MAT.venom.base} />
-      <path d="M15.6 31.4Q20 29 24 31Q28 33 32.4 30.6L31.4 35Q28 36.6 24 35Q20 33.4 16.6 35.4Z" fill={p.split(MAT.emerald)} />
-      <rect x="21.8" y="35" width="4.4" height="8" rx="1.4" fill={MAT.darkWood.base} />
-      <Ink d={strokes([[22.1, 38, 25.9, 38], [22.1, 40.6, 25.9, 40.6]])} width={1} />
-      <circle cx="24" cy="45.4" r="2.6" fill={p.ball(MAT.emerald)} />
+    <Diagonal mid={25.4}>
+      <path d="M28.4 1.4Q33.4 15 29.4 31H19Q19.8 15.6 28.4 1.4Z" fill={p.split(MAT.steel)} />
+      <Ink d="M26.4 9.4Q27.6 19 26 28.4" width={2.2} color={MAT.venom.base} />
+      <Shine d="M22 25Q22.4 19 24.6 13.6" color={MAT.steel.light} />
+      <path d="M14.4 31.4Q19.6 28.6 24 31Q28.4 33.4 33.6 30.6L32.4 35.6Q28.4 37.2 24 35Q19.6 32.8 15.6 35.8Z" fill={p.split(MAT.emerald)} />
+      <rect x="21.2" y="35.4" width="5.6" height="8.6" rx="1.6" fill={MAT.darkWood.base} />
+      <Ink d={strokes([[21.5, 38.4, 26.5, 38.4], [21.5, 41.2, 26.5, 41.2]])} width={1.1} />
+      <circle cx="24" cy="46.6" r="3" fill={p.ball(MAT.emerald)} />
     </Diagonal>
   ),
 
-  /** 刀鞘：寬口短木鞘插著一把短刀，一道深色皮帶與黃銅扣；與劍鞘的長空鞘一眼可分。 */
+  /** 刀鞘：寬口短木鞘插著一把短刀，一道深色皮帶與黃銅扣；短而寬的木色剪影，與劍鞘的長紅皮鞘一眼可分。 */
   刀鞘: (p) => (
     <Diagonal mid={24} angle={32}>
       <circle cx="24" cy="5.4" r="2.6" fill={p.ball(MAT.brass)} />
@@ -89,15 +95,15 @@ export const BLADE_DESIGNS: Readonly<Record<string, EquipDesign>> = {
     </Diagonal>
   ),
 
-  /** 短刃：單面開刃的小刀，刃口有兩道豁口，握柄纏著舊布條。 */
+  /** 短刃：單面開刃的寬背小刀，刃口有兩道豁口，握柄纏著舊布條。 */
   短刃: (p) => (
     <Diagonal mid={25}>
-      <path d="M21 4L28 11V17L26.3 18.6L28 20.2V24.4L26.7 25.6L28 26.8V31H21Z" fill={p.split(MAT.iron)} />
-      <Shine d="M22.6 9V28.5" color={MAT.iron.light} />
-      <rect x="19.4" y="31" width="10" height="3.2" rx="1.2" fill={MAT.darkIron.base} />
-      <rect x="21" y="34" width="6.2" height="11.4" rx="2" fill={p.split(MAT.rag)} />
-      <Ink d={strokes([[21.2, 36.6, 27, 38.6], [21.2, 40, 27, 42], [21.2, 43.4, 26, 45]])} width={1.1} />
-      <path d="M26.4 43.6Q31 46.6 33.6 43.6Q31.4 44 29.6 42.2Z" fill={MAT.rag.base} strokeWidth={1.4} />
+      <path d="M19.6 3.4L29 10.6V16.6L27 18.6L29 20.6V24.6L27.4 26L29 27.4V31H19.6Z" fill={p.split(MAT.iron)} />
+      <Shine d="M21.6 8V28.6" color={MAT.iron.light} width={1.6} />
+      <rect x="18" y="31" width="12.4" height="3.8" rx="1.4" fill={MAT.darkIron.base} />
+      <rect x="20.6" y="34.6" width="7" height="11.4" rx="2" fill={p.split(MAT.rag)} />
+      <Ink d={strokes([[20.8, 37.2, 27.4, 39.2], [20.8, 40.6, 27.4, 42.6], [20.8, 44, 26.4, 45.6]])} width={1.2} />
+      <path d="M26.8 44Q31.6 47.2 34.4 44Q32 44.4 30 42.4Z" fill={MAT.rag.base} strokeWidth={1.4} />
     </Diagonal>
   ),
 

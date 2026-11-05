@@ -11,3 +11,4 @@ export { SlotIcon } from './icons/SlotIcon.tsx';
 export { JobEmblem } from './icons/JobEmblem.tsx';
 export { EquipIcon } from './icons/EquipIcon.tsx';
 export { SkillIcon } from './icons/SkillIcon.tsx';
+export { UnitArt } from './units/UnitArt.tsx';

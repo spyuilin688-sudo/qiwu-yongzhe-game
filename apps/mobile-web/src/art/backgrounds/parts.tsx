@@ -81,10 +81,14 @@ export function circles(list: readonly Circle[]): string {
   return list.map(([cx, cy, r]) => `M${f(cx - r)} ${f(cy)}a${r} ${r} 0 1 0 ${f(r * 2)} 0a${r} ${r} 0 1 0 ${f(-r * 2)} 0Z`).join('');
 }
 
-/** 雲朵：一排大小不一的圓，底部切平（以扁橢圓壓底）。 */
+/**
+ * 雲朵：一排大小不一的圓，底部以矩形切平。
+ * 矩形必須與 circles() 同為逆時針（先往下、再往右、再往上），
+ * 否則 nonzero 填色規則下重疊處繞數相消，雲底會挖出一條條透明橫紋。
+ */
 export function cloud(x: number, y: number, size: number): string {
   const s = size;
-  return `${circles([[x, y, s * 0.55], [x + s * 0.6, y - s * 0.25, s * 0.7], [x + s * 1.3, y, s * 0.5]])}M${f(x - s * 0.5)} ${f(y + s * 0.1)}h${f(s * 2.3)}v${f(s * 0.4)}h${f(-s * 2.3)}Z`;
+  return `${circles([[x, y, s * 0.55], [x + s * 0.6, y - s * 0.25, s * 0.7], [x + s * 1.3, y, s * 0.5]])}M${f(x - s * 0.5)} ${f(y + s * 0.1)}v${f(s * 0.4)}h${f(s * 2.3)}v${f(-s * 0.4)}Z`;
 }
 
 /** 四芒星點（星空、雪花、火星）。 */

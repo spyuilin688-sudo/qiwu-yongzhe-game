@@ -1,7 +1,7 @@
 import type { BossDesign } from './kit.tsx';
 import { ADD_OUTLINE, B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11, B12, INK, ROYAL } from './palette.ts';
 import { Blob } from './parts.tsx';
-import { circles, gear, leaves, regular, sparkles, star, strokes } from './shapes.ts';
+import { circles, gear, leaves, polar, regular, sparkle, sparkles, star, strokes } from './shapes.ts';
 
 /** 48 格畫布的接地線（比例同 128 格 BOSS 的 y=120）。 */
 const GROUND = 45;
@@ -20,6 +20,16 @@ function MiniEyes({ x, y, gap = 6, r = 1.8, brow = true }: { readonly x: number;
       {brow ? <path d={strokes([[x - r * 1.6, y - r * 2.6, x + r * 1.2, y - r * 1.5], [right + r * 1.6, y - r * 2.6, right - r * 1.2, y - r * 1.5]])} fill="none" strokeWidth={1.4} /> : null}
     </>
   );
+}
+
+/** 五角星每支角的「右半」三角形（中心→尖端→右側內角），合成一條路徑當暗面，做出切割寶石的立體感。 */
+function starFacets(cx: number, cy: number, outer: number, inner: number): string {
+  return Array.from({ length: 5 }, (_, index) => {
+    const tipAngle = -90 + index * 72;
+    const [tx, ty] = polar(cx, cy, outer, tipAngle);
+    const [ix, iy] = polar(cx, cy, inner, tipAngle + 36);
+    return `M${cx} ${cy}L${tx} ${ty}L${ix} ${iy}Z`;
+  }).join('');
 }
 
 /** 帶描邊的粗線（莖、觸腕、彈簧）。 */
@@ -79,7 +89,12 @@ const DESIGNS: readonly (readonly [number, BossDesign])[] = [
         <path d="M27 18L36 6L38 22Z" fill={k.paint(B03.steel)} />
         <path d="M31 13L35 15M33 9L36 10" fill="none" stroke="#5a626e" strokeWidth={1.4} />
         <path d="M8 44L10 28L20 20L34 22L40 34L38 44Z" fill={k.paint('#8a8078')} />
-        <path d="M14 32L20 28L22 34ZM28 30L33 28L32 36L27 35ZM18 39L23 37L22 42Z" fill={k.paint(B03.copper)} strokeWidth={1.4} />
+        {/*
+          銅礦是擠在右下角的一團礦粒＋一道裂縫：三塊對稱三角形會讀成南瓜燈的臉，
+          折線礦脈又像股價走勢圖，不對稱的圓團才像嵌在岩裡的礦。
+        */}
+        <path d="M14 27L19 33L17 39" fill="none" stroke="#5a504a" strokeWidth={1.4} />
+        <Blob d={circles([[29, 36, 3.6], [34, 31.5, 2.4], [24.5, 40, 2.2]])} fill={k.paint(B03.copper)} width={1.4} />
         <path d="M12 30L18 23" fill="none" stroke={ROYAL.white} strokeWidth={1.6} opacity={0.4} />
       </>
     ),
@@ -106,12 +121,17 @@ const DESIGNS: readonly (readonly [number, BossDesign])[] = [
     5,
     (k) => (
       <>
-        <AddShadow w={20} float />
-        <circle cx={24} cy={22} r={17} fill={k.glow(B05.gem)} stroke="none" />
-        <path d="M24 6L34 18L28 38L20 38L14 18Z" fill={k.paint(B05.gem)} />
-        <path d="M14 18L34 18M24 6L22 18L24 38M24 6L27 18L28 38" fill="none" stroke={B05.gemDeep} strokeWidth={1.2} />
-        <path d="M12 20Q24 26 36 20L34 24Q24 30 14 24Z" fill={k.paint(B05.gold)} strokeWidth={1.6} />
-        <path d="M18 12L22 8L20 16Z" fill={ROYAL.white} opacity={0.75} stroke="none" />
+        <AddShadow w={26} />
+        <circle cx={24} cy={24} r={18} fill={k.glow(B05.gem)} stroke="none" />
+        {/*
+          斷口參差、略微傾斜的碎片插在沙裡：上寬下窄又纏一圈金環的對稱造型，
+          縮小後像燈罩或提燈，和「古物不畫成神燈」的規範衝突。
+        */}
+        <path d="M17 41L11 23L17 9L22 17L29 5L37 22L31 41Z" fill={k.paint(B05.gem)} />
+        <path d="M17 9L20 27L19 41M29 5L26 26L28 41M11 23L20 27L26 26L37 22" fill="none" stroke={B05.gemDeep} strokeWidth={1.2} />
+        <path d="M14 22L17 13L18 21Z" fill={ROYAL.white} opacity={0.75} stroke="none" />
+        <Blob d={circles([[13, 43, 4.5], [22, 42, 5.5], [32, 43, 5]])} fill={k.paint(B05.sand)} width={1.6} />
+        <path d="M33 39Q36 33 41 35Q38 37 37 42Z" fill={k.paint(B05.gold)} strokeWidth={1.4} />
       </>
     ),
   ],
@@ -182,8 +202,14 @@ const DESIGNS: readonly (readonly [number, BossDesign])[] = [
       <>
         <AddShadow w={18} float />
         <circle cx={24} cy={21} r={18} fill={k.glow(B10.crystal)} stroke="none" />
-        <path d={star(24, 22, 15, 6.6)} fill={k.paint(B10.star)} />
-        <path d="M24 7L24 22L38.3 17.4M24 22L32.8 34.1M24 22L15.2 34.1M24 22L9.7 17.4" fill="none" stroke="#d8a830" strokeWidth={1.1} />
+        {/*
+          星形水晶：每支角切成亮暗兩個刻面、中心嵌一顆金色星芯。
+          平塗的金色五角星會被讀成「評分星」或介面圖示，刻面才看得出是一塊晶體。
+        */}
+        <path d={star(24, 22, 15, 6.6)} fill={B10.crystal} stroke="none" />
+        <path d={starFacets(24, 22, 15, 6.6)} fill={B10.crystalDeep} stroke="none" />
+        <path d={star(24, 22, 15, 6.6)} fill="none" />
+        <path d={sparkle(24, 22, 4.6)} fill={B10.star} strokeWidth={1} />
         <path d={sparkles([[39, 6, 2.6], [8, 34, 2.2], [40, 32, 1.6]])} fill={ROYAL.white} strokeWidth={0.9} />
       </>
     ),

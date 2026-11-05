@@ -144,12 +144,14 @@ export const LATE_BOSSES: Readonly<Record<string, BossDesign>> = {
         <path d="M96 104C108 110 118 104 118 94C118 86 110 84 106 90" fill="none" stroke={B12.scale} strokeWidth={9} />
         <path d="M104 90L100 78L106 82L110 76L110 90Z" fill={B12.ribbon} strokeWidth={2} />
         <ellipse cx={86} cy={112} rx={12} ry={8} fill={scale} />
+        {/* 背棘畫在身體之前：基部被身體蓋住、只露出尖端，背脊輪廓才像龍而不是貼在背上的三角形。 */}
+        <path d="M62 70L70 52L76 67L82 51L88 69L94 57L96 76L103 66L100 82Z" fill={k.paint(B12.horn)} strokeWidth={2} />
         <ellipse cx={74} cy={88} rx={30} ry={26} fill={scale} />
         <ellipse cx={64} cy={94} rx={17} ry={18} fill={k.paint(B12.belly)} strokeWidth={2} />
         <Detail d={strokes([[52, 86, 76, 86], [50, 93, 78, 93], [51, 100, 77, 100], [54, 107, 74, 107]])} color="#c8b48a" w={1.4} />
-        <path d="M70 70L76 62L80 70L86 64L88 74Z" fill={k.paint(B12.scaleDeep)} strokeWidth={2} />
         <ellipse cx={50} cy={114} rx={12} ry={7} fill={scale} />
-        <path d={leaves([[50, 34, 20, 6, -120], [60, 36, 22, 6, -70]])} fill={k.paint(B12.horn)} />
+        {/* 雙角往後掃（朝右上）：朝上豎起的角縮小後像狗耳朵，往後掃才是龍。 */}
+        <path d={leaves([[50, 36, 22, 6, -58], [58, 40, 24, 6, -30]])} fill={k.paint(B12.horn)} />
         <path d="M66 52C66 34 54 30 42 32C30 34 26 42 24 46L10 50Q6 60 12 66Q28 72 48 70Q66 68 66 52Z" fill={scale} />
         <path d="M2 58L18 52L24 70L6 74Z" fill={page} strokeWidth={2} />
         <Detail d={strokes([[6, 60, 18, 56], [7, 65, 20, 61], [8, 70, 21, 66]])} color={B12.ink} w={1.2} />

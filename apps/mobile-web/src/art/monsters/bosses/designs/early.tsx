@@ -85,7 +85,8 @@ export const EARLY_BOSSES: Readonly<Record<string, BossDesign>> = {
     return (
       <>
         <Shadow x={66} w={100} />
-        <Blob d={circles([[102, 18, 7], [110, 12, 6], [96, 10, 5]])} fill="#d8d2cc" width={2} opacity={0.85} />
+        {/* 蒸汽排成往右上飄、由大到小的一串；三顆圓擠成三角會變成「圓臉加兩隻耳朵」的知名剪影。 */}
+        <Blob d={circles([[99, 19, 5], [107, 12, 5.5], [116, 8, 3.8], [122, 3.5, 2.4]])} fill="#d8d2cc" width={2} opacity={0.85} />
         <path d="M92 56L94 28L104 28L104 58Z" fill={copper} />
         <rect x={91} y={24} width={15} height={6} rx={2} fill={copper} strokeWidth={2} />
         <ellipse cx={72} cy={86} rx={36} ry={32} fill={fur} />

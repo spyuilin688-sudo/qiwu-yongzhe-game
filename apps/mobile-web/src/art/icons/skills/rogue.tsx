@@ -139,8 +139,8 @@ export const ROGUE_GLYPHS: Readonly<Record<string, SkillGlyph>> = {
   /** 蔓毒之刃：刀尖一顆大毒滴分裂成兩顆，沿虛線傳給其他敵人。 */
   SK039: () => (
     <>
-      <Beam d="M27 16Q34 10.6 38.6 14M28.6 24Q36 26 38 33.4" color={FX.venom.light} width={1.4} dash="2.4 2" />
-      <path d={[at(TEMPLATE.drop, 39.4, 17.4, 3), at(TEMPLATE.drop, 38, 37.6, 3)].join('')} fill={FX.venom.base} strokeWidth={1.4} />
+      <Beam d="M27 16Q34 10.6 38.6 14M28.6 24Q36 26 38 33.4" color={FX.venom.base} width={2.2} />
+      <path d={[at(TEMPLATE.drop, 39.4, 17.8, 3.6), at(TEMPLATE.drop, 38, 38, 3.6)].join('')} fill={FX.venom.base} strokeWidth={1.4} />
       <Place x={14.6} y={31.4} angle={45} scale={1.05}>
         <Dagger />
       </Place>

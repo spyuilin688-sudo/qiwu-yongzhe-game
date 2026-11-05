@@ -3,7 +3,7 @@ import { useSvgId } from '../heroes/svgId.ts';
 import type { ArtProps } from '../types.ts';
 import { RegularFrame, ULTIMATE_GLYPH_SCALE, UltimateFrame } from './skills/frame.tsx';
 import { sparkle } from './skills/geometry.ts';
-import { GLYPH_STROKE } from './skills/kit.tsx';
+import { GLYPH_STROKE, GlyphScaleContext } from './skills/kit.tsx';
 import { FIELD, FX, INK, type Tone } from './skills/palette.ts';
 import { skillIconSpec } from './skills/registry.ts';
 
@@ -32,7 +32,7 @@ export function SkillIcon({ skillId, ...rest }: ArtProps & { readonly skillId: s
         strokeLinecap="round"
         transform={ultimate ? `translate(24 24) scale(${ULTIMATE_GLYPH_SCALE}) translate(-24 -24)` : undefined}
       >
-        {spec ? spec.glyph() : <path d={sparkle(24, 24, 10)} fill={FX.cream} />}
+        <GlyphScaleContext.Provider value={glyphScale}>{spec ? spec.glyph() : <path d={sparkle(24, 24, 10)} fill={FX.cream} />}</GlyphScaleContext.Provider>
       </g>
     </Svg>
   );

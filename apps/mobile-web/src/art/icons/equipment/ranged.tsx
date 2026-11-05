@@ -1,5 +1,5 @@
 import { dots, leaf, shape, strokes } from '../skills/geometry.ts';
-import { Diagonal, Ink, Shine, Tube, type EquipDesign } from './kit.tsx';
+import { Diagonal, Grow, Ink, Shine, Tube, type EquipDesign } from './kit.tsx';
 import { DETAIL, INK, MAT } from './palette.ts';
 
 /** 箭羽範本：上尖下開的山形，單位座標。 */
@@ -24,7 +24,7 @@ export const RANGED_DESIGNS: Readonly<Record<string, EquipDesign>> = {
   短弓: (p) => (
     <Diagonal mid={24}>
       <BowString d="M30 6V42" />
-      <path d="M29 5Q4.6 24 29 43L31 41.4Q13.4 24 31 6.6Z" fill={p.split(MAT.greenWood)} />
+      <path d="M29 5Q3.2 24 29 43L31.2 41.2Q15.4 24 31.2 6.8Z" fill={p.split(MAT.greenWood)} />
       <rect x="15.4" y="20.4" width="7.4" height="7.2" rx="1.6" fill={MAT.leather.base} />
       <Ink d={strokes([[15.8, 22.8, 22.4, 22.8], [15.8, 25.2, 22.4, 25.2]])} width={1} />
       <path d={leaf(12.6, 18.2, 8, 3.6, -125)} fill={MAT.emerald.base} strokeWidth={1.5} />
@@ -36,7 +36,7 @@ export const RANGED_DESIGNS: Readonly<Record<string, EquipDesign>> = {
   長弓: (p) => (
     <Diagonal mid={24}>
       <BowString d="M29 3.4V44.6" />
-      <path d="M28 2Q3 24 28 46L30 44.5Q9 24 30 3.5Z" fill={p.split(MAT.darkWood)} />
+      <path d="M28 2Q1.4 24 28 46L30.2 44.4Q11 24 30.2 3.6Z" fill={p.split(MAT.darkWood)} />
       <Shine d="M21 8Q12 15 11.6 22" color={MAT.darkWood.light} width={1.2} />
       <rect x="13.4" y="20" width="7.4" height="8" rx="1.5" fill={MAT.blueCloth.base} />
       <path d={dots([[29, 2.8, 1.9], [29, 45.2, 1.9]])} fill={MAT.brass.base} strokeWidth={1.3} />
@@ -48,10 +48,10 @@ export const RANGED_DESIGNS: Readonly<Record<string, EquipDesign>> = {
 
   /** 獵弓：反曲弓，弓梢外翻、弓臂長出荊棘，綠藤纏住握把。 */
   獵弓: () => (
-    <Diagonal mid={24}>
+    <Diagonal mid={24} offset={-4.4}>
       <BowString d="M32.4 4V44" />
       <path d="M18.4 15.8L13.8 14.4L17 19.4ZM18.4 32.2L13.8 33.6L17 28.6Z" fill={MAT.emerald.shade} strokeWidth={1.4} />
-      <Tube d="M33 3C28 2 27.5 7 24.5 11.5Q14.5 24 24.5 36.5C27.5 41 28 46 33 45" width={5} color={MAT.darkWood.base} />
+      <Tube d="M33 3C28 2 27.5 7 24.5 11.5Q14.5 24 24.5 36.5C27.5 41 28 46 33 45" width={5.8} color={MAT.darkWood.base} />
       <Shine d="M23.6 13Q18.6 19 18.4 23" color={MAT.darkWood.light} width={1.1} />
       <rect x="16" y="20" width="7" height="8" rx="1.5" fill={MAT.leather.base} />
       <Tube d="M16.4 21.6Q19.6 20.4 22.6 23.2M16.4 26.4Q19.6 25.2 22.6 27.6" width={2.2} color={MAT.emerald.base} />
@@ -81,7 +81,7 @@ export const RANGED_DESIGNS: Readonly<Record<string, EquipDesign>> = {
 
   /** 獸笛／號角：彎曲的獸角號，兩道黃銅箍、喇叭口內暗，口端垂著紅流蘇。 */
   '獸笛／號角': (p) => (
-    <g transform="translate(0 4)">
+    <Grow by={1.22} cx={25.4} cy={21.7} dx={-1.4} dy={2.3}>
       <Tube d="M12.6 25.2L11 31.8M15 25.6L15 32.4" width={2.2} color={MAT.feather.base} />
       <path d="M10 10C9 26 18 36 34 35L38 21C26 24 15 20 13 10Z" fill={p.ball(MAT.bone)} />
       <Shine d="M12.4 14Q12.6 23.6 17.6 29.4" color={MAT.bone.light} />
@@ -89,7 +89,7 @@ export const RANGED_DESIGNS: Readonly<Record<string, EquipDesign>> = {
       <ellipse cx="36" cy="28" rx="3.4" ry="7.6" transform="rotate(16 36 28)" fill={p.split(MAT.brass)} />
       <ellipse cx="36.4" cy="28" rx="1.7" ry="5.2" transform="rotate(16 36.4 28)" fill={DETAIL.hollow} strokeWidth={1.2} />
       <path d="M9.4 11.2L13.6 10.8L13.2 7.2L9.8 7.6Z" fill={MAT.brass.base} strokeWidth={1.5} />
-    </g>
+    </Grow>
   ),
 
   /** 手砲／機砲：黃銅砲管朝右（與角色朝向一致）、喇叭形砲口、木製握把與鐵製後膛。 */

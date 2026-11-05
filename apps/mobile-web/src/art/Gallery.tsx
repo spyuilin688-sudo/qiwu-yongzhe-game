@@ -1,4 +1,4 @@
-import { SLOT_IDS, type ContentCatalog } from '@qiwu/content';
+import { SLOT_IDS, UNIT_KINDS, UNIT_LABELS, type ContentCatalog } from '@qiwu/content';
 import type { ReactNode } from 'react';
 import { MapBackdrop } from './backgrounds/MapBackdrop.tsx';
 import { HeroArt } from './heroes/HeroArt.tsx';
@@ -11,6 +11,7 @@ import { heroLookFor } from './mapping.ts';
 import { AddArt } from './monsters/BossArt.tsx';
 import { MonsterArt } from './monsters/MonsterArt.tsx';
 import type { FamilyKey, UiIconName } from './types.ts';
+import { UnitArt } from './units/UnitArt.tsx';
 
 /**
  * 美術總覽（僅開發模式：網址加 ?gallery=1）。用來在手機與桌面檢查全部原創 SVG 資產，
@@ -107,6 +108,13 @@ export function Gallery({ catalog }: { catalog: ContentCatalog }) {
             </Cell>
           );
         })}
+      </Section>
+      <Section title={`召喚物與區域（${UNIT_KINDS.length}）`} id="units">
+        {UNIT_KINDS.map((kind) => (
+          <Cell key={kind} label={UNIT_LABELS[kind]}>
+            <UnitArt kind={kind} size={48} />
+          </Cell>
+        ))}
       </Section>
       <Section title="技能（70）" id="skills">
         {[...catalog.skills.values()].map((skill) => (

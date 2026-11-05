@@ -5,8 +5,7 @@ import { useBattleView, useCatalog, useGame, useHostEvents, useSend } from '../.
 import { useOpenSheet, useUi } from '../../app/uiStore.tsx';
 import { usePrefs } from '../../app/prefs.tsx';
 import { formatClock, formatCompact } from '../format/format.ts';
-import { AddArt, HeroArt, MapBackdrop, MonsterArt, heroLookFor } from '../../art/index.ts';
-import { UnitArt } from '../../art/units/UnitArt.tsx';
+import { AddArt, HeroArt, MapBackdrop, MonsterArt, UnitArt, heroLookFor } from '../../art/index.ts';
 import { ActionButton } from '../components/primitives.tsx';
 import styles from './battle.module.css';
 

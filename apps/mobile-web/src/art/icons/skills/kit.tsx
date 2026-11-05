@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 import { fmt, shape } from './geometry.ts';
 import { FX, INK, type Tone } from './palette.ts';
 import { isRedSuit, suitPath, type Suit } from './suits.ts';
@@ -22,10 +22,17 @@ export const TEMPLATE = {
   heart: 'M0 0.95C-0.25 0.7 -1 0.25 -1 -0.3C-1 -0.75 -0.65 -1 -0.32 -1C-0.12 -1 0 -0.85 0 -0.65C0 -0.85 0.12 -1 0.32 -1C0.65 -1 1 -0.75 1 -0.3C1 0.25 0.25 0.7 0 0.95Z',
 } as const;
 
-/** 群組變換：只平移、旋轉、等比縮放；描邊依縮放反向補償，維持全圖一致粗細。 */
+/**
+ * 符號外層的縮放倍率（絕招內框較小，整個符號會先縮一次）。Place 會覆寫繼承的描邊粗細，
+ * 若不知道外層倍率，被移動的子圖形（劍、牌、拳）在絕招裡就會比同一符號的其他線條細一截。
+ */
+export const GlyphScaleContext = createContext(1);
+
+/** 群組變換：只平移、旋轉、等比縮放；描邊依自身與外層縮放反向補償，維持全圖一致粗細。 */
 export function Place({ x, y, angle = 0, scale = 1, children, opacity }: PlaceProps) {
+  const outer = useContext(GlyphScaleContext);
   return (
-    <g transform={`translate(${fmt(x)} ${fmt(y)}) rotate(${fmt(angle)}) scale(${fmt(scale)})`} strokeWidth={GLYPH_STROKE / scale} opacity={opacity}>
+    <g transform={`translate(${fmt(x)} ${fmt(y)}) rotate(${fmt(angle)}) scale(${fmt(scale)})`} strokeWidth={GLYPH_STROKE / (scale * outer)} opacity={opacity}>
       {children}
     </g>
   );
@@ -155,15 +162,19 @@ export function Fist({ ghost }: { readonly ghost?: string }) {
   );
 }
 
-/** 鎚子（鎚頭朝上、長約 28）：工匠系。hot 時鎚頭燒紅。 */
+/**
+ * 鎚子（鎚頭朝上、長約 28）：工匠系。hot 時鎚身轉為深鐵、打擊面燒得發亮：
+ * 整顆鎚頭塗成火色會與火焰、紅銅底色糊成一團，留深色鎚身才看得出鎚形。
+ */
 export function Hammer({ hot }: { readonly hot?: boolean }) {
-  const head = hot ? FX.fire : FX.iron;
+  const head = hot ? FX.darkIron : FX.iron;
   return (
     <>
       <path d="M0 -3V13" fill="none" stroke={INK} strokeWidth={5.4} strokeLinecap="round" />
       <path d="M0 -3V13" fill="none" stroke={FX.wood.base} strokeWidth={2.4} strokeLinecap="round" />
       <rect x="-9" y="-11" width="18" height="8.4" rx="1.8" fill={head.base} />
       <path d="M2 -11H7.2Q9 -11 9 -9.2V-4.4Q9 -2.6 7.2 -2.6H2Z" fill={head.shade} stroke="none" />
+      {hot ? <path d="M5.4 -11H7.2Q9 -11 9 -9.2V-4.4Q9 -2.6 7.2 -2.6H5.4Z" fill={FX.fire.light} stroke="none" /> : null}
       <rect x="-2.4" y="-12" width="4.8" height="10.4" rx="1" fill={FX.copper.base} />
     </>
   );

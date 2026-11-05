@@ -2,8 +2,8 @@ import { circle, crescent, dots, shape, sparkle, star, strokes } from './geometr
 import { Arrow, Beam, Glint, TEMPLATE, at, type SkillGlyph } from './kit.tsx';
 import { FX } from './palette.ts';
 
-/** 狼頭側影（朝右、約 20×19，原點在臉中央）：馴獸師一線的戰獸。 */
-const WOLF = 'M-8 6L-8.4 -2L-6 -10.6L-1.6 -5.2Q3 -6 6 -3L12 0L11.4 3L5 4.4L2 8.4Z';
+/** 狼頭側影（朝右、約 22×22，原點在臉中央）：尖耳、長吻、張開的下顎與頸部鬃毛，縮小後才不會像狗或胡狼。 */
+const WOLF = 'M-9 8L-9.4 -1L-7.4 -5L-6 -12L-1.6 -5.6Q2.4 -6.4 5.6 -3.6L12 -0.8Q13 0.6 12 1.8L5.4 3L8.6 5.2L1.6 7.4L-1 10.4L-3.6 8L-6 10.6Z';
 const HORN = 'M8 25C9.6 33.6 17 37 27 33.6L31 21.6C23 25.4 15 24 12 20Z';
 const PAW_PAD = 'M24 37Q15.6 37 16.4 30.6Q17.2 25.4 24 25.4Q30.8 25.4 31.6 30.6Q32.4 37 24 37Z';
 
@@ -90,10 +90,10 @@ export const BOW_GLYPHS: Readonly<Record<string, SkillGlyph>> = {
   /** 獵群奔襲：兩道狼影並肩向右疾奔。 */
   SK019: () => (
     <>
-      <Beam d={strokes([[4.6, 32, 10.6, 32], [6, 38, 13, 38], [4.6, 22, 8.6, 22]])} color={FX.white} width={1.2} />
-      <path d={shape(WOLF, 15, 16.4, 0.92)} fill={FX.fur.shade} />
-      <path d={shape(WOLF, 26, 29, 1.18)} fill={FX.fur.base} />
-      <path d={dots([[28.4, 26.2, 1.1], [16.8, 14.2, 0.9]])} fill={FX.cardInk} stroke="none" />
+      <Beam d={strokes([[5, 31.4, 12.4, 31.4], [6.4, 37.4, 14, 37.4]])} color={FX.white} width={1.4} />
+      <path d={shape(WOLF, 17, 19.6, 0.84)} fill={FX.fur.shade} />
+      <path d={shape(WOLF, 27.4, 28.6, 1.08)} fill={FX.fur.base} />
+      <path d={dots([[29.6, 25.2, 1.2], [18.6, 17.2, 1], [40.4, 28.4, 1.1], [27.4, 19.4, 0.9]])} fill={FX.cardInk} stroke="none" />
     </>
   ),
 

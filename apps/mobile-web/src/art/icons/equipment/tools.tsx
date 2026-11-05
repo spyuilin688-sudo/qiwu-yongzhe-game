@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { circle, crescent, dots, gear, star, strokes } from '../skills/geometry.ts';
 import { suitPath } from '../skills/suits.ts';
-import { Diagonal, Ink, Shine, Tube, type EquipDesign, type Paint } from './kit.tsx';
+import { Diagonal, Grow, Ink, Shine, Tube, type EquipDesign, type Paint } from './kit.tsx';
 import { DETAIL, MAT, type Tone } from './palette.ts';
 
 const BOTTLE = 'M20 7H28V14.4Q37 17.6 37 28.4Q37 41 24 41Q11 41 11 28.4Q11 17.6 20 14.4Z';
@@ -115,7 +115,7 @@ export const TOOL_DESIGNS: Readonly<Record<string, EquipDesign>> = {
 
   /** 線軸／線輪：木製線軸纏滿紫線，鬆脫的線頭連到一支木偶十字操縱桿。 */
   '線軸／線輪': (p) => (
-    <>
+    <g transform="translate(-1.2 -2.2)">
       <ellipse cx="24" cy="36.4" rx="12" ry="4.6" fill={MAT.wood.shade} />
       <ellipse cx="24" cy="34.4" rx="12" ry="4.6" fill={MAT.wood.base} />
       <path d="M15.4 10V34.4Q24 37.6 32.6 34.4V10Z" fill={p.split(MAT.purple)} />
@@ -125,12 +125,12 @@ export const TOOL_DESIGNS: Readonly<Record<string, EquipDesign>> = {
       <ellipse cx="24" cy="9.4" rx="3" ry="1.2" fill={DETAIL.hollow} strokeWidth={1} />
       <Tube d="M32.6 21Q42 23.6 39.4 31.6Q37.4 37 40 41" width={1.8} core={1.4} color={MAT.purple.light} />
       <Tube d="M35.2 42.6H44.4M39.8 38.8V46.4" width={3} color={MAT.wood.base} />
-    </>
+    </g>
   ),
 
   /** 工鎚：木柄銅頭的羊角鎚，一面平頭、一面彎爪。 */
   工鎚: (p) => (
-    <Diagonal mid={27}>
+    <Diagonal mid={23.2}>
       <Tube d="M24 15V49" width={5} color={MAT.wood.base} />
       <rect x="21" y="39" width="6" height="9" rx="1.8" fill={MAT.leather.base} />
       <Ink d={strokes([[21.3, 42, 26.7, 42], [21.3, 45, 26.7, 45]])} width={1} />
@@ -142,27 +142,31 @@ export const TOOL_DESIGNS: Readonly<Record<string, EquipDesign>> = {
     </Diagonal>
   ),
 
-  /** 工具匣：黃銅工具箱，提把、扣鎖與鉚釘，箱口插著扳手和螺絲起子。 */
+  /**
+   * 工具匣：無蓋的黃銅提籃式工具箱，木製提桿橫跨兩端山形側板，扳手、螺絲起子與鎚柄從箱口冒出。
+   * 刻意不畫箱蓋與正面鎖扣：有蓋有鎖的箱子會被讀成寶箱，與「不使用寶箱外型」的規則衝突。
+   */
   工具匣: (p) => (
     <>
-      <Tube d="M14.4 18L10.6 7.6" width={3.4} color={MAT.iron.base} />
-      <path d="M6.8 3.6Q6.2 8.6 10.6 9.2Q14.8 8.6 14 3.6L12 5.6H9Z" fill={p.split(MAT.iron)} strokeWidth={1.6} />
-      <Tube d="M34.4 17L36.4 11" width={2} color={MAT.iron.base} />
-      <Tube d="M36.4 11.4L38.4 5.4" width={4.6} color={MAT.redLeather.base} />
-      <Tube d="M17 15Q17 8.4 24 8.4Q31 8.4 31 15" width={3.4} color={MAT.darkIron.base} />
-      <rect x="9" y="38.6" width="6" height="4" rx="1" fill={MAT.darkIron.base} />
-      <rect x="33" y="38.6" width="6" height="4" rx="1" fill={MAT.darkIron.base} />
-      <rect x="7" y="17.4" width="34" height="22.6" rx="3" fill={p.split(MAT.brass)} />
-      <Shine d="M10.2 27V35" color={MAT.brass.light} />
-      <rect x="6" y="15.4" width="36" height="6" rx="2" fill={p.split(MAT.copper)} />
-      <rect x="21.4" y="18.6" width="5.2" height="6.4" rx="1" fill={MAT.darkIron.base} strokeWidth={1.6} />
-      <path d={dots([[11, 36, 1.1], [37, 36, 1.1], [11, 25.4, 1.1], [37, 25.4, 1.1]])} fill={MAT.brass.light} strokeWidth={0.8} />
+      <path d="M7.6 20.4H40.4V24H7.6Z" fill={DETAIL.hollow} />
+      <Tube d="M18.6 22L13.4 9.4" width={3.4} color={MAT.iron.base} />
+      <path d="M9.4 5.4Q8.6 10.4 13.2 11.2Q17.6 10.6 16.8 5.6L14.6 7.6H11.6Z" fill={p.split(MAT.iron)} strokeWidth={1.6} />
+      <Tube d="M25.4 22V12" width={4.2} color={MAT.wood.base} />
+      <rect x="21" y="7.2" width="9.2" height="5.6" rx="1.4" fill={p.split(MAT.darkIron)} />
+      <Tube d="M33 22L35.6 15" width={1.8} color={MAT.iron.base} />
+      <Tube d="M35.4 15.6L38.2 8.2" width={4.6} color={MAT.redLeather.base} />
+      <path d="M5 42.6V22L9.6 15.4L14.2 22V42.6Z" fill={p.split(MAT.wood)} />
+      <path d="M33.8 42.6V22L38.4 15.4L43 22V42.6Z" fill={p.split(MAT.wood)} />
+      <Tube d="M9.6 19.4H38.4" width={3.6} color={MAT.darkWood.base} />
+      <path d="M6.6 24.6H41.4L39.6 42.6H8.4Z" fill={p.split(MAT.brass)} />
+      <Shine d="M10.4 28V39" color={MAT.brass.light} width={1.6} />
+      <path d={dots([[11.4, 28.4, 1.1], [36.6, 28.4, 1.1], [11.8, 38.6, 1.1], [36.2, 38.6, 1.1]])} fill={MAT.brass.light} strokeWidth={0.8} />
     </>
   ),
 
   /** 戰鎚：黑鐵雙面巨鎚，黃銅箍、頂端尖刺，鎚心嵌著一顆熔火核心。 */
   戰鎚: (p) => (
-    <Diagonal mid={22} angle={42}>
+    <Diagonal mid={21} angle={42}>
       <Tube d="M24 18V43" width={5.4} color={MAT.darkWood.base} />
       <rect x="20.8" y="33" width="6.4" height="10" rx="2" fill={MAT.redLeather.base} />
       <Ink d={strokes([[21.1, 36.4, 26.9, 36.4], [21.1, 39.6, 26.9, 39.6]])} width={1} />
@@ -177,22 +181,24 @@ export const TOOL_DESIGNS: Readonly<Record<string, EquipDesign>> = {
     </Diagonal>
   ),
 
-  /** 工具匣／風箱：鍛爐風箱，木板刻著日輪、兩側皮革摺紋、黃銅噴嘴朝下。 */
+  /**
+   * 工具匣／風箱：鍛爐手風箱的側面：上下兩片木板張開成 V 字，中間是摺紋從噴嘴放射出去的皮革，
+   * 黃銅噴嘴朝右（與角色朝向一致），寬端伸出兩支握把，上板刻日輪。
+   * 只畫正面水滴形木板時縮小後像甲蟲或魯特琴，張開的 V 字與摺紋才是風箱的辨識點。
+   */
   '工具匣／風箱': (p) => (
-    <>
-      <Tube d="M17.4 11L14.6 3.6M30.6 11L33.4 3.6" width={3.6} color={MAT.wood.base} />
-      <path d={dots([[14.4, 3, 2.2], [33.6, 3, 2.2]])} fill={MAT.darkWood.base} strokeWidth={1.5} />
-      <path
-        d="M12 16L8.4 19.6L11.8 23L8.4 26.6L11.8 30L9.6 33.6L15 37.6H33L38.4 33.6L36.2 30L39.6 26.6L36.2 23L39.6 19.6L36 16L32 10.4H16Z"
-        fill={p.split(MAT.leather)}
-      />
-      <path d="M20.6 36H27.4L25.6 45.4H22.4Z" fill={p.split(MAT.brass)} />
-      <path d="M24 9Q35.6 9 35.6 20.4Q35.6 30.4 28 36.4H20Q12.4 30.4 12.4 20.4Q12.4 9 24 9Z" fill={p.split(MAT.wood)} />
-      <Shine d="M15.4 17Q15.6 13 19 11.4" color={MAT.wood.light} />
-      <path d={star(24, 21.4, 8, 8.2, 5.4)} fill={p.split(MAT.amber)} strokeWidth={1.3} />
-      <circle cx="24" cy="21.4" r="4.2" fill={p.ball(MAT.gold)} strokeWidth={1.4} />
-      <rect x="20" y="35" width="8" height="3" rx="1" fill={MAT.copper.base} strokeWidth={1.4} />
-    </>
+    <Grow by={0.94} cy={25}>
+      <Tube d="M8 9L3.4 5.2M8 39.6L3.4 43.4" width={3.6} color={MAT.wood.base} />
+      <path d={dots([[3, 4.8, 2.4], [3, 43.8, 2.4]])} fill={MAT.darkWood.base} strokeWidth={1.5} />
+      <path d="M35 22.6L44.6 24Q46 25.4 44.6 26.8L35 28.2Z" fill={p.fall(MAT.brass)} />
+      <path d="M36 25L10.8 18L8.2 21L10.8 24L8.2 27L10.8 30L8.2 33L10.8 35.4L36 26.6Z" fill={p.fall(MAT.redLeather)} />
+      <Ink d="M34 25.8L10.8 24M34 25.8L10.8 30" width={1.2} color={MAT.redLeather.shade} />
+      <path d="M36 27.4L11 33.6Q6 35.2 6.6 38.8Q7.8 42 12.6 40.8L36 30.4Z" fill={p.fall(MAT.darkWood)} />
+      <path d="M36 23L14.4 7.2Q8.4 4.4 6.6 9.8Q5.4 15.6 10.8 18.6L36 26.2Z" fill={p.split(MAT.wood)} />
+      <path d={star(13.6, 12.4, 8, 5.6, 3.6)} fill={MAT.amber.base} strokeWidth={1.2} />
+      <circle cx="13.6" cy="12.4" r="2.3" fill={MAT.gold.light} strokeWidth={1.1} />
+      <rect x="33.2" y="22" width="3.8" height="9" rx="1.2" fill={MAT.copper.base} strokeWidth={1.4} />
+    </Grow>
   ),
 
   /** 機芯：黃銅大齒輪咬著一枚紅銅小齒輪，中央是發著藍光的動力核心。 */

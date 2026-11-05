@@ -131,10 +131,6 @@ export const MIDDLE_BOSSES: Readonly<Record<string, BossDesign>> = {
     return (
       <>
         <Shadow w={108} />
-        <path d="M26 96L34 22L40 23L33 97Z" fill={k.paint(B08.handle)} />
-        <path d="M14 10L46 16L42 36L10 30Z" fill={k.paint(B08.hammer)} />
-        <path d="M14 10L10 30L16 31L20 11Z" fill={B08.magma} strokeWidth={2} />
-        <Detail d="M30 13L27 33" color="#4a4f5a" w={2.4} />
         <ellipse cx={48} cy={112} rx={12} ry={8} fill={rock} />
         <ellipse cx={82} cy={112} rx={12} ry={8} fill={rock} />
         <circle cx={108} cy={104} r={11} fill={rock} />
@@ -153,9 +149,19 @@ export const MIDDLE_BOSSES: Readonly<Record<string, BossDesign>> = {
         <BossEye x={47} y={41} r={5} iris={ROYAL.eyeHot} inner="right" />
         <BossEye x={61} y={42} r={5.5} iris={ROYAL.eyeHot} inner="left" />
         <FangMouth x={53} y={51} w={12} h={3.5} />
+        {/*
+          鍛錘握柄畫在身體前方、穿過拳頭：握柄若藏在身後，只剩一塊灰色錘頭浮在左上，
+          縮圖時會被讀成砲管。錘頭與握柄垂直（同樣傾斜 15°），左端是燒紅的打擊面、朝向勇者。
+        */}
+        <Tubes d="M33 92L17 30" color={B08.handle} width={4.5} />
+        <g transform="rotate(-15 17 27)">
+          <rect x={1} y={17} width={32} height={20} rx={3} fill={k.paint(B08.hammer)} />
+          <rect x={1} y={17} width={7} height={20} rx={2.5} fill={k.paint(B08.magma)} strokeWidth={2} />
+          <Detail d="M24 18V36" color="#4a4f5a" w={2.4} />
+        </g>
         <path d="M40 58Q28 62 28 74L38 78Q40 68 48 64Z" fill={rock} />
-        <circle cx={32} cy={76} r={9} fill={rock} />
-        <Detail d="M27 72L33 74M27 77L34 79" color={B08.basaltDeep} w={1.8} />
+        <circle cx={31} cy={76} r={9} fill={rock} />
+        <Detail d="M26 72L32 74M26 77L33 79" color={B08.basaltDeep} w={1.8} />
         <Shine x={44} y={30} rx={4} ry={2} opacity={0.3} />
         <Shine x={42} y={52} rx={8} ry={3} opacity={0.18} />
       </>

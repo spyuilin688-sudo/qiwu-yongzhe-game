@@ -60,10 +60,40 @@ export const OUTLINE = { stroke: INK, strokeWidth: 2, strokeLinejoin: 'round', s
 
 /**
  * 長柄物件以直立方式繪製，再整組轉 45° 成「左下握柄、右上尖端」的標準道具角度。
- * mid 為物件直立時的長度中點，轉動前先把它移到畫面中心，物件才會置中。
+ * mid 為物件直立時的長度中點，轉動前先把它移到畫面中心，物件才會置中（mid 越大、物件越往右上角推）。
+ * offset 是垂直於長軸的位移：弓這類重心偏一側的物件，靠它把兩端弓梢從角落拉回來。
  */
-export function Diagonal({ mid = 24, angle = 45, children }: { readonly mid?: number; readonly angle?: number; readonly children: ReactNode }) {
-  return <g transform={`rotate(${angle} 24 24) translate(0 ${24 - mid})`}>{children}</g>;
+export function Diagonal({ mid = 24, angle = 45, offset = 0, children }: DiagonalProps) {
+  return <g transform={`rotate(${angle} 24 24) translate(${offset} ${24 - mid})`}>{children}</g>;
+}
+
+interface DiagonalProps {
+  readonly mid?: number;
+  readonly angle?: number;
+  readonly offset?: number;
+  readonly children: ReactNode;
+}
+
+/**
+ * 等比放大一組圖形（以 cx,cy 為中心）。UI 實際顯示只有 22～40px，小物件或杖頭不放大會縮成一個點；
+ * 繼承的外框粗細依倍率反向補償，維持全圖一致的 2 單位描邊，細節線則跟著略為加粗，小尺寸反而更清楚。
+ */
+export function Grow({ by, cx = 24, cy = 24, dx = 0, dy = 0, children }: GrowProps) {
+  return (
+    <g transform={`translate(${cx + dx} ${cy + dy}) scale(${by}) translate(${-cx} ${-cy})`} strokeWidth={OUTLINE.strokeWidth / by}>
+      {children}
+    </g>
+  );
+}
+
+interface GrowProps {
+  readonly by: number;
+  readonly cx?: number;
+  readonly cy?: number;
+  /** 放大後的位移：原圖重心不在中央時，順便把物件挪回畫面中心。 */
+  readonly dx?: number;
+  readonly dy?: number;
+  readonly children: ReactNode;
 }
 
 /** 小高光：不填色的亮色細線，放在物件左上受光面。 */

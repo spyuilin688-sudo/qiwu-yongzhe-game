@@ -1,6 +1,6 @@
 import type { SharedSlotId } from '@qiwu/content';
 import { circle, dots, fmt, leaf, sparkle, strokes } from '../skills/geometry.ts';
-import { Ink, Shine, Tube, type EquipDesign } from './kit.tsx';
+import { Grow, Ink, Shine, Tube, type EquipDesign } from './kit.tsx';
 import { DETAIL, MAT } from './palette.ts';
 
 /** 橢圓環（戒指本體）：外、內兩個橢圓配 evenodd，中間鏤空透出卡框底色。 */
@@ -67,28 +67,28 @@ export const WEARABLE_DESIGNS: Readonly<Record<SharedSlotId, EquipDesign>> = {
     </>
   ),
 
-  /** 項鍊：金色細鍊掛一顆水滴形琥珀墜，鍊上兩顆小珠。 */
+  /** 項鍊：粗金鍊串著四顆琥珀珠，下方掛一顆大水滴形琥珀墜；鍊與墜都要夠粗，22px 格子裡才不會只剩一個點。 */
   necklace: (p) => (
     <>
-      <Tube d="M9.6 5Q10.6 25 24 27.6Q37.4 25 38.4 5" width={2.6} color={MAT.gold.base} dash="2.2 1.4" />
-      <path d={dots([[12.4, 18.6, 1.7], [35.6, 18.6, 1.7]])} fill={MAT.amber.base} strokeWidth={1.1} />
-      <Tube d={circle(24, 29.4, 1.8)} width={2} color={MAT.gold.base} />
-      <path d="M24 31.6Q32.4 36.4 31.6 41.2Q30.8 46.4 24 46.4Q17.2 46.4 16.4 41.2Q15.6 36.4 24 31.6Z" fill={p.ball(MAT.amber)} />
-      <path d="M20.4 32.6Q24 29.6 27.6 32.6L26.2 34.8H21.8Z" fill={p.split(MAT.gold)} strokeWidth={1.5} />
-      <ellipse cx="20.8" cy="38.6" rx="1.4" ry="2.4" transform="rotate(20 20.8 38.6)" fill={DETAIL.white} stroke="none" opacity={0.85} />
+      <Tube d="M8.8 5Q9.4 21.8 24 24.6Q38.6 21.8 39.2 5" width={3.2} color={MAT.gold.base} />
+      <path d={dots([[10.2, 14.2, 2.2], [37.8, 14.2, 2.2], [15.4, 20.4, 2.2], [32.6, 20.4, 2.2]])} fill={MAT.amber.base} strokeWidth={1.3} />
+      <Tube d={circle(24, 25.8, 2.1)} width={2.2} color={MAT.gold.base} />
+      <path d="M24 27.6Q36 33.6 35 39.6Q34 45 24 45Q14 45 13 39.6Q12 33.6 24 27.6Z" fill={p.ball(MAT.amber)} />
+      <path d="M19.2 29.2Q24 25.6 28.8 29.2L27.2 32H20.8Z" fill={p.split(MAT.gold)} strokeWidth={1.6} />
+      <ellipse cx="19.4" cy="37.2" rx="1.7" ry="2.8" transform="rotate(24 19.4 37.2)" fill={DETAIL.white} stroke="none" opacity={0.85} />
     </>
   ),
 
   /** 戒指：厚金指環（中間鏤空），頂端鑲著切面紅寶石。 */
   ring: (p) => (
-    <>
+    <Grow by={1.14} cy={22.9} dy={1.6}>
       <path d={ellipseRing(24, 31, 13, 9.6, 9, 6.2, 1)} fill={p.ball(MAT.gold)} fillRule="evenodd" />
       <Shine d="M12.8 28.4Q14.6 24 19.4 22.6" color={MAT.gold.light} />
       <rect x="19.4" y="17.4" width="9.2" height="5" rx="1.6" fill={p.split(MAT.gold)} />
       <path d="M17.6 13.4L20.6 9H27.4L30.4 13.4L24 21.4Z" fill={p.split(MAT.ruby)} />
       <Ink d="M17.8 13.4H30.2M21.4 9.2L22.6 13.4L24 21M26.6 9.2L25.4 13.4" width={1} />
       <path d={sparkle(32.4, 8, 2.8)} fill={DETAIL.white} stroke="none" />
-    </>
+    </Grow>
   ),
 };
 

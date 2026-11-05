@@ -36,15 +36,19 @@ export const ARTISAN_GLYPHS: Readonly<Record<string, SkillGlyph>> = {
     </>
   ),
 
-  /** 熔火重擊：燒紅的鐵鎚包在火焰裡，消耗熱度換一記重擊。 */
+  /**
+   * 熔火重擊：燒紅的鐵鎚斜揮向右下，火焰沿揮擊方向拖在鎚頭後方，消耗熱度換一記重擊。
+   * 鎚子直立、火焰往上竄時會被讀成火把或斧頭，斜放加拖尾火焰才看得出「揮鎚」。
+   */
   SK063: () => (
     <>
-      <path d={at(TEMPLATE.flame, 24, 15.4, 12, 0, 1.05)} fill={FX.fire.base} />
-      <path d={at(TEMPLATE.flame, 24, 17.6, 6.6)} fill={FX.fire.light} strokeWidth={1.3} />
-      <Place x={24} y={27} scale={1.05}>
+      <path d={at(TEMPLATE.flame, 19.4, 14.4, 11.6, -52, 1.15)} fill={FX.fire.base} />
+      <path d={at(TEMPLATE.flame, 22.2, 17, 6.2, -52, 1.1)} fill={FX.bolt.base} strokeWidth={1.3} />
+      <Place x={26.4} y={26.6} angle={42} scale={1.18}>
         <Hammer hot />
       </Place>
-      <path d={dots([[10, 30, 1.4], [38.6, 27.6, 1.2], [36, 37, 1]])} fill={FX.fire.light} stroke="none" />
+      <path d={star(36.4, 36.4, 6, 4.6, 2)} fill={FX.bolt.light} strokeWidth={1.2} />
+      <path d={dots([[10.6, 30.6, 1.4], [40.6, 13, 1.2], [30, 6.4, 1.1], [8.6, 22, 1]])} fill={FX.fire.light} stroke="none" />
     </>
   ),
 

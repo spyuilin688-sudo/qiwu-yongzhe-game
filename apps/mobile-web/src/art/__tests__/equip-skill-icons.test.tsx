@@ -3,7 +3,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { EquipIcon, KNOWN_EQUIP_TYPES, SHARED_EQUIP_TYPE, isKnownEquipType } from '../icons/EquipIcon.tsx';
 import { SkillIcon, ULTIMATE_SKILL_IDS, hasSkillDesign } from '../icons/SkillIcon.tsx';
+import { ULTIMATE_GLYPH_SCALE } from '../icons/skills/frame.tsx';
+import { GLYPH_STROKE } from '../icons/skills/kit.tsx';
 import { skillIconSpec } from '../icons/skills/registry.ts';
+import { OUTLINE } from '../icons/equipment/kit.tsx';
 import { familyKeyOfName } from '../mapping.ts';
 
 const catalog = loadDefaultCatalog();
@@ -17,6 +20,11 @@ const EXPECTED_ULTIMATES = 14;
 
 const renderEquip = (typeName: string, slot: (typeof bases)[number]['slot']): string => renderToStaticMarkup(<EquipIcon typeName={typeName} slot={slot} size={48} />);
 const renderSkill = (skillId: string): string => renderToStaticMarkup(<SkillIcon skillId={skillId} size={48} />);
+/** 取出帶縮放與描邊的群組：[transform, 縮放倍率, stroke-width]。 */
+const scaledGroups = (markup: string): (readonly [string, number, number])[] =>
+  [...markup.matchAll(/<g transform="([^"]*scale\(([\d.]+)\)[^"]*)" stroke-width="([\d.]+)"/g)].map((match) => [match[1] ?? '', Number(match[2]), Number(match[3])] as const);
+const STROKE_TOLERANCE = 0.02;
+
 const idsIn = (markup: string): string[] => [...markup.matchAll(/ id="([^"]+)"/g)].map((match) => match[1] ?? '');
 
 /** 只允許向量元素、不得有外部資源；路徑不得含 NaN；漸層引用都要能找到定義。 */
@@ -61,6 +69,17 @@ describe('裝備基底圖示', () => {
   it('只用允許的 SVG 元素，並維持輕量', () => {
     for (const base of bases) expectCleanArt(renderEquip(base.typeName, base.slot), base.name);
     expectCleanArt(renderEquip('不存在的種類', 'offhand'), 'fallback');
+  });
+
+  it('放大的小物件與杖頭維持全圖一致的 2 單位外框', () => {
+    let checked = 0;
+    for (const base of bases) {
+      for (const [transform, scale, width] of scaledGroups(renderEquip(base.typeName, base.slot))) {
+        expect(width * scale, `${base.name} ${transform}`).toBeCloseTo(OUTLINE.strokeWidth, 1);
+        checked += 1;
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 
   it('同頁兩個相同圖示的漸層 id 不衝突', () => {
@@ -111,6 +130,20 @@ describe('技能圖示', () => {
     for (const skill of skills) expectCleanArt(renderSkill(skill.id), skill.id);
     expect(hasSkillDesign('SK999')).toBe(false);
     expectCleanArt(renderSkill('SK999'), 'SK999');
+  });
+
+  it('被移動或縮放的子圖形（劍、牌、拳）描邊與符號其他線條一致，絕招內也一樣', () => {
+    let checked = 0;
+    for (const skill of skills) {
+      const outer = skill.kind === 'ultimate' ? ULTIMATE_GLYPH_SCALE : 1;
+      for (const [transform, scale, width] of scaledGroups(renderSkill(skill.id))) {
+        // 只看 Place 的群組（translate→rotate→scale）；絕招外層縮放群組自己就以 1/倍率補償。
+        if (!transform.includes('rotate(')) continue;
+        expect(Math.abs(width * scale * outer - GLYPH_STROKE), `${skill.id} ${transform}`).toBeLessThan(STROKE_TOLERANCE);
+        checked += 1;
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 
   it('同頁兩個相同技能的漸層 id 不衝突', () => {

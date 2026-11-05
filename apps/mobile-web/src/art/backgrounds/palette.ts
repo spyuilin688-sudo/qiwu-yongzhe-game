@@ -51,10 +51,14 @@ export const BG06 = {
   coral: '#e87a6a', shell: '#f2d0c0', gull: '#f4f4f0', dusk: '#2a3a5a',
 } as const;
 
+/**
+ * 雪嶺與空島是最亮的兩張圖：白色怪物（雪兔、霜鵬、審判官）與白色傷害飄字都疊在上面，
+ * 所以天空與雪地刻意壓到中間調的藍灰，白色只留給遠山雪冠與前景小物。
+ */
 export const BG07 = {
-  skyTop: '#4f6f9c', skyMid: '#93a9c8', skyLow: '#b4c4da', farMount: '#7f96ba', midMount: '#8ea3c0',
-  snowCap: '#e6eef6', pine: '#3f6a6e', pineDeep: '#2f5458', snowTop: '#bccadc', snowLow: '#71829e',
-  lip: '#dce6f0', ice: '#9cc6e2', drift: '#a4b4ca', flake: '#ffffff', twig: '#8a7a6a', rock: '#7d8ca4', cabinLight: '#ffcf6a', dusk: '#3a3a6a',
+  skyTop: '#3f5c8a', skyMid: '#7890b4', skyLow: '#98abc6', farMount: '#6c84aa', midMount: '#7d92b2',
+  snowCap: '#d4dfeb', pine: '#3f6a6e', pineDeep: '#2f5458', snowTop: '#a9b9cf', snowLow: '#5f7090',
+  lip: '#c8d4e2', ice: '#9cc6e2', drift: '#91a2bb', flake: '#ffffff', twig: '#8a7a6a', rock: '#6d7c96', cabinLight: '#ffcf6a', dusk: '#3a3a6a',
 } as const;
 
 export const BG08 = {
@@ -79,9 +83,9 @@ export const BG10 = {
 } as const;
 
 export const BG11 = {
-  skyTop: '#4277b4', skyMid: '#86aed2', skyLow: '#b0c8de', sun: '#fff6d8', island: '#7d97b0',
-  islandTop: '#8fb08f', fall: '#eef6fa', cloud: '#e6ecf4', column: '#d8d0c0', columnLine: '#9a9284',
-  gold: '#e8c04a', tileTop: '#b4ae9e', tileLow: '#6e6a62', tileLine: '#928c7e', lip: '#d8d2c2',
+  skyTop: '#3a68a4', skyMid: '#7097c2', skyLow: '#93b1cf', sun: '#fff6d8', island: '#6f8aa6',
+  islandTop: '#8fb08f', fall: '#e6f0f6', cloud: '#dfe6f0', column: '#d0c8b8', columnLine: '#8f877a',
+  gold: '#e8c04a', tileTop: '#a39d8e', tileLow: '#5f5b54', tileLine: '#827c70', lip: '#c4bead',
   feather: '#ffffff', dusk: '#3a3a6a',
 } as const;
 

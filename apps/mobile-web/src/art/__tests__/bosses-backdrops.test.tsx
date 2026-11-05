@@ -2,6 +2,7 @@ import { loadDefaultCatalog } from '@qiwu/content';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { MapBackdrop } from '../backgrounds/MapBackdrop.tsx';
+import { cloud } from '../backgrounds/parts.tsx';
 import { AddArt, BossArt } from '../monsters/BossArt.tsx';
 
 const catalog = loadDefaultCatalog();
@@ -152,5 +153,35 @@ describe('地圖背景', () => {
     expectCleanSvg(markup);
     expectResolvedRefs(markup);
     expect(maps.map((map) => backdrop(map.number))).not.toContain(markup);
+  });
+});
+
+describe('背景共用形狀', () => {
+  /**
+   * 雲朵由三個圓＋一個切平雲底的矩形合成一條路徑。nonzero 填色規則下，
+   * 矩形若與圓的繞向相反，重疊處繞數相消，雲底會挖出透明橫紋（曾實際發生過）。
+   */
+  it('雲底矩形與圓同為逆時針繞向，重疊處不會挖洞', () => {
+    const d = cloud(40, 60, 20);
+    const subpaths = d.split('M').filter(Boolean);
+    const arcs = subpaths.filter((sub) => sub.includes('a'));
+    const rect = subpaths.find((sub) => /[vh]/.test(sub));
+    expect(arcs.length).toBe(3);
+    // circles() 的圓弧 sweep-flag 全為 0：螢幕座標（y 向下）中為逆時針。
+    const sweeps = arcs.flatMap((arc) => [...arc.matchAll(/a[\d.]+ [\d.]+ 0 1 (\d)/g)].map((match) => match[1]));
+    expect(sweeps).toEqual(['0', '0', '0', '0', '0', '0']);
+    expect(rect).toBeDefined();
+    // 依序走完相對位移 v/h，以鞋帶公式求有號面積；y 向下座標中逆時針為負值，與上面的圓一致。
+    const [startX = 0, startY = 0] = (rect ?? '').match(/^[-\d.]+ [-\d.]+/)?.[0].split(' ').map(Number) ?? [];
+    const points: [number, number][] = [[startX, startY]];
+    for (const [, axis, value] of (rect ?? '').matchAll(/([vh])(-?[\d.]+)/g)) {
+      const [x, y] = points[points.length - 1]!;
+      points.push(axis === 'h' ? [x + Number(value), y] : [x, y + Number(value)]);
+    }
+    const area = points.reduce((sum, [x, y], index) => {
+      const [nx, ny] = points[(index + 1) % points.length]!;
+      return sum + x * ny - nx * y;
+    }, 0);
+    expect(area).toBeLessThan(0);
   });
 });

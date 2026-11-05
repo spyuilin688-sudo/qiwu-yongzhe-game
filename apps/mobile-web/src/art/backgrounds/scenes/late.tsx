@@ -166,12 +166,13 @@ export const LATE_SCENES: readonly (readonly [number, SceneDesign])[] = [
     (k, zone) => {
       const P = BG11;
       const s = zone.shift * 0.4;
+      // 浮島底部用圓弧堆出岩塊，直線三角形縮小後會讀成「漏斗」。
       const island = (x: number, y: number, w: number): string =>
-        `M${f(x)} ${y}Q${f(x + w / 2)} ${f(y - w * 0.12)} ${f(x + w)} ${y}L${f(x + w * 0.7)} ${f(y + w * 0.3)}L${f(x + w * 0.5)} ${f(y + w * 0.55)}L${f(x + w * 0.32)} ${f(y + w * 0.28)}Z`;
+        `M${f(x)} ${y}Q${f(x + w / 2)} ${f(y - w * 0.12)} ${f(x + w)} ${y}Q${f(x + w * 0.92)} ${f(y + w * 0.26)} ${f(x + w * 0.64)} ${f(y + w * 0.3)}Q${f(x + w * 0.56)} ${f(y + w * 0.56)} ${f(x + w * 0.44)} ${f(y + w * 0.36)}Q${f(x + w * 0.12)} ${f(y + w * 0.3)} ${f(x)} ${y}Z`;
       return (
         <>
           {sky(k, [[0, P.skyTop], [0.65, P.skyMid], [1, P.skyLow]])}
-          <circle cx={196} cy={16} r={150} fill={k.glow(P.sun, 0.35)} />
+          <circle cx={196} cy={16} r={150} fill={k.glow(P.sun, 0.28)} />
           <path d={`M196 -10L150 176H170ZM196 -10L230 176H250Z`} fill={P.sun} opacity={0.1} />
           <path d={`${island(70 + s, 82, 64)}${island(258 - s, 64, 82)}${island(178 + s * 0.5, 108, 38)}`} fill={P.island} />
           <path d={`M${f(72 + s)} 82Q${102 + s} 74 ${134 + s} 82M${260 - s} 64Q${299 - s} 54 ${340 - s} 64M${179 + s * 0.5} 108Q${197 + s * 0.5} 103 ${216 + s * 0.5} 108`} fill="none" stroke={P.islandTop} strokeWidth={4} strokeLinecap="round" />
@@ -182,7 +183,7 @@ export const LATE_SCENES: readonly (readonly [number, SceneDesign])[] = [
               <path d="M160 178V120Q160 88 196 88Q232 88 232 120V178H222V122Q222 100 196 100Q170 100 170 122V178Z" fill={P.gold} opacity={0.75} />
             </>
           ) : null}
-          <path d={`${cloud(-6, 160, 30)}${cloud(80 + s, 168, 22)}${cloud(160, 164, 26)}${cloud(250 - s, 168, 22)}${cloud(330, 160, 30)}`} fill={P.cloud} opacity={0.5} />
+          <path d={`${cloud(-6, 160, 30)}${cloud(80 + s, 168, 22)}${cloud(160, 164, 26)}${cloud(250 - s, 168, 22)}${cloud(330, 160, 30)}`} fill={P.cloud} opacity={0.42} />
           <g stroke={P.columnLine} strokeWidth={1.5} strokeLinejoin="round">
             <rect x={12} y={46} width={24} height={132} fill={P.column} />
             <path d="M6 46H42V36H6ZM6 178H42V170H6Z" fill={P.column} />
