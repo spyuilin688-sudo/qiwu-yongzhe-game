@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.vite/
+apps/mobile-web/test-results/
+apps/mobile-web/playwright-report/
+apps/mobile-web/e2e/__screenshots__/
+.DS_Store
+*.log

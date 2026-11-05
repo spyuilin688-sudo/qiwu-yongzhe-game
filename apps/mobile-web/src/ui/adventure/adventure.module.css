@@ -1,0 +1,563 @@
+/*
+ * 冒險頁版面（規格 07「窄螢幕、面板與可及性規則」）：
+ *  高度 ≥ 720：裝備 116、鑑定區 176，戰場吃剩餘空間（800 高時 272）。
+ *  高度 640～719：裝備收合 60、鑑定區 152、戰場 ≥ 180。
+ *  高度 < 640：資源列、鑑定主操作、底部導覽固定；中段可捲，戰場 ≥ 180。
+ * 區域高度以 min-height 表示，字體放大時內容可換行並改為捲動，不裁切文字。
+ */
+.adventure {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ≥ 720：內層容器不產生方框，所有列直接排在同一欄；主操作列以 order 排回鑑定台與篩選列之間。 */
+.adventureScroll {
+  display: contents;
+}
+
+.adventure > *,
+.adventureScroll > * {
+  flex-shrink: 0;
+}
+
+.adventureScroll > [data-testid='battle-viewport'] {
+  flex: 1 1 auto;
+}
+
+/* ── 地圖列 ── */
+.stageBar {
+  min-height: var(--h-stagebar);
+  margin: 0;
+  padding: var(--space-1) var(--gutter);
+  border: 0;
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-surface);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: left;
+}
+
+.stageMap {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--space-2);
+  align-items: baseline;
+}
+
+.stageCode {
+  font-weight: 800;
+  color: var(--c-accent-strong);
+  font-size: var(--font-s);
+}
+
+.stageName {
+  font-weight: 700;
+  font-size: var(--font-s);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stageMapName {
+  grid-column: 1 / -1;
+  font-size: var(--font-xs);
+  color: var(--c-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stageMeta {
+  flex: none;
+  width: 34%;
+  max-width: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.stageDetail,
+.stageAlert {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  text-align: right;
+}
+
+.stageAlert {
+  color: var(--c-boss);
+}
+
+.stageProgress {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--hp-track);
+  overflow: hidden;
+}
+
+.stageProgress span {
+  display: block;
+  height: 100%;
+  background: var(--c-accent);
+}
+
+/* ── 技能列 ── */
+.skillBar {
+  min-height: var(--h-skillbar);
+  padding: 7px var(--gutter) var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border);
+}
+
+.skillSlots {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.skillSlot {
+  position: relative;
+  width: var(--skill-button);
+  height: var(--skill-button);
+  flex: none;
+  border-radius: var(--radius-m);
+  border: 1px solid var(--c-border-strong);
+  background: linear-gradient(180deg, var(--skill-top), var(--skill-bottom));
+  overflow: hidden;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skillUltimate {
+  border-color: var(--c-accent);
+  box-shadow: inset 0 0 0 1px var(--c-accent-glow);
+}
+
+.skillEmpty {
+  background: var(--c-surface-2);
+  border-style: dashed;
+}
+
+.skillName {
+  position: relative;
+  z-index: 1;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.skillEmpty .skillName {
+  color: var(--c-text-dim);
+  font-weight: 500;
+}
+
+.skillCooldown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--shade-55);
+  pointer-events: none;
+}
+
+.skillTimer {
+  position: absolute;
+  right: 3px;
+  bottom: 1px;
+  z-index: 2;
+  font-size: 0.625rem;
+  font-weight: 800;
+  color: var(--c-timer);
+}
+
+.skillWaiting {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  font-size: 0.5625rem;
+  background: var(--c-accent-banner);
+  color: var(--c-accent-ink);
+  text-align: center;
+}
+
+.loadoutToggle {
+  flex: 1;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--c-border-strong);
+  background: var(--c-surface-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+  padding: 0 4px;
+}
+
+.loadoutLabel {
+  font-size: var(--font-s);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.loadoutSub {
+  font-size: 0.625rem;
+  color: var(--c-text-dim);
+}
+
+/* ── 裝備區 ── */
+.equipment {
+  background: var(--c-surface);
+  padding: 5px var(--gutter) 6px;
+  border-top: 1px solid var(--c-border);
+}
+
+.equipmentGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.equipmentCollapsed {
+  display: none;
+  width: 100%;
+  min-height: var(--touch);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface-2);
+  padding: 0 var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-s);
+  font-weight: 600;
+}
+
+.equipmentToggleText {
+  color: var(--c-accent-strong);
+}
+
+.equipItem {
+  display: flex;
+  min-width: 0;
+}
+
+.equipCell {
+  flex: 1;
+  min-height: var(--touch);
+  border-radius: var(--radius-s);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface-2);
+  padding: 2px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+}
+
+.equipFilled {
+  border-color: var(--q);
+  background: color-mix(in srgb, var(--q) 10%, var(--c-surface-2));
+}
+
+.equipSlot {
+  font-size: 0.6875rem;
+  color: var(--c-text-dim);
+}
+
+.equipInfo {
+  display: flex;
+  gap: 3px;
+  font-size: var(--font-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.equipQuality {
+  color: var(--q);
+}
+
+.equipEmpty {
+  font-size: 0.6875rem;
+  color: var(--c-text-dim);
+}
+
+/* ── 鑑定區 ── */
+/* 鑑定區三列合計 176 高（48 + 56 + 48 + 間距），對應規格 --h-dock。 */
+.benchRow,
+.mainRow,
+.secondaryRow {
+  background: var(--c-surface-2);
+  padding: 2px var(--gutter);
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.benchRow {
+  padding-top: 5px;
+  border-top: 1px solid var(--c-border-strong);
+  align-items: center;
+}
+
+.mainRow {
+  order: 1;
+}
+
+.secondaryRow {
+  order: 2;
+  padding-bottom: 7px;
+}
+
+.noticeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--gutter);
+  background: var(--c-danger-soft);
+  border-top: 1px solid var(--c-danger);
+  font-size: var(--font-s);
+}
+
+.noticeRow > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.benchIcon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  /* 黃銅透鏡 + 刻盤的幾何佔位：遺物鑑定台不是寶箱或神燈（C-10）。 */
+  background:
+    radial-gradient(circle at 50% 50%, var(--lens-glass) 0 38%, transparent 40%),
+    conic-gradient(from 0deg, var(--brass-1), var(--brass-2), var(--brass-3), var(--brass-2), var(--brass-1));
+  border: 2px solid var(--brass-rim);
+}
+
+.benchScanning {
+  animation: scan var(--duration-reveal) linear infinite;
+}
+
+@keyframes scan {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.benchInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.benchName {
+  font-weight: 700;
+  font-size: var(--font-s);
+}
+
+.benchDist {
+  font-size: var(--font-xs);
+  color: var(--c-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.benchUpgrade {
+  flex: none;
+  width: clamp(96px, 33%, 128px);
+}
+
+.identifyButton {
+  flex: 2.1;
+  min-width: 0;
+}
+
+.autoButton {
+  flex: 1;
+  min-width: 0;
+}
+
+.reviewButton {
+  flex: none;
+  min-width: var(--touch);
+}
+
+.autoOn {
+  border-color: var(--c-accent);
+  box-shadow: inset 0 0 0 2px var(--c-accent);
+}
+
+.secondaryButton {
+  flex: 1;
+  min-width: 0;
+}
+
+.routeButton {
+  flex: 1.3;
+  min-width: 0;
+}
+
+.relicStock {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--touch);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 var(--space-1);
+  font-size: var(--font-xs);
+}
+
+.relicCount {
+  font-weight: 700;
+  font-size: var(--font-s);
+  white-space: nowrap;
+}
+
+.relicNext {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--hp-track);
+  overflow: hidden;
+}
+
+.relicNext span {
+  display: block;
+  height: 100%;
+  background: var(--relic-paper);
+}
+
+.bagCount {
+  color: var(--c-text-dim);
+  white-space: nowrap;
+}
+
+/* 640～719：裝備收合為摘要列，鑑定區縮為 152 高；觸控區不縮。 */
+@media (max-height: 719px) {
+  .equipment:not([data-expanded='true']) .equipmentGrid {
+    display: none;
+  }
+  .equipmentCollapsed {
+    display: flex;
+  }
+  .equipment[data-expanded='true'] .equipmentCollapsed {
+    margin-bottom: var(--space-2);
+  }
+  .benchRow,
+  .mainRow,
+  .secondaryRow {
+    padding-top: 1px;
+    padding-bottom: 1px;
+  }
+  .benchRow {
+    padding-top: var(--space-1);
+  }
+  .secondaryRow {
+    padding-bottom: 3px;
+  }
+  .benchIcon {
+    width: 40px;
+    height: 40px;
+  }
+  .identifyButton,
+  .autoButton {
+    min-height: var(--touch);
+    font-size: var(--font-m);
+  }
+}
+
+/*
+ * < 720（或字體放大）：上方內容在內層捲動，鑑定主操作列固定在可捲動區之外；
+ * 展開裝備或字體放大時，主操作仍在底部導覽之上，也不會蓋住其他按鈕。
+ */
+@media (max-height: 719px) {
+  .adventureScroll {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .mainRow {
+    padding-top: var(--space-1);
+    padding-bottom: var(--space-1);
+    border-top: 1px solid var(--c-border);
+  }
+}
+
+:global(html[data-text-scale='1.5']) .adventureScroll,
+:global(html[data-text-scale='2']) .adventureScroll {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+:global(html[data-text-scale='2']) .secondaryRow {
+  flex-wrap: wrap;
+}
+
+:global(html[data-text-scale='2']) .secondaryRow > * {
+  flex: 1 1 40%;
+}
+
+/* 字體放大：技能格改為四等分並可長高，名稱與冷卻數字上下排列不重疊。 */
+:global(html[data-text-scale='1.5']) .skillBar,
+:global(html[data-text-scale='2']) .skillBar {
+  flex-wrap: wrap;
+}
+
+:global(html[data-text-scale='1.5']) .skillSlots,
+:global(html[data-text-scale='2']) .skillSlots {
+  flex: 1 1 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+:global(html[data-text-scale='1.5']) .skillSlot,
+:global(html[data-text-scale='2']) .skillSlot {
+  width: auto;
+  height: auto;
+  min-height: var(--skill-button);
+  flex-direction: column;
+}
+
+:global(html[data-text-scale='1.5']) .skillTimer,
+:global(html[data-text-scale='2']) .skillTimer {
+  position: relative;
+  right: auto;
+  bottom: auto;
+}
+
+:global(html[data-text-scale='1.5']) .stageName,
+:global(html[data-text-scale='2']) .stageName,
+:global(html[data-text-scale='1.5']) .stageMapName,
+:global(html[data-text-scale='2']) .stageMapName {
+  white-space: normal;
+}

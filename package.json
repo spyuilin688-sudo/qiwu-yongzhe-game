@@ -1,0 +1,33 @@
+{
+  "name": "qiwu-yongzhe-game",
+  "private": true,
+  "version": "0.1.0",
+  "description": "奇物勇者：手機直式放置 RPG 原型（第一階段）",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "workspaces": [
+    "packages/content",
+    "packages/game-core",
+    "apps/mobile-web"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @qiwu/mobile-web",
+    "build": "npm run build -w @qiwu/mobile-web",
+    "preview": "npm run preview -w @qiwu/mobile-web",
+    "typecheck": "tsc -p packages/content --noEmit && tsc -p packages/game-core --noEmit && tsc -p apps/mobile-web --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate:content": "vitest run packages/content",
+    "e2e": "npm run e2e -w @qiwu/mobile-web",
+    "check": "npm run typecheck && npm run validate:content && npm run test"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  },
+  "overrides": {
+    "vite": "8.3.5"
+  }
+}

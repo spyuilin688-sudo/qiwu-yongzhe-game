@@ -1,0 +1,397 @@
+.viewport {
+  position: relative;
+  flex: 1;
+  min-height: var(--battle-min);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 70% 20%, var(--battle-sun), transparent 60%),
+    linear-gradient(180deg, var(--battle-sky-top) 0%, var(--battle-sky-bottom) 64%, var(--battle-ground) 64%, var(--battle-ground-deep) 100%);
+}
+
+.hint,
+.waiting {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  top: var(--space-2);
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-s);
+  background: var(--shade-45);
+  font-size: var(--font-xs);
+  color: var(--c-text-muted);
+  text-align: center;
+}
+
+.waiting {
+  top: 40%;
+  background: transparent;
+}
+
+/* ── 角色：沒有血條或魔條（C-02） ── */
+.hero {
+  position: absolute;
+  top: 74%;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.heroBody {
+  width: 52px;
+  height: 64px;
+  border-radius: 18px 18px 10px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, var(--hero-top), var(--hero-bottom));
+  border: 2px solid var(--hero-rim);
+  font-size: var(--font-l);
+  font-weight: 800;
+  color: var(--hero-text);
+  box-shadow: 0 6px 0 var(--shade-25);
+}
+
+.heroLunge {
+  animation: lunge 260ms ease-out;
+}
+
+@keyframes lunge {
+  40% {
+    transform: translateX(10px);
+  }
+}
+
+.skillPop {
+  position: absolute;
+  top: -22px;
+  white-space: nowrap;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--c-pop-bg);
+  color: var(--c-accent-strong);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  animation: pop 900ms ease-out forwards;
+}
+
+@keyframes pop {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.resourcePips {
+  font-size: 0.6875rem;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--shade-45);
+  white-space: nowrap;
+}
+
+.units {
+  position: absolute;
+  left: -34px;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.unit {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--unit-body);
+  border: 1px solid var(--unit-rim);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  line-height: 1;
+}
+
+.unit small {
+  font-size: 0.5625rem;
+}
+
+/* ── 敵人 ── */
+.enemy {
+  position: absolute;
+  top: 76%;
+  width: 13.5%;
+  max-width: 64px;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  animation: spawn var(--duration-m) ease-out;
+}
+
+@keyframes spawn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -90%);
+  }
+}
+
+.enemyBody {
+  width: 44px;
+  height: 40px;
+  border-radius: 50% 50% 40% 40%;
+  background: radial-gradient(circle at 40% 35%, var(--enemy-light), var(--enemy-dark));
+  border: 2px solid var(--enemy-rim);
+}
+
+.enemyLarge {
+  width: 30%;
+  max-width: 128px;
+}
+
+.enemyLarge .enemyBody {
+  width: 72px;
+  height: 66px;
+  background: radial-gradient(circle at 40% 30%, var(--elite-light), var(--elite-dark));
+  border-color: var(--elite-rim);
+}
+
+.enemyAdd .enemyBody {
+  width: 32px;
+  height: 30px;
+  background: radial-gradient(circle at 40% 35%, var(--add-light), var(--add-dark));
+}
+
+.enemyName {
+  max-width: 100%;
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--c-white);
+  text-shadow: 0 1px 2px var(--c-black);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.enemyHp {
+  width: 100%;
+  max-width: 64px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--hp-track);
+  overflow: hidden;
+}
+
+.enemyHp span {
+  display: block;
+  height: 100%;
+  background: var(--hp-enemy);
+  transition: width 100ms linear;
+}
+
+.statusRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  max-width: 110px;
+}
+
+.status,
+.trait {
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 0.625rem;
+  line-height: 1.5;
+  background: var(--shade-55);
+  white-space: nowrap;
+}
+
+.trait {
+  color: var(--c-accent-strong);
+}
+
+/* ── 傷害飄字 ── */
+.float {
+  position: absolute;
+  top: 38%;
+  transform: translateX(-50%);
+  font-weight: 800;
+  font-size: var(--font-m);
+  color: var(--c-white);
+  text-shadow:
+    0 1px 0 var(--c-black),
+    0 0 4px var(--c-black);
+  pointer-events: none;
+  animation: float 800ms ease-out forwards;
+}
+
+.floatCrit {
+  color: var(--float-crit);
+  font-size: var(--font-l);
+}
+
+.floatDot {
+  color: var(--float-dot);
+  font-size: var(--font-s);
+}
+
+.floatSummon {
+  color: var(--float-summon);
+  font-size: var(--font-s);
+}
+
+.floatFollow {
+  color: var(--float-follow);
+  font-size: var(--font-s);
+}
+
+@keyframes float {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -26px);
+  }
+}
+
+/* ── BOSS ── */
+.bossBar {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  top: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 2;
+}
+
+.bossTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.bossName {
+  flex: 1;
+  min-width: 0;
+  font-weight: 800;
+  font-size: var(--font-m);
+  text-shadow: 0 1px 2px var(--c-black);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bossState {
+  font-size: 0.625rem;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+}
+
+/* 召喚按鈕出現時（第 30 關刷怪）角色與敵人基準線上移，讓右下角按鈕不蓋住敵人名稱。 */
+.viewport[data-summon='true'] .enemy,
+.viewport[data-summon='true'] .hero {
+  top: 55%;
+}
+
+.viewport[data-summon='true'] .backdrop {
+  background:
+    radial-gradient(ellipse at 70% 20%, var(--battle-sun), transparent 60%),
+    linear-gradient(180deg, var(--battle-sky-top) 0%, var(--battle-sky-bottom) 52%, var(--battle-ground) 52%, var(--battle-ground-deep) 100%);
+}
+
+.bossTimer {
+  font-weight: 800;
+  font-size: var(--font-l);
+  color: var(--c-timer);
+  text-shadow: 0 1px 2px var(--c-black);
+}
+
+.abortButton {
+  min-height: 36px;
+  min-width: var(--touch);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-s);
+  border: 1px solid var(--c-danger);
+  background: var(--shade-50);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  position: relative;
+}
+
+/* 視覺高度 36，但觸控區延伸至 48。 */
+.abortButton::after {
+  content: '';
+  position: absolute;
+  inset: -6px 0;
+}
+
+.bossHp {
+  position: relative;
+  height: 14px;
+  border-radius: 7px;
+  background: var(--hp-track);
+  overflow: hidden;
+  border: 1px solid var(--shade-60);
+}
+
+.bossHp span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--hp-boss-deep), var(--hp-boss));
+  transition: width 100ms linear;
+}
+
+.bossHp em {
+  position: absolute;
+  inset: 0;
+  font-style: normal;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+  text-shadow: 0 1px 1px var(--c-black);
+}
+
+.phaseRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.bossButton {
+  position: absolute;
+  right: var(--gutter);
+  bottom: var(--gutter);
+  min-width: 128px;
+  max-width: 45%;
+  z-index: 3;
+}

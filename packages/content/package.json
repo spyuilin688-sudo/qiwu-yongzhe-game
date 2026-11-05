@@ -1,0 +1,13 @@
+{
+  "name": "@qiwu/content",
+  "private": true,
+  "version": "0.1.0",
+  "description": "內容資料：職業、技能、裝備、地圖、關卡與原型數值（N）",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  }
+}

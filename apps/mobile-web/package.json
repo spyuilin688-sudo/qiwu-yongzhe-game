@@ -1,0 +1,26 @@
+{
+  "name": "@qiwu/mobile-web",
+  "private": true,
+  "version": "0.1.0",
+  "description": "手機直式 Web 原型（React UI + DOM 戰場繪製）",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "@qiwu/content": "*",
+    "@qiwu/game-core": "*",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "vite": "8.3.5"
+  }
+}

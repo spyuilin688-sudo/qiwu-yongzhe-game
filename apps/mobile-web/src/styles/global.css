@@ -1,0 +1,82 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* 字體放大（100%～200%）由 data-text-scale 控制；全站字級以 rem 計算。 */
+  font-size: calc(16px * var(--text-scale, 1));
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--c-bg);
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-family);
+  font-size: var(--font-m);
+  line-height: 1.45;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 3px solid var(--c-focus);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.numeric {
+  font-family: var(--font-numeric);
+  font-variant-numeric: tabular-nums;
+}
+
+.q-Q1 {
+  --q: var(--q1);
+}
+.q-Q2 {
+  --q: var(--q2);
+}
+.q-Q3 {
+  --q: var(--q3);
+}
+.q-Q4 {
+  --q: var(--q4);
+}
+.q-Q5 {
+  --q: var(--q5);
+}
