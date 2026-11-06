@@ -92,7 +92,10 @@ out('「本圖用時」從進圖到打贏 BOSS；「卡王」從第一次走到 
 out();
 out('| 地圖 | 本圖用時 | 卡王 | 挑戰次數 | 過王等級 | 過王台等 | 王前每分鐘古物 | 下一圖進圖每分鐘古物 | 換圖差異 |');
 out('| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |');
-const jumps: number[] = [];
+/** 第 1 圖的「王前」產出是轉職前（只有普攻）的速度，換圖差異主要來自轉職，另外列。 */
+const jumps: { mapNumber: number; jump: number }[] = [];
+const mapDurations = new Map<number, number>();
+const mapStuck = new Map<number, number[]>();
 for (let mapNumber = 1; mapNumber <= catalog.mapCount; mapNumber += 1) {
   const rows = results.map((result) => ({
     current: result.maps.find((map) => map.mapNumber === mapNumber),
@@ -112,7 +115,9 @@ for (let mapNumber = 1; mapNumber <= catalog.mapCount; mapNumber += 1) {
     .filter((row) => row.current?.preBossRelicsPerMin && row.next?.enteringRelicsPerMin)
     .map((row) => row.next!.enteringRelicsPerMin! / row.current!.preBossRelicsPerMin! - 1);
   const jump = routeJumps.length > 0 ? median(routeJumps) : null;
-  if (jump !== null) jumps.push(jump);
+  if (jump !== null) jumps.push({ mapNumber, jump });
+  if (duration !== null) mapDurations.set(mapNumber, duration);
+  mapStuck.set(mapNumber, cleared.map((row) => row.current!.clearedAtMin! - row.current!.reachedBossAtMin!));
   out(
     `| ${mapNumber} | ${fixed(duration)} | ${fixed(stuck)} | ${fixed(attempts, 0)} | ${fixed(level, 0)} | ${fixed(bench, 0)} | ${fixed(before)} | ${mapNumber < catalog.mapCount ? fixed(after) : '—'} | ${jump === null ? '—' : signedPct(jump)} |`,
   );
@@ -125,7 +130,21 @@ out('## 觀察');
 out();
 out(`1. 牆：${walls.length === 0 ? '14 條路線都能通關，沒有卡超過上限的圖' : `${walls.map((result) => `${result.routeName}（第${result.wallAtMap}圖）`).join('、')} 卡牆`}。`);
 if (totals.length > 0) out(`2. 通關時間：${fixed(Math.min(...totals), 0)}～${fixed(Math.max(...totals), 0)} 分鐘（中位數 ${fixed(median(totals), 0)}）。`);
-if (jumps.length > 0) out(`3. 換圖產出差異（中位數）：${signedPct(Math.min(...jumps))}～${signedPct(Math.max(...jumps))}。`);
+const laterJumps = jumps.filter((entry) => entry.mapNumber > 1).map((entry) => entry.jump);
+const firstJump = jumps.find((entry) => entry.mapNumber === 1)?.jump;
+if (laterJumps.length > 0) {
+  out(
+    `3. 換圖產出差異（各圖中位數）：第 2～${catalog.mapCount - 1} 圖 ${signedPct(Math.min(...laterJumps))}～${signedPct(Math.max(...laterJumps))}，其中 +40% 是規格的每圖產出 ×1.4。${firstJump === undefined ? '' : `第 1 圖 ${signedPct(firstJump)} 主要是 Lv10 轉職前只有普攻，不是換圖本身。`}`,
+  );
+}
+const firstMap = mapDurations.get(1);
+if (firstMap !== undefined && totals.length > 0) {
+  out(`4. 第 1 圖用時中位數 ${fixed(firstMap)} 分鐘，約佔通關中位數的 ${((firstMap / median(totals)) * 100).toFixed(0)}%（見習者在 Lv10 轉職前只有普攻）；規格沒有開局節奏目標，列為待決策。`);
+}
+const lastStuck = mapStuck.get(catalog.mapCount) ?? [];
+if (lastStuck.length > 0) {
+  out(`5. 最後一張圖卡王 ${fixed(Math.min(...lastStuck))}～${fixed(Math.max(...lastStuck))} 分鐘，是各路線差距最大的地方（打王輸出差異直接變成等待時間）。`);
+}
 out();
 
 const target = process.argv[2] ?? 'docs/PROGRESSION_REPORT.md';

@@ -42,6 +42,7 @@ npm test                 # 核心規則、經濟、BOSS 狀態機、戰鬥機制
 npm run e2e              # Playwright：核心循環與 320／360／390／430 寬版面（會自動啟動開發伺服器）
 npm run balance          # 14 路線同投入平衡模擬，輸出 docs/BALANCE_REPORT.md（本機離線，約 10 秒）
 npm run balance:breakdown -- JOB03 JOB28   # 指定路線的傷害來源拆解
+npm run balance:progression   # 14 條三轉路線從 Lv1 玩到通關的真實進度模擬，輸出 docs/PROGRESSION_REPORT.md（4 核心約 9 分鐘）
 ```
 
 開發模式小工具（只在 `npm run dev` 有效，正式建置不會包含）：
