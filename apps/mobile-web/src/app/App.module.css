@@ -34,15 +34,15 @@
 .devBadge {
   position: absolute;
   left: 50%;
-  top: calc(var(--safe-top) + 2px);
+  top: calc(var(--safe-top) + var(--space-0));
   transform: translateX(-50%);
   z-index: 60;
-  padding: 0 8px;
-  border-radius: 999px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
   background: var(--c-danger);
   color: var(--c-white);
-  font-size: 0.625rem;
-  font-weight: 700;
+  font-size: var(--font-3xs);
+  font-weight: var(--fw-bold);
   pointer-events: none;
 }
 
@@ -51,23 +51,54 @@
   inset: 0;
   z-index: 70;
   display: flex;
+  padding: calc(var(--safe-top) + var(--space-5)) var(--gutter) calc(var(--safe-bottom) + var(--space-5));
+  background: var(--c-blocker);
+  overflow-y: auto;
+}
+
+/* 分頁衝突／存檔錯誤：置中的說明卡（不是一整片純文字），頂部警告圖示＋標題＋原因＋唯一的下一步。 */
+.blockerCard {
+  --blocker-card-max: 320px;
+  /* margin:auto 置中：內容比畫面高時（字體放大＋短螢幕）仍可往上捲到標題，不會被裁掉。 */
+  margin: auto;
+  width: 100%;
+  max-width: var(--blocker-card-max);
+  display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: var(--space-3);
-  padding: var(--space-5) var(--gutter);
-  background: var(--c-blocker);
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  border-radius: var(--radius-l);
+  border: 1px solid var(--c-border-strong);
+  border-top: var(--space-0) solid var(--c-accent);
+  background: var(--c-surface-2);
+  box-shadow: var(--bevel-top), var(--shadow-sheet);
   text-align: center;
+  animation: blockerIn var(--duration-m) var(--ease-out);
+}
+
+@keyframes blockerIn {
+  from {
+    transform: translateY(var(--space-2));
+    opacity: 0;
+  }
+}
+
+.blockerIcon {
+  display: inline-flex;
+  color: var(--c-accent-strong);
 }
 
 .blocker h2 {
   margin: 0;
   font-size: var(--font-xl);
+  text-wrap: balance;
 }
 
 .blocker p {
   margin: 0;
   color: var(--c-text-muted);
+  text-wrap: pretty;
 }
 
 .suspendedBar {

@@ -2,15 +2,49 @@ import type { ReactNode } from 'react';
 import type { BackdropKit, Stop } from './kit.tsx';
 
 /**
- * 背景共用構圖。戰場規格：角色腳點在高度 74～76%，地面帶從 64%（y≈174）開始，
+ * 背景共用構圖。戰場規格：角色腳點約在地面帶 40% 深處（y≈213），地面帶從 64%（y≈174）開始，
  * 所以遠景只畫在地平線以上，地面前緣（y>215）才放高對比的小物件；
  * 角色身後（x 60～370、y 110～210）一律維持低對比，讓角色與傷害飄字清楚。
+ * 戰場以「寬度貼齊、底部對齊」顯示：每種寬度都看得到完整 390 寬構圖，地標不可超出 0～W；
+ * 高螢幕多出來的高度會露出 viewBox 上方，天空與暮色因此往上多畫 SKY_OVERDRAW。
  */
 export const W = 390;
 export const H = 272;
 export const HORIZON = 174;
+/**
+ * viewBox 上方額外畫出的天空高度。430×932 的戰場約 430×405，寬度貼齊後上方露出約 95 單位；
+ * 取 240 留給更高的戰場（例如召喚 BOSS 時版面改變），超出部分由戰場容器裁掉。
+ */
+export const SKY_OVERDRAW = 240;
+/** 往上延伸的天空頂端 y 座標（負值）。 */
+export const SKY_TOP = -SKY_OVERDRAW;
+
+/**
+ * 背景明暗：暗色地圖上深色角色與怪物的描邊會被吃掉，戰場要加一圈邊光。
+ * 依角色身後區域（x 60～370、y 110～215）的平均相對亮度分類：
+ * 實測礦山、火山、花園、書庫約 0.03～0.07，古鎮約 0.12～0.17，其餘亮色圖 0.17～0.4。
+ */
+export type BackdropTone = 'light' | 'dark';
+
+/** 一張背景的光線資料：給戰場決定要不要替角色、怪物加邊光，以及邊光顏色。 */
+export interface BackdropLight {
+  readonly tone: BackdropTone;
+  /** 場景主光源（燈火、熔岩、月光）的顏色，含透明度；tone 為 dark 時拿來畫邊光。 */
+  readonly rim: string;
+}
 
 export type SceneDesign = (kit: BackdropKit, zone: ZoneLook) => ReactNode;
+
+/**
+ * 一張地圖的背景登記：繪圖函式和光線資料放在一起，調整場景色調時才不會忘了同步邊光判斷。
+ */
+export interface SceneEntry {
+  readonly mapNumber: number;
+  readonly light: BackdropLight;
+  /** 從第幾區（0 起算）起暮色夠深、改用暗色邊光；省略代表 6 區都沿用 light.tone。 */
+  readonly darkFromZone?: number;
+  readonly draw: SceneDesign;
+}
 
 /**
  * 區域外觀：同一張地圖的 6 個區域共用場景，只換光線與道具位置，
@@ -34,6 +68,26 @@ export function zoneLook(zoneIndex: number | undefined): ZoneLook {
   const index = Math.min(ZONE_COUNT - 1, Math.max(0, raw));
   return { index, shift: ZONE_SHIFTS[index] ?? 0, dusk: ZONE_DUSK[index] ?? 0, isCourt: index === ZONE_COUNT - 1 };
 }
+
+/**
+ * 從上方垂掛的道具（布幔、旗幟、冰簷）上緣：略高於 viewBox 頂端，一般比例看不到吊點；
+ * 寬度貼齊的高螢幕會露出一小段上緣，看得出是掛著的，而不是一路延伸到天頂的色塊。
+ */
+export const HANGING_TOP = -36;
+
+/** 腳點在地面帶的深度（0＝地平線、1＝畫面底），與戰場版面的約定相同。 */
+const FOOT_DEPTH = 0.4;
+/** 角色與怪物腳點的 y。 */
+export const FOOT_Y = HORIZON + FOOT_DEPTH * (H - HORIZON);
+/** BOSS 站位：戰場寬 76% 處（與戰場的 BOSS 欄位一致）；王庭的光與道具以這裡為中心。 */
+const BOSS_STAND_RATIO = 0.76;
+export const BOSS_STAND_X = Math.round(W * BOSS_STAND_RATIO);
+/**
+ * 王庭框景道具離 BOSS 中心的距離：BOSS 本體約 112 寬（x 240～352），道具放在它身後兩側邊緣，
+ * 只露出一半，框住 BOSS 而不和 BOSS 搶視覺；左側也不會擋到勇者（x≈94）。
+ */
+const COURT_FRAME_OFFSET = 72;
+export const COURT_FRAME_X = [BOSS_STAND_X - COURT_FRAME_OFFSET, BOSS_STAND_X + COURT_FRAME_OFFSET] as const;
 
 const f = (value: number): number => Math.round(value * 10) / 10;
 
@@ -106,13 +160,24 @@ export function strokes(list: readonly (readonly [number, number, number, number
 }
 
 /*
- * 以下三個是「立即呼叫」的函式而不是元件：漸層必須在場景函式執行時就登記，
+ * 以下 sky、ground、zoneTint、courtSpot 是「立即呼叫」的函式而不是元件：漸層必須在場景函式執行時就登記，
  * 若包成子元件，React 會在 <defs> 輸出之後才執行它們，漸層 id 就會指向不存在的定義。
  */
 
-/** 天空＋地平線光帶。天空矩形延伸到地平線下方幾格，避免地面邊緣出現縫。 */
-export function sky(k: BackdropKit, stops: readonly Stop[]): ReactNode {
-  return <rect width={W} height={HORIZON + 8} fill={k.vertical(stops)} />;
+/**
+ * 天空＋地平線光帶。天空矩形延伸到地平線下方幾格，避免地面邊緣出現縫。
+ * viewBox 上方再用天頂色（或 cap 指定的頂棚色，例如樹冠、坑頂）補到 SKY_TOP，
+ * 寬度貼齊的高螢幕才不會露出底色；漸層只畫在 0～地平線，色帶位置不因補天而改變。
+ */
+export function sky(k: BackdropKit, stops: readonly Stop[], cap?: string): ReactNode {
+  const zenith = cap ?? stops[0]?.[1];
+  return (
+    <>
+      {/* 多畫 1 單位和下方漸層重疊，避免 y=0 處反鋸齒留下一條細縫。 */}
+      <rect y={SKY_TOP} width={W} height={SKY_OVERDRAW + 1} fill={zenith} />
+      <rect width={W} height={HORIZON + 8} fill={k.vertical(stops)} />
+    </>
+  );
 }
 
 /**
@@ -128,12 +193,61 @@ export function ground(k: BackdropKit, top: string, bottom: string, lip?: string
   );
 }
 
-/** 上緣壓暗：BOSS 血條與提示文字疊在天空上方，壓暗後文字對比穩定。 */
+/**
+ * @deprecated 戰場改為寬度貼齊後，畫在 viewBox 頂端的暗帶會落在天空中段，
+ * 已改由戰場 CSS（.backdrop::after）畫固定高度的頂部暗化；場景不再呼叫，僅保留匯出相容。
+ */
 export function topShade(k: BackdropKit): ReactNode {
   return <rect width={W} height={64} fill={k.vertical([[0, '#120c08', 0.5], [1, '#120c08', 0]])} />;
 }
 
-/** 區域光線：越深入越偏暮色；王庭區再壓一點暗，讓 BOSS 的亮色更跳。 */
+/** 地面只吃一半暮色：天空先暗下來，腳下仍保留亮度，深色角色在第 5、6 區才不會被吃掉。 */
+const GROUND_DUSK_RATIO = 0.5;
+/**
+ * 王庭地面暗角：亮區中心放在地面帶頂端正中（cy=0），半徑等於整條地面帶（r=1），
+ * 所以角色腳下幾乎不變暗，只有前景左右兩角壓到最深 strength。
+ */
+const COURT_VIGNETTE = { strength: 0.5, cx: 0.5, cy: 0, r: 1 } as const;
+/** 王庭 BOSS 腳下聚光：寬度涵蓋 BOSS 與兩側副目標，高度只壓在地面帶。 */
+const COURT_SPOT = { rx: 92, ry: 18, strength: 0.24 } as const;
+
+const round2 = (value: number): number => Math.round(value * 100) / 100;
+
+/**
+ * 區域光線（立即呼叫）：越深入越偏暮色，天空吃滿、地面減半，以連續漸層銜接，
+ * 跨過地平線的樹、柱子不會出現明暗接縫。王庭區另在地面兩側加暗角，把視線收到中間的戰鬥。
+ * 從 SKY_TOP 開始畫，寬度貼齊時延伸出來的天空也一起變暗。
+ */
+export function zoneTint(k: BackdropKit, zone: ZoneLook, color: string): ReactNode {
+  if (zone.dusk <= 0) return null;
+  const horizonAt = (HORIZON - SKY_TOP) / (H - SKY_TOP);
+  const fill = k.vertical([
+    [0, color, zone.dusk],
+    [round2(horizonAt), color, zone.dusk],
+    [1, color, round2(zone.dusk * GROUND_DUSK_RATIO)],
+  ]);
+  return (
+    <>
+      <rect y={SKY_TOP} width={W} height={H - SKY_TOP} fill={fill} />
+      {zone.isCourt ? (
+        <rect y={HORIZON} width={W} height={H - HORIZON} fill={k.vignette(color, COURT_VIGNETTE.strength, COURT_VIGNETTE.cx, COURT_VIGNETTE.cy, COURT_VIGNETTE.r)} />
+      ) : null}
+    </>
+  );
+}
+
+/**
+ * 王庭聚光（立即呼叫）：BOSS 站位腳下的一圈柔光，像舞台燈，
+ * 讓第 6 區一眼看得出是王的場地；只壓在地面帶，不碰傷害飄字所在的天空。
+ */
+export function courtSpot(k: BackdropKit, color: string): ReactNode {
+  return <ellipse cx={BOSS_STAND_X} cy={FOOT_Y} rx={COURT_SPOT.rx} ry={COURT_SPOT.ry} fill={k.glow(color, COURT_SPOT.strength)} />;
+}
+
+/**
+ * @deprecated 改用 zoneTint(k, zone, color)：新版會延伸到 SKY_TOP，且地面只吃一半暮色。
+ * 元件形式無法登記漸層，僅保留匯出相容。
+ */
 export function ZoneTint({ zone, color }: { readonly zone: ZoneLook; readonly color: string }) {
-  return zone.dusk > 0 ? <rect width={W} height={H} fill={color} opacity={zone.dusk} /> : null;
+  return zone.dusk > 0 ? <rect y={SKY_TOP} width={W} height={H - SKY_TOP} fill={color} opacity={zone.dusk} /> : null;
 }

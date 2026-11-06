@@ -6,8 +6,9 @@ import { JobEmblem } from '../icons/JobEmblem.tsx';
 import { SlotIcon } from '../icons/SlotIcon.tsx';
 import { UiIcon } from '../icons/UiIcon.tsx';
 import { EMBLEM_FIELD } from '../icons/ui/emblemGlyphs.tsx';
+import type { UiGlyphName } from '../icons/ui/uiGlyphs.tsx';
 import { heroLookFor } from '../mapping.ts';
-import type { FamilyKey, UiIconName } from '../types.ts';
+import type { FamilyKey } from '../types.ts';
 
 const catalog = loadDefaultCatalog();
 
@@ -15,8 +16,9 @@ const catalog = loadDefaultCatalog();
 const UI_NAMES = Object.keys({
   adventure: true, character: true, skills: true, codex: true, more: true, coin: true, relic: true,
   lens: true, lock: true, boss: true, filter: true, route: true, bag: true, close: true, up: true,
-  down: true, check: true, warning: true, timer: true, star: true,
-} satisfies Record<UiIconName, true>) as UiIconName[];
+  down: true, check: true, warning: true, timer: true, star: true, bench: true, unlock: true,
+  chevron: true, plus: true, minus: true, info: true,
+} satisfies Record<UiGlyphName, true>) as UiGlyphName[];
 const FAMILIES = Object.keys({
   novice: true, sword: true, bow: true, mage: true, rogue: true, priest: true, jester: true, artisan: true,
 } satisfies Record<FamilyKey, true>) as FamilyKey[];
@@ -29,6 +31,9 @@ function expectCleanSvg(markup: string): void {
   const body = markup.replace('xmlns="http://www.w3.org/2000/svg"', '');
   expect(body).not.toMatch(/<image|<text|<filter|<animate|<set\b|<foreignObject|href=|data:|https?:/);
 }
+
+/** 每張角色圖的元素上限：戰場同屏多個實例時，繪製成本與元素數成正比。 */
+const HERO_ELEMENT_BUDGET = 60;
 
 /** 圖形元素數（含群組與漸層節點），用來守住「每張圖約 60 個元素內」的效能預算。 */
 function elementCount(markup: string): number {
@@ -45,7 +50,8 @@ describe('角色立繪', () => {
       const markup = renderToStaticMarkup(<HeroArt {...heroLookFor(catalog, jobId)} size={56} />);
       expectCleanSvg(markup);
       expect(markup).toContain('viewBox="0 0 64 80"');
-      expect(elementCount(markup), jobId).toBeLessThanOrEqual(60);
+      const count = elementCount(markup);
+      expect(count, `${jobId} 元素數 ${count}`).toBeLessThanOrEqual(HERO_ELEMENT_BUDGET);
     }
   });
 

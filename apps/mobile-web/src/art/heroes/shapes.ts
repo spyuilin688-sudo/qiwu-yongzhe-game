@@ -48,3 +48,34 @@ export function gearPath(cx: number, cy: number, outer: number, inner: number, t
   }
   return `M${points.join('L')}Z`;
 }
+
+/** 座標轉成路徑字串（四捨五入到小數兩位，避免標記過長）。 */
+export function pointText({ x, y }: { x: number; y: number }): string {
+  return `${fmt(x)} ${fmt(y)}`;
+}
+
+/** 以 center 為軸心把點順時針轉 degrees 度（SVG 的 y 軸朝下，與 rotate() 方向一致）。 */
+export function rotatePoint(point: { x: number; y: number }, center: { x: number; y: number }, degrees: number): { x: number; y: number } {
+  const radians = (degrees * Math.PI) / 180;
+  const dx = point.x - center.x;
+  const dy = point.y - center.y;
+  return {
+    x: center.x + dx * Math.cos(radians) - dy * Math.sin(radians),
+    y: center.y + dx * Math.sin(radians) + dy * Math.cos(radians),
+  };
+}
+
+/** 傾斜的橢圓（例如音符頭）；用弧線的 x 軸旋轉參數，不必另包 transform 群組。 */
+export function tiltedEllipsePath(cx: number, cy: number, rx: number, ry: number, degrees: number): string {
+  const radians = (degrees * Math.PI) / 180;
+  const start = { x: cx - rx * Math.cos(radians), y: cy - rx * Math.sin(radians) };
+  const end = { x: cx + rx * Math.cos(radians), y: cy + rx * Math.sin(radians) };
+  const arc = `A${fmt(rx)} ${fmt(ry)} ${fmt(degrees)} 1 0`;
+  return `M${pointText(start)}${arc} ${pointText(end)}${arc} ${pointText(start)}Z`;
+}
+
+/** 四芒閃光；多顆同色閃光串成一條路徑，只佔一個元素。 */
+export function sparklePath(x: number, y: number, size: number): string {
+  const w = size * 0.28;
+  return `M${fmt(x)} ${fmt(y - size)}Q${fmt(x + w)} ${fmt(y - w)} ${fmt(x + size)} ${fmt(y)}Q${fmt(x + w)} ${fmt(y + w)} ${fmt(x)} ${fmt(y + size)}Q${fmt(x - w)} ${fmt(y + w)} ${fmt(x - size)} ${fmt(y)}Q${fmt(x - w)} ${fmt(y - w)} ${fmt(x)} ${fmt(y - size)}Z`;
+}

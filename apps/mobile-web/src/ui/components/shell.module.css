@@ -1,7 +1,11 @@
 .header {
+  /* 資源列專用尺寸：頭像、資源圖示與資源格最小寬（窄螢幕在下方縮小，但頭像不再隱藏）。 */
+  --res-avatar: 34px;
+  --res-icon: 22px;
+  --res-min: 78px;
   flex: none;
   min-height: calc(var(--h-header) + var(--safe-top));
-  padding: calc(var(--safe-top) + 6px) var(--space-3) 6px;
+  padding: calc(var(--safe-top) + var(--space-1h)) var(--space-3) var(--space-1h);
   display: flex;
   align-items: stretch;
   gap: var(--space-2);
@@ -16,10 +20,11 @@
   border: 1px solid var(--c-border);
   border-radius: var(--radius-m);
   background: var(--c-surface-2);
+  box-shadow: var(--bevel-top);
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 6px;
+  gap: var(--space-1h);
+  padding: 0 var(--pad-row);
   min-width: 0;
   text-align: left;
 }
@@ -31,7 +36,7 @@
 
 .resource {
   flex: 0 1 auto;
-  min-width: 78px;
+  min-width: var(--res-min);
 }
 
 .more {
@@ -41,25 +46,21 @@
   justify-content: center;
   gap: 0;
   padding: 0;
-  font-size: 1.1rem;
   line-height: 1;
 }
 
 .moreLabel {
-  font-size: 0.625rem;
+  font-size: var(--font-2xs);
   color: var(--c-text-dim);
 }
 
 .avatar {
   flex: none;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
+  width: var(--res-avatar);
+  height: var(--res-avatar);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: var(--font-s);
 }
 
 .levelBlock {
@@ -67,34 +68,34 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: var(--space-1);
 }
 
 .levelText {
   display: flex;
   align-items: baseline;
-  gap: 4px;
-  font-weight: 700;
-  font-size: var(--font-s);
+  gap: var(--space-1);
+  font-size: var(--font-m);
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
 }
 
 .jobName {
   font-size: var(--font-xs);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--c-text-dim);
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* 粉圓沒有粗體：資源數字改用較大的字級強調，不靠合成粗體。 */
 .resourceText {
   display: flex;
   flex-direction: column;
   min-width: 0;
   line-height: 1.15;
-  font-weight: 700;
-  font-size: var(--font-m);
+  font-size: var(--font-lead);
   white-space: nowrap;
 }
 
@@ -103,32 +104,22 @@
 }
 
 .resourceLabel {
-  font-size: 0.6875rem;
-  font-weight: 500;
+  font-size: var(--font-2xs);
+  font-weight: var(--fw-medium);
   color: var(--c-text-dim);
 }
 
-.coin,
-.relic {
+.resIcon {
   flex: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-}
-
-.coin {
-  background: radial-gradient(circle at 35% 35%, var(--coin-light), var(--coin-dark));
-  box-shadow: inset 0 0 0 2px var(--coin-rim);
-}
-
-/* 古物以「帶封蠟的拓印卷」幾何佔位：不畫寶箱或神燈（C-10）。 */
-.relic {
-  border-radius: 4px;
-  background: linear-gradient(135deg, var(--relic-paper) 0 60%, var(--relic-seal) 60% 100%);
-  box-shadow: inset 0 0 0 2px var(--relic-rim);
+  display: inline-flex;
+  width: var(--res-icon);
+  height: var(--res-icon);
 }
 
 .nav {
+  /* 選中膠囊的內距：膠囊包住圖示，和經驗條、古物條這類「條狀」進度分得開。 */
+  --nav-pill-py: var(--space-0);
+  --nav-pill-px: var(--space-4);
   flex: none;
   min-height: calc(var(--h-nav) + var(--safe-bottom));
   padding-bottom: var(--safe-bottom);
@@ -140,48 +131,61 @@
 
 .navButton {
   min-height: var(--h-nav);
+  padding: var(--space-1) 0 0;
   border: 0;
   background: transparent;
   color: var(--c-text-dim);
   font-size: var(--font-xs);
-  font-weight: 600;
+  font-weight: var(--fw-bold);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--space-0);
 }
 
 .navGlyph {
   display: inline-flex;
   line-height: 1;
+  padding: var(--nav-pill-py) var(--nav-pill-px);
+  border-radius: var(--radius-pill);
+  transition:
+    transform var(--duration-fast),
+    background var(--duration-fast);
+}
+
+.navButton:active .navGlyph {
+  transform: scale(var(--press-scale-strong));
 }
 
 .navActive {
   color: var(--c-accent-strong);
-  box-shadow: inset 0 3px 0 var(--c-accent);
 }
 
-/* 窄螢幕：先隱藏職業名與頭像，再縮資源格間距；等級與數字永遠完整顯示。 */
+.navActive .navGlyph {
+  background: var(--c-accent-soft);
+}
+
+/* 窄螢幕：先隱藏職業名與「更多」字樣（無障礙名稱保留），頭像與資源圖示縮小但照常顯示；等級與數字永遠完整。 */
 @media (max-width: 379px) {
-  .jobName,
-  .avatar {
-    display: none;
-  }
   .header {
-    gap: 6px;
+    --res-avatar: 28px;
+    --res-icon: 18px;
+    gap: var(--space-1h);
     padding-left: var(--space-2);
     padding-right: var(--space-2);
   }
+  .jobName,
+  .moreLabel {
+    display: none;
+  }
   .resource {
     min-width: 0;
-    gap: 4px;
-    padding: 0 4px;
+    gap: var(--space-1);
+    padding: 0 var(--space-1);
   }
-  .coin,
-  .relic {
-    width: 14px;
-    height: 14px;
+  .resourceText {
+    font-size: var(--font-m);
   }
 }
 
@@ -206,4 +210,9 @@
 :global(html[data-text-scale='1.5']) .resource,
 :global(html[data-text-scale='2']) .resource {
   flex: 1 1 0;
+}
+
+:global(html[data-text-scale='1.5']) .nav,
+:global(html[data-text-scale='2']) .nav {
+  --nav-pill-px: var(--space-3);
 }

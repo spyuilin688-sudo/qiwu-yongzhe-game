@@ -1,8 +1,8 @@
 import { useUi, type TabId } from '../../app/uiStore.tsx';
-import { UiIcon, type UiIconName } from '../../art/index.ts';
+import { UiIcon, type UiGlyphName } from '../../art/index.ts';
 import styles from './shell.module.css';
 
-const TABS: readonly { id: TabId; label: string; icon: UiIconName }[] = [
+const TABS: readonly { id: TabId; label: string; icon: UiGlyphName }[] = [
   { id: 'adventure', label: '冒險', icon: 'adventure' },
   { id: 'character', label: '角色', icon: 'character' },
   { id: 'skills', label: '技能', icon: 'skills' },
@@ -23,7 +23,7 @@ export function BottomNav() {
           onClick={() => dispatch({ type: 'setTab', tab: tab.id })}
         >
           <span className={styles.navGlyph} aria-hidden="true">
-            <UiIcon name={tab.icon} size={22} />
+            <UiIcon name={tab.icon} size="base" />
           </span>
           <span>{tab.label}</span>
         </button>

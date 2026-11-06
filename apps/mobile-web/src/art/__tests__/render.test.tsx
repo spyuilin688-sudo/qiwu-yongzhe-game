@@ -24,7 +24,8 @@ describe('原創 SVG 美術：全部資產可渲染', () => {
     for (const kind of UNIT_KINDS) {
       const markup = renderToStaticMarkup(<UnitArt kind={kind} size={30} />);
       expectSvg(markup);
-      expect(markup).toContain('viewBox="0 0 40 40"');
+      // 區域鋪在地上，改用扁長的 160×40，放大到戰場寬度時描邊才不會變粗（審查 bf-13）。
+      expect(markup).toContain(kind === 'zone' ? 'viewBox="0 0 160 40"' : 'viewBox="0 0 40 40"');
       expect(markup).toContain('aria-hidden="true"');
     }
     expect(renderToStaticMarkup(<UnitArt kind="beast" title="戰獸" />)).toContain('<title>戰獸</title>');

@@ -1,5 +1,5 @@
 import { BG05, BG06, BG07, BG08 } from '../palette.ts';
-import { ZoneTint, circles, cloud, ground, hills, ridge, sky, sparkles, strokes, topShade, type SceneDesign } from '../parts.tsx';
+import { BOSS_STAND_X, COURT_FRAME_X, HORIZON, SKY_TOP, circles, cloud, courtSpot, ground, hills, ridge, sky, sparkles, strokes, zoneTint, type SceneEntry } from '../parts.tsx';
 
 const f = (value: number): number => Math.round(value * 10) / 10;
 
@@ -52,12 +52,42 @@ function snowCaps(peaks: readonly (readonly [number, number])[], depth: number):
     .join('');
 }
 
+/** 熔殿石柱的中心 x：左柱貼著 BOSS 左側，右柱沿用原本貼著右側岩塔的位置。 */
+const COURT_PILLARS = [COURT_FRAME_X[0], 376] as const;
+
+/**
+ * 黃金砂宮：底座、主圓頂與左右兩座洋蔥頂尖塔合成一條路徑。
+ * 主圓頂對準 BOSS（cx），尖塔立在 frame 的兩個 x，框住 BOSS。
+ */
+function sandPalace(cx: number, frame: readonly [number, number]): string {
+  const [left, right] = frame;
+  const towers = [left, right]
+    .map((x) => `M${x - 5} ${HORIZON + 2}V104H${x + 5}V${HORIZON + 2}ZM${x - 8} 104Q${x - 8} 93 ${x} 86Q${x + 8} 93 ${x + 8} 104Z`)
+    .join('');
+  return `M${cx - 58} ${HORIZON + 2}V146H${cx + 58}V${HORIZON + 2}ZM${cx - 24} 146Q${cx - 24} 110 ${cx} 100Q${cx + 24} 110 ${cx + 24} 146ZM${cx} 100V86${towers}`;
+}
+
+/** 扇貝王座的放射肋紋：從底部中心往弧邊畫 7 條。 */
+function shellRibs(cx: number, cy: number, radius: number): string {
+  const ribs = 7;
+  return Array.from({ length: ribs }, (_, index) => {
+    const a = Math.PI + (Math.PI * (index + 1)) / (ribs + 1);
+    return `M${cx} ${cy}L${f(cx + Math.cos(a) * radius * 0.92)} ${f(cy + Math.sin(a) * radius * 0.92)}`;
+  }).join('');
+}
+
+/** 分枝珊瑚（約 40 寬）：主幹加兩對分枝，以 x 為主幹位置。 */
+function coral(x: number): string {
+  return `M${x} 178V154M${x} 162L${x - 12} 148L${x - 15} 138M${x - 12} 148L${x - 5} 139M${x} 158L${x + 12} 144L${x + 9} 136M${x + 12} 144L${x + 19} 139`;
+}
+
 /** 第 5～8 圖：砂海、港灣、雪嶺、火山。 */
-export const MIDDLE_SCENES: readonly (readonly [number, SceneDesign])[] = [
+export const MIDDLE_SCENES: readonly SceneEntry[] = [
   /** 砂海商路：烈日下的沙丘與平頂岩、遠方駱駝商隊，左邊棕櫚、右邊商路遺跡。 */
-  [
-    5,
-    (k, zone) => {
+  {
+    mapNumber: 5,
+    light: { tone: 'light', rim: BG05.rim },
+    draw: (k, zone) => {
       const P = BG05;
       const s = zone.shift * 0.5;
       return (
@@ -68,8 +98,9 @@ export const MIDDLE_SCENES: readonly (readonly [number, SceneDesign])[] = [
           <path d={`M${238 + s} 178L${246 + s} 132L${262 + s} 126L${296 + s} 126L${304 + s} 136L${318 + s} 136L${326 + s} 124L${356 + s} 124L${364 + s} 140L400 140L400 178Z`} fill={P.mesa} opacity={0.7} />
           {zone.isCourt ? (
             <>
-              <circle cx={196} cy={132} r={56} fill={k.glow(P.dome, 0.45)} />
-              <path d="M160 176V146H232V176ZM170 146Q170 124 184 120Q198 124 198 146ZM196 146Q196 112 210 106Q224 112 224 146ZM209 106V94" fill={P.dome} stroke={P.ruinLine} strokeWidth={1.4} opacity={0.85} />
+              {/* 黃金砂宮：宮殿立在 BOSS 身後，主圓頂從 BOSS 頭頂露出，兩座尖塔一左一右框住 BOSS。 */}
+              <circle cx={BOSS_STAND_X} cy={118} r={78} fill={k.glow(P.dome, 0.42)} />
+              <path d={sandPalace(BOSS_STAND_X, COURT_FRAME_X)} fill={P.dome} stroke={P.ruinLine} strokeWidth={1.4} strokeLinejoin="round" opacity={0.8} />
             </>
           ) : null}
           <path d={hills(152, 10, 1.4, zone.index * 0.8)} fill={P.farDune} />
@@ -82,10 +113,13 @@ export const MIDDLE_SCENES: readonly (readonly [number, SceneDesign])[] = [
             <path d="M338 104H364V112H338ZM370 118H396V126H370Z" fill={P.ruin} />
             <path d="M358 120Q368 110 376 122" fill="none" />
           </g>
-          <g stroke={P.ruinLine} strokeWidth={1.3} strokeLinejoin="round" opacity={0.9}>
-            <path d={`M${292 + s * 0.3} 178V160L${310 + s * 0.3} 146L${328 + s * 0.3} 160V178Z`} fill={P.tent} />
-            <path d={`M${298 + s * 0.3} 156L${304 + s * 0.3} 151V178H${298 + s * 0.3}ZM${316 + s * 0.3} 151L${322 + s * 0.3} 156V178H${316 + s * 0.3}Z`} fill={P.tentStripe} />
-          </g>
+          {/* 王庭的宮殿底座就在 BOSS 腳下，商隊帳篷收起來，避免擠在 BOSS 身後。 */}
+          {zone.isCourt ? null : (
+            <g stroke={P.ruinLine} strokeWidth={1.3} strokeLinejoin="round" opacity={0.9}>
+              <path d={`M${292 + s * 0.3} 178V160L${310 + s * 0.3} 146L${328 + s * 0.3} 160V178Z`} fill={P.tent} />
+              <path d={`M${298 + s * 0.3} 156L${304 + s * 0.3} 151V178H${298 + s * 0.3}ZM${316 + s * 0.3} 151L${322 + s * 0.3} 156V178H${316 + s * 0.3}Z`} fill={P.tentStripe} />
+            </g>
+          )}
           <path d="M22 178Q24 130 36 98M48 178Q46 150 54 128" fill="none" stroke={P.palm} strokeWidth={5} strokeLinecap="round" />
           <path
             d={`${frond(36, 98, 30, 7, 200)}${frond(36, 98, 30, 7, 240)}${frond(36, 98, 32, 7, 300)}${frond(36, 98, 28, 7, 340)}${frond(36, 98, 24, 6, 20)}${frond(54, 128, 20, 5, 210)}${frond(54, 128, 20, 5, 320)}${frond(54, 128, 16, 4, 10)}`}
@@ -98,17 +132,18 @@ export const MIDDLE_SCENES: readonly (readonly [number, SceneDesign])[] = [
             <path d="M62 236V204M50 206H76L80 211L76 216H50ZM52 218H72L68 223H52Z" fill={P.sign} stroke={P.ruinLine} strokeWidth={1.5} />
           ) : null}
           {zone.index === 2 ? <path d={sparkles([[90, 230, 2.4], [200, 222, 2], [300, 246, 2.6], [340, 222, 2]])} fill={P.water} /> : null}
-          {topShade(k)}
-          <ZoneTint zone={zone} color={P.dusk} />
+          {zone.isCourt ? courtSpot(k, P.dome) : null}
+          {zoneTint(k, zone, P.dusk)}
         </>
       );
     },
-  ],
+  },
 
   /** 碧潮港灣：燈塔崖、海面帆船與海鷗；地面依區域換成貝殼沙灘或木棧碼頭。 */
-  [
-    6,
-    (k, zone) => {
+  {
+    mapNumber: 6,
+    light: { tone: 'light', rim: BG06.rim },
+    draw: (k, zone) => {
       const P = BG06;
       const s = zone.shift * 0.5;
       const beach = zone.index === 0 || zone.index === 3;
@@ -123,7 +158,7 @@ export const MIDDLE_SCENES: readonly (readonly [number, SceneDesign])[] = [
           <path d="M80 140q8 -3 16 0M170 150q10 -3 20 0M260 138q8 -3 16 0M320 156q10 -3 20 0M120 164q10 -3 20 0M220 168q12 -3 24 0" fill="none" stroke={P.foam} strokeWidth={1.4} strokeLinecap="round" opacity={0.55} />
           {zone.index === 3 ? (
             <path d="M246 140L284 132L292 140L250 146ZM262 136L258 98M258 106L276 112" fill={P.hull} stroke={P.post} strokeWidth={2} opacity={0.75} />
-          ) : (
+          ) : zone.isCourt ? null : (
             <g stroke={P.post} strokeWidth={1.3} strokeLinejoin="round">
               <path d={`M${206 + s} 136h22l-4 6h-14ZM${296 - s * 0.5} 146h14l-3 4h-9Z`} fill={P.hull} />
               <path d={`M${217 + s} 134V112L${230 + s} 132ZM${303 - s * 0.5} 144V130L${311 - s * 0.5} 143Z`} fill={P.sail} />
@@ -131,10 +166,12 @@ export const MIDDLE_SCENES: readonly (readonly [number, SceneDesign])[] = [
           )}
           {zone.isCourt ? (
             <>
-              <circle cx={196} cy={150} r={46} fill={k.glow(P.coral, 0.3)} />
+              {/* 潮汐王座：BOSS 身後豎起一面扇貝王座，上緣從 BOSS 頭頂露出；兩側珊瑚框住 BOSS。 */}
+              <path d={`M${BOSS_STAND_X - 58} 176L${BOSS_STAND_X - 58} 150A58 58 0 0 1 ${BOSS_STAND_X + 58} 150L${BOSS_STAND_X + 58} 176Z`} fill={P.shell} stroke={P.post} strokeWidth={1.4} opacity={0.42} />
+              <path d={shellRibs(BOSS_STAND_X, 150, 58)} fill="none" stroke={P.coral} strokeWidth={1.4} strokeLinecap="round" opacity={0.45} />
               {/* 分枝珊瑚剪影：圓頭粗線一筆畫完，比尖刺多邊形更像珊瑚，也不會在勇者與 BOSS 之間形成高對比的紅色尖塊。 */}
               <path
-                d="M196 178V154M196 162L182 146L178 136M182 146L190 136M196 158L210 142L206 134M210 142L220 136M170 178V166L162 156M170 168L178 158M224 178V164L232 154M224 168L216 158"
+                d={COURT_FRAME_X.map((x) => coral(x)).join('')}
                 fill="none"
                 stroke={P.coral}
                 strokeWidth={5}
@@ -174,17 +211,18 @@ export const MIDDLE_SCENES: readonly (readonly [number, SceneDesign])[] = [
             <rect x={356} y={222} width={26} height={34} rx={8} fill={P.barrel} />
             <path d="M356 232H382M356 246H382" fill="none" />
           </g>
-          {topShade(k)}
-          <ZoneTint zone={zone} color={P.dusk} />
+          {zone.isCourt ? courtSpot(k, P.foam) : null}
+          {zoneTint(k, zone, P.dusk)}
         </>
       );
     },
-  ],
+  },
 
   /** 霜羽雪嶺：雪冠群峰、兩側覆雪松林、細雪飄落，地面是厚雪與冰面。 */
-  [
-    7,
-    (k, zone) => {
+  {
+    mapNumber: 7,
+    light: { tone: 'light', rim: BG07.rim },
+    draw: (k, zone) => {
       const P = BG07;
       const s = zone.shift * 0.4;
       const far = ([[-10, 126], [36, 96], [70, 114], [112, 72], [150, 106], [190, 86], [230, 112], [272, 62], [312, 98], [350, 80], [400, 110]] as const).map(([x, y]) => [x + s, y] as const);
@@ -215,6 +253,8 @@ export const MIDDLE_SCENES: readonly (readonly [number, SceneDesign])[] = [
                 strokeLinejoin="round"
               />
               <path d={`M${272 + s} 48L${271 + s} 72M${259.5 + s} 64L${260 + s} 77`} stroke={P.flake} strokeWidth={1.4} strokeLinecap="round" opacity={0.8} />
+              {/* 左側一根冰柱框住 BOSS（右側由前景松林框住）。 */}
+              <path d={`M${COURT_FRAME_X[0] - 9} ${HORIZON}L${COURT_FRAME_X[0] - 4} 112L${COURT_FRAME_X[0] + 1} 96L${COURT_FRAME_X[0] + 6} 118L${COURT_FRAME_X[0] + 9} ${HORIZON}Z`} fill={P.ice} stroke={P.pineDeep} strokeWidth={1.2} strokeLinejoin="round" opacity={0.6} />
             </>
           ) : null}
           <path d={hills(152, 12, 2.4, 0.6 + zone.index * 0.9)} fill={P.midMount} />
@@ -244,24 +284,33 @@ export const MIDDLE_SCENES: readonly (readonly [number, SceneDesign])[] = [
           <path d={pines.map(([x, base, h]) => pine(x, base, h)).join('')} fill={P.pine} stroke={P.pineDeep} strokeWidth={1.4} strokeLinejoin="round" />
           <path d={pines.map(([x, base, h]) => pineSnow(x, base, h)).join('')} fill={P.snowCap} />
           {zone.index === 2 ? (
-            <path d="M-4 -2H120L112 8L106 30L100 8L92 20L86 6L78 26L70 6L60 18L52 4L44 34L36 6L26 22L18 4L8 28L0 6ZM394 -2H280L288 8L294 26L300 8L310 22L316 6L326 32L334 6L344 20L352 4L360 28L370 6L380 24L388 6Z" fill={P.ice} stroke={P.pineDeep} strokeWidth={1.2} opacity={0.85} />
+            // 冰牙峽谷：兩側冰壁往上越來越寬，內緣參差，寬度貼齊的高螢幕看起來像身在峽谷底部。
+            <path
+              d={`M-4 ${SKY_TOP}H156L146 -150L150 -96L132 -52L126 -20L120 -2L112 8L106 30L100 8L92 20L86 6L78 26L70 6L60 18L52 4L44 34L36 6L26 22L18 4L8 28L0 6ZM394 ${SKY_TOP}H244L250 -140L246 -88L264 -46L270 -18L280 -2L288 8L294 26L300 8L310 22L316 6L326 32L334 6L344 20L352 4L360 28L370 6L380 24L388 6Z`}
+              fill={P.ice}
+              stroke={P.pineDeep}
+              strokeWidth={1.2}
+              strokeLinejoin="round"
+              opacity={0.85}
+            />
           ) : null}
           <path
             d={circles([[30, 40, 1.6], [86, 72, 1.3], [140, 30, 1.5], [196, 58, 1.2], [232, 24, 1.6], [262, 96, 1.2], [330, 40, 1.4], [372, 80, 1.6], [110, 118, 1.2], [300, 130, 1.3], [60, 150, 1.4], [210, 112, 1.2]])}
             fill={P.flake}
             opacity={0.85}
           />
-          {topShade(k)}
-          <ZoneTint zone={zone} color={P.dusk} />
+          {zone.isCourt ? courtSpot(k, P.ice) : null}
+          {zoneTint(k, zone, P.dusk)}
         </>
       );
     },
-  ],
+  },
 
   /** 赤爐火山：冒煙的火山口與熔岩流、兩側玄武岩柱，左邊石造熔爐，地面有發光裂縫。 */
-  [
-    8,
-    (k, zone) => {
+  {
+    mapNumber: 8,
+    light: { tone: 'dark', rim: BG08.rim },
+    draw: (k, zone) => {
       const P = BG08;
       const s = zone.shift * 0.4;
       return (
@@ -288,15 +337,17 @@ export const MIDDLE_SCENES: readonly (readonly [number, SceneDesign])[] = [
           <path d="M120 230L150 238L172 232L196 246M260 222L282 230L300 226M30 254L56 248L70 258M320 258L346 250L372 256" fill="none" stroke={P.lava} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
           {zone.isCourt ? (
             <>
-              <path d="M140 178L145 70H159L164 178ZM364 178L369 70H383L388 178Z" fill={P.obsidian} opacity={0.85} />
-              <path d="M142 70H162V62H142ZM366 70H386V62H366Z" fill={P.lava} opacity={0.8} />
+              {/* 地心熔殿：兩根黑曜石柱一左一右框住 BOSS，柱頂火盆與 BOSS 身後的熔光呼應。 */}
+              <circle cx={BOSS_STAND_X} cy={122} r={80} fill={k.glow(P.lava, 0.35)} />
+              <path d={COURT_PILLARS.map((x) => `M${x - 12} 178L${x - 7} 70H${x + 7}L${x + 12} 178Z`).join('')} fill={P.obsidian} opacity={0.85} />
+              <path d={COURT_PILLARS.map((x) => `M${x - 10} 70H${x + 10}V62H${x - 10}Z`).join('')} fill={P.lava} opacity={0.8} />
             </>
           ) : null}
           <path d={sparkles([[120, 80, 2.6], [190, 110, 2], [300, 90, 2.4], [340, 140, 2], [150, 150, 1.8], [220, 40, 2.2]])} fill={P.ember} opacity={0.9} />
-          {topShade(k)}
-          <ZoneTint zone={zone} color={P.dusk} />
+          {zone.isCourt ? courtSpot(k, P.lavaCore) : null}
+          {zoneTint(k, zone, P.dusk)}
         </>
       );
     },
-  ],
+  },
 ];

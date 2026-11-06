@@ -9,28 +9,46 @@
   color: var(--c-text);
   font-family: var(--font-display);
   font-size: var(--font-m);
-  font-weight: 400;
+  font-weight: var(--fw-regular);
+  font-synthesis-weight: none;
   letter-spacing: 0.02em;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--space-0);
   line-height: 1.2;
   text-align: center;
+  /* 凸面：上緣一道亮線＋下緣一道暗線，和停用（平面、無框色）一眼分開。 */
+  box-shadow: var(--bevel-top), var(--elev-1);
   transition:
     transform var(--duration-fast),
-    background var(--duration-fast);
+    background var(--duration-fast),
+    box-shadow var(--duration-fast);
 }
 
 .button:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: scale(var(--press-scale));
 }
 
+/* 主要鍵：凸起的黃銅牌（亮上緣＋黃銅下唇），按下時下沉 1px 並收起下唇。 */
 .primary {
   background: linear-gradient(180deg, var(--c-accent-strong), var(--c-accent));
   border-color: var(--c-accent-strong);
   color: var(--c-accent-ink);
+  box-shadow: var(--bevel-primary), var(--brass-lip);
+}
+
+.primary:active:not(:disabled) {
+  transform: translateY(var(--press-depth));
+  box-shadow: var(--bevel-primary);
+}
+
+/* 交易（出售換金幣）：黃銅外框＋淡金底的外框款，和實心金色的主要鍵分得出主次，也不像危險操作。 */
+.trade {
+  background: var(--c-accent-soft);
+  border-color: var(--brass-1);
+  color: var(--c-text);
 }
 
 .danger {
@@ -42,16 +60,19 @@
 .ghost {
   background: transparent;
   border-color: var(--c-border);
+  box-shadow: none;
 }
 
+/* 停用：平面、透明底、細框、暗字；不論原本是哪種語氣都一樣，可按與不可按一眼可分。 */
 .button:disabled {
-  background: var(--c-surface-2);
-  border-color: var(--c-border);
-  color: var(--c-text-dim);
+  background: var(--disabled-bg);
+  border-color: var(--disabled-border);
+  color: var(--disabled-text);
+  box-shadow: none;
 }
 
 .large {
-  min-height: 56px;
+  min-height: calc(var(--touch) + var(--space-2));
   font-size: var(--font-l);
 }
 
@@ -73,13 +94,19 @@
   display: block;
 }
 
+/* 平衡換行：放大字級時避免最後一行只剩一個字（不支援的瀏覽器維持原樣）。 */
+.label {
+  text-wrap: balance;
+}
+
 .subLabel {
   font-family: var(--font-family);
   font-size: var(--font-xs);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   letter-spacing: 0;
   opacity: 0.9;
   overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
 /* ── 底部面板 ── */
@@ -98,11 +125,20 @@
   background: var(--c-overlay);
   border: 0;
   padding: 0;
+  animation: fadeIn var(--duration-m) ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
 }
 
 .sheet {
+  /* 最高 88%，但永遠在頂端留 --sheet-top-reserve，讓提示落在面板上緣之外。 */
+  --sheet-max: min(88%, calc(100% - var(--safe-top) - var(--sheet-top-reserve)), 720px);
   position: relative;
-  max-height: min(88%, 720px);
+  max-height: var(--sheet-max);
   display: flex;
   flex-direction: column;
   background: var(--c-surface);
@@ -110,27 +146,43 @@
   border-radius: var(--radius-l) var(--radius-l) 0 0;
   box-shadow: var(--shadow-sheet);
   padding-bottom: var(--safe-bottom);
-  animation: sheetIn var(--duration-m) ease-out;
+  animation: sheetIn var(--duration-m) var(--ease-out);
+}
+
+/* 頂部內側的黃銅飾邊，呼應資源列；左右內縮一個圓角，不會超出圓角。 */
+.sheet::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: var(--radius-l);
+  right: var(--radius-l);
+  height: var(--space-0);
+  background: var(--edge-brass);
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .sheetCompact {
-  max-height: min(70%, 600px);
+  --sheet-max: min(70%, 600px);
 }
 
 @keyframes sheetIn {
   from {
-    transform: translateY(24px);
+    transform: translateY(var(--space-5));
     opacity: 0;
   }
 }
 
 .sheetHeader {
-  min-height: 56px;
+  min-height: calc(var(--touch) + var(--space-2));
   display: flex;
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-1) var(--space-1) var(--space-1) var(--gutter);
   border-bottom: 1px solid var(--c-border);
+  border-radius: var(--radius-l) var(--radius-l) 0 0;
+  background: linear-gradient(180deg, var(--c-header-top), var(--c-surface));
 }
 
 .sheetTitle {
@@ -139,6 +191,7 @@
   font-size: var(--font-l);
   line-height: 1.25;
   overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
 .sheetBody {
@@ -149,14 +202,36 @@
   padding: var(--space-3) var(--gutter);
 }
 
+/* 未加 class 的段落改用一致的段距（:where 權重為 0：有自己 class 的段落不受影響）。 */
+:where(.sheetBody p) {
+  margin: 0 0 var(--space-2);
+  text-wrap: pretty;
+}
+
+.sheetBody > :first-child {
+  margin-top: 0;
+}
+
+/* 每顆鍵等寬；--footer-item-min 用 em 跟著字級走：100% 時三鍵一列，放大後自動換列，換下來的鍵撐滿整列。 */
 .sheetFooter {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
+  --footer-item-min: 5.5em;
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
   padding: var(--space-3) var(--gutter);
   border-top: 1px solid var(--c-border);
   background: var(--c-surface);
+}
+
+.sheetFooter > * {
+  flex: 1 1 var(--footer-item-min);
+  min-width: 0;
+}
+
+:global(html[data-text-scale='1.5']) .footerPrimaryFirst > .primary,
+:global(html[data-text-scale='2']) .footerPrimaryFirst > .primary {
+  order: -1;
+  flex-basis: 100%;
 }
 
 .iconButton {
@@ -166,77 +241,245 @@
   border: 0;
   background: transparent;
   color: var(--c-text-muted);
-  font-size: 1.4rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: none;
 }
 
-/* ── 分段切換 ── */
+/* 關閉圖示跟著字級放大，但最大不超過 --icon-l，避免 200% 時大到搶標題。 */
+.closeIcon {
+  display: block;
+  width: clamp(var(--icon-m), 1.25rem, var(--icon-l));
+  height: clamp(var(--icon-m), 1.25rem, var(--icon-l));
+}
+
+.closeIcon > svg {
+  display: block;
+}
+
+/* 字體放大：面板幾乎全高，外框更精簡，讓內文可視區多一些。 */
+:global(html[data-text-scale='1.5']) .sheet,
+:global(html[data-text-scale='2']) .sheet {
+  --sheet-max: calc(100% - var(--safe-top) - var(--space-5));
+}
+
+:global(html[data-text-scale='1.5']) .sheetHeader,
+:global(html[data-text-scale='2']) .sheetHeader {
+  min-height: var(--touch);
+}
+
+/* ── 單選：分段切換（segmented）與頁面分頁（tabs） ── */
 .segmented {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
-  gap: 2px;
-  padding: 2px;
+  gap: var(--space-0);
+  padding: var(--space-0);
   border-radius: var(--radius-m);
   background: var(--c-surface-2);
   border: 1px solid var(--c-border);
+  box-shadow: var(--well);
 }
 
 .segment {
-  min-height: 44px;
+  min-height: calc(var(--touch) - var(--space-1));
   border: 0;
-  border-radius: calc(var(--radius-m) - 2px);
+  border-radius: var(--radius-inner);
   background: transparent;
   color: var(--c-text-muted);
   font-size: var(--font-s);
-  font-weight: 600;
+  font-weight: var(--fw-bold);
   padding: 0 var(--space-2);
+  text-wrap: balance;
+  transition:
+    transform var(--duration-fast),
+    background var(--duration-fast);
+}
+
+.segment:active:not(:disabled) {
+  transform: scale(var(--press-scale));
 }
 
 .segmentActive {
-  background: var(--c-surface-3);
-  color: var(--c-text);
-  box-shadow: inset 0 0 0 1px var(--c-accent);
+  background: var(--sel-bg);
+  color: var(--sel-text);
+  box-shadow: var(--sel-ring);
+}
+
+.segment:disabled {
+  color: var(--disabled-text);
+}
+
+.segmentedDisabled {
+  background: var(--disabled-bg);
+  border-color: var(--disabled-border);
+  box-shadow: none;
+}
+
+/* 停用中的選中項：保留位置與內框，但降為細框暗字，表示「已選但現在不能改」。 */
+.segmentedDisabled .segmentActive {
+  background: var(--c-accent-soft);
+  color: var(--disabled-text);
+  box-shadow: inset 0 0 0 1px var(--disabled-border);
+}
+
+.tabs {
+  --tab-indicator-w: 24px;
+  --tab-indicator-h: 3px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.tabs .segment {
+  position: relative;
+  min-height: var(--touch);
+  border-radius: 0;
+  font-size: var(--font-m);
+}
+
+.tabs .segmentActive {
+  background: transparent;
+  box-shadow: none;
+  color: var(--sel-text);
+}
+
+/* 指示條壓在分隔線上；形狀（不只顏色）表示目前分頁。 */
+.tabs .segmentActive::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -1px;
+  width: var(--tab-indicator-w);
+  height: var(--tab-indicator-h);
+  margin-left: calc(var(--tab-indicator-w) / -2);
+  border-radius: var(--radius-pill);
+  background: var(--c-accent);
+}
+
+.tabs.segmentedDisabled .segmentActive::after {
+  background: var(--disabled-border);
+}
+
+/*
+ * 字體放大：等寬欄位會被不可斷行的標籤（例如「200%」）撐出畫面。改為可換列的彈性排列：
+ * 每個選項至少是自身文字寬，放不下就換到下一列；單一選項比整列還寬時才在選項內換行。
+ */
+:global(html[data-text-scale='1.5']) .segmented,
+:global(html[data-text-scale='2']) .segmented,
+:global(html[data-text-scale='1.5']) .tabs,
+:global(html[data-text-scale='2']) .tabs {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+:global(html[data-text-scale='1.5']) .segment,
+:global(html[data-text-scale='2']) .segment {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0 var(--space-1);
+  overflow-wrap: anywhere;
 }
 
 /* ── 品質標記 ── */
+/* 用系統字型：放在面板標題（粉圓）裡時仍是真正的粗體，不是合成假粗體。 */
 .quality {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 0 6px;
-  border-radius: 6px;
+  gap: var(--space-1);
+  padding: 0 var(--space-1h);
+  border-radius: var(--radius-xs);
   border: 1px solid var(--q);
   color: var(--q);
+  font-family: var(--font-family);
   font-size: var(--font-xs);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0;
   line-height: 1.6;
   white-space: nowrap;
 }
 
-/* ── 進度條 ── */
-.progress {
-  height: 6px;
-  border-radius: 3px;
+.qualityCell {
+  color: var(--q);
+}
+
+/* ── 進度條（Meter） ── */
+.meter {
+  --meter-h: var(--bar-m);
+  --meter-fill: var(--c-accent);
+  --meter-duration: var(--duration-m);
+  position: relative;
+  height: var(--meter-h);
+  border-radius: var(--radius-pill);
   background: var(--hp-track);
   overflow: hidden;
 }
 
-.progressFill {
-  height: 100%;
-  background: var(--c-accent);
-  transition: width var(--duration-m) linear;
+.meterFill {
+  position: absolute;
+  inset: 0;
+  background: var(--meter-fill);
+  transform-origin: left center;
+  transition: transform var(--meter-duration) linear;
 }
 
-/* ── 提示 ── */
+.meter_xp {
+  --meter-fill: linear-gradient(90deg, var(--c-accent), var(--c-accent-strong));
+}
+
+.meter_stage {
+  --meter-h: var(--bar-thin);
+}
+
+.meter_relic {
+  --meter-h: var(--bar-thin);
+  --meter-fill: var(--relic-paper);
+}
+
+/* 血量跟著每次戰鬥更新走：過渡時間等於更新間隔，不會落後或跳格。 */
+.meter_enemy {
+  --meter-fill: var(--hp-enemy);
+  --meter-duration: var(--duration-tick);
+}
+
+/* BOSS 條上有置中文字：字體放大時條跟著加高，文字不會被裁掉（100% 時仍是 --bar-boss）。 */
+.meter_boss {
+  --meter-h: max(var(--bar-boss), calc(var(--font-2xs) + var(--space-0)));
+  --meter-fill: linear-gradient(90deg, var(--hp-boss-deep), var(--hp-boss));
+  --meter-duration: var(--duration-tick);
+  border: 1px solid var(--shade-60);
+}
+
+.meterLabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-2xs);
+  line-height: 1;
+  color: var(--c-white);
+  text-shadow: var(--text-outline-strong);
+  white-space: nowrap;
+}
+
+.meterLegacy {
+  display: block;
+}
+
+.meterLegacy > .meter {
+  --meter-fill: var(--legacy-fill);
+}
+
+/* ── 提示（Toast） ── */
+/* 位置跟著實際資源列高度（--h-header-live 由資源列量測寫入；量不到時退回 Token 估算）。 */
 .toastRegion {
   position: absolute;
   left: var(--gutter);
   right: var(--gutter);
-  top: calc(var(--safe-top) + var(--h-header) + var(--space-2));
+  top: calc(var(--h-header-live, calc(var(--safe-top) + var(--h-header))) + var(--space-2));
   z-index: 40;
   display: flex;
   flex-direction: column;
@@ -244,25 +487,65 @@
   pointer-events: none;
 }
 
-/* 提示只供閱讀，不攔截點擊，避免蓋住地圖列或戰場時吃掉玩家的操作。 */
-.toast {
-  pointer-events: none;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-m);
-  background: var(--c-surface-3);
-  border: 1px solid var(--c-border-strong);
-  font-size: var(--font-s);
-  box-shadow: 0 6px 18px var(--shade-45);
+/* 有面板或確認對話時，提示改疊在被遮罩壓暗的資源列上，不壓住面板表頭。 */
+.toastRegionOverlay {
+  top: calc(var(--safe-top) + var(--space-2));
 }
 
+/* 提示只供閱讀，不攔截點擊，避免蓋住地圖列或戰場時吃掉玩家的操作。語氣同時用圖示、左側色條與底色表示。 */
+.toast {
+  --toast-tone: var(--c-border-strong);
+  --toast-rule: 4px;
+  --toast-lh: 1.45;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--c-border-strong);
+  border-left: var(--toast-rule) solid var(--toast-tone);
+  background: var(--c-surface-3);
+  background: color-mix(in srgb, var(--toast-tone) 10%, var(--c-surface-3));
+  font-size: var(--font-s);
+  line-height: var(--toast-lh);
+  box-shadow: var(--elev-toast);
+  animation: toastIn var(--duration-m) var(--ease-out);
+}
+
+@keyframes toastIn {
+  from {
+    transform: translateY(calc(-1 * var(--space-2)));
+    opacity: 0;
+  }
+}
+
+.toast_info {
+  --toast-tone: var(--c-info);
+}
 .toast_success {
-  border-color: var(--c-success);
+  --toast-tone: var(--c-success);
 }
 .toast_warning {
-  border-color: var(--c-accent);
+  --toast-tone: var(--c-accent);
 }
 .toast_danger {
-  border-color: var(--c-danger);
+  --toast-tone: var(--c-danger);
+}
+
+/* 圖示略大於文字（1.2em），外框高度等於一行文字高，讓圖示和第一行文字垂直置中。 */
+.toastIcon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  width: 1.2em;
+  height: calc(var(--toast-lh) * 1em);
+  color: var(--toast-tone);
+}
+
+.toastText {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* ── 確認對話 ── */
@@ -276,47 +559,104 @@
   justify-content: center;
 }
 
+/* 標題與內文在可捲動的 .confirmBody 內；操作列固定在底部，任何字級都按得到。 */
 .confirmBox {
+  --confirm-tone: var(--c-accent);
   position: relative;
   width: 100%;
+  max-height: calc(100% - var(--safe-top) - var(--space-4));
   background: var(--c-surface-2);
-  border-top: 1px solid var(--c-accent);
+  border-top: var(--space-0) solid var(--confirm-tone);
   border-radius: var(--radius-l) var(--radius-l) 0 0;
+  box-shadow: var(--shadow-sheet);
   padding: var(--space-4) var(--gutter) calc(var(--space-4) + var(--safe-bottom));
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  animation: sheetIn var(--duration-m) var(--ease-out);
 }
 
-.confirmBox h2 {
+.confirmDanger {
+  --confirm-tone: var(--c-danger);
+}
+
+.confirmBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.confirmTitle {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font-size: var(--font-l);
+  text-wrap: balance;
 }
 
-.confirmBox p {
+.confirmTitleIcon {
+  flex: none;
+  display: inline-flex;
+  color: var(--confirm-tone);
+}
+
+.confirmMessage {
   margin: 0;
   color: var(--c-text-muted);
   white-space: pre-line;
+  text-wrap: pretty;
+}
+
+.confirmDetails {
+  margin: 0;
+  padding-left: 1.25em;
+  display: grid;
+  gap: var(--space-1);
+  color: var(--c-text-muted);
 }
 
 .confirmActions {
+  flex: none;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-2);
 }
 
+/* 字體放大：兩鍵改上下排，主要鍵在上、取消在下（最靠近拇指的是不造成後果的取消）。 */
+:global(html[data-text-scale='1.5']) .confirmActions,
+:global(html[data-text-scale='2']) .confirmActions {
+  grid-template-columns: 1fr;
+}
+
+:global(html[data-text-scale='1.5']) .confirmActions > :nth-child(2),
+:global(html[data-text-scale='2']) .confirmActions > :nth-child(2) {
+  order: -1;
+}
+
 /* ── 通用排版 ── */
+/* 段落標題不靠粗體（粉圓沒有粗體檔），改用左側黃銅短線表示段落。 */
 .sectionTitle {
+  --section-mark-w: 3px;
   margin: var(--space-4) 0 var(--space-2);
+  padding-left: var(--space-2);
+  border-left: var(--section-mark-w) solid var(--brass-1);
   font-size: var(--font-m);
+  line-height: 1.3;
   color: var(--c-text-muted);
-  font-weight: 700;
+  font-weight: var(--fw-regular);
+  text-wrap: balance;
 }
 
 .note {
   margin: var(--space-2) 0;
   font-size: var(--font-s);
   color: var(--c-text-muted);
+  text-wrap: pretty;
 }
 
 .warning {
@@ -335,6 +675,44 @@
   background: var(--c-danger-soft);
   border: 1px solid var(--c-danger);
   font-size: var(--font-s);
+}
+
+.infoNote {
+  margin: var(--space-2) 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-s);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-info);
+  font-size: var(--font-s);
+}
+
+/* Notice 元件：圖示＋內文並排；搭配上面三種語氣框使用。 */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.noticeIcon {
+  flex: none;
+  margin-top: 0.2em;
+}
+
+.warning > .noticeIcon {
+  color: var(--c-accent-strong);
+}
+
+.dangerNote > .noticeIcon {
+  color: var(--c-danger);
+}
+
+.infoNote > .noticeIcon {
+  color: var(--c-info);
+}
+
+.noticeBody {
+  min-width: 0;
+  flex: 1;
 }
 
 .table {
@@ -358,15 +736,20 @@
 
 .table th {
   color: var(--c-text-dim);
-  font-weight: 600;
+  font-weight: var(--fw-bold);
 }
 
+/* 數值變化：依對玩家「更好／更差／不變」上色（由檢視模型判斷），不是依數字變大變小。 */
 .positive {
-  color: var(--c-success);
+  color: var(--c-delta-better);
 }
 
 .negative {
-  color: var(--c-danger);
+  color: var(--c-delta-worse);
+}
+
+.neutral {
+  color: var(--c-delta-same);
 }
 
 .chipRow {
@@ -378,22 +761,45 @@
 .chip {
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--c-border-strong);
   background: var(--c-surface-2);
   color: var(--c-text-muted);
   font-size: var(--font-s);
-  font-weight: 600;
+  font-weight: var(--fw-bold);
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  box-shadow: var(--bevel-top);
+  transition: transform var(--duration-fast);
 }
 
-/* 選取狀態同時用底色、勾號與 aria-pressed 表示，不只靠框線顏色。 */
+.chip:active:not(:disabled) {
+  transform: scale(var(--press-scale));
+}
+
+/* 選取狀態同時用底色、勾號與 aria-pressed 表示，不只靠框線顏色。整顆金色只留給多選篩選。 */
 .chipOn {
   background: linear-gradient(180deg, var(--c-accent-strong), var(--c-accent));
   border-color: var(--c-accent-strong);
   color: var(--c-accent-ink);
+  box-shadow: var(--bevel-primary);
+}
+
+.chip:disabled {
+  background: var(--disabled-bg);
+  border-color: var(--disabled-border);
+  color: var(--disabled-text);
+  box-shadow: none;
+}
+
+/* 「已選但目前不生效」：淡金底＋暗字＋淡化勾號，不再是亮金色（否則玩家會以為設定已生效）。 */
+.chipOn:disabled {
+  background: var(--c-accent-soft);
+}
+
+.chipOn:disabled .chipCheck {
+  opacity: var(--disabled-mark-opacity);
 }
 
 .chipCheck {
@@ -409,22 +815,52 @@
   border-bottom: 1px solid var(--c-border);
 }
 
+/* 清單列固定兩層：第一行粗體名稱（徽章與名稱同一行置中），第二行起是灰色說明。 */
 .rowMain {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0);
 }
 
+/* 一般字級：徽章固定在左、長名稱在右側自行換行；字體放大後空間不夠，改為整段換到徽章下一行。 */
 .rowTitle {
-  font-weight: 600;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: var(--fw-bold);
   overflow-wrap: anywhere;
 }
 
+.rowTitle > .quality {
+  flex: none;
+}
+
+:global(html[data-text-scale='1.5']) .rowTitle,
+:global(html[data-text-scale='2']) .rowTitle {
+  flex-wrap: wrap;
+}
+
 .rowSub {
+  display: block;
   font-size: var(--font-xs);
   color: var(--c-text-dim);
   overflow-wrap: anywhere;
 }
 
+/* 面板內的版面小工具：取代散落的行內樣式。 */
+.inlineAction {
+  margin-top: var(--space-2);
+}
+
+.toggleStack {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* ── 開關（Toggle） ── */
 .toggle {
   min-height: var(--touch);
   display: flex;
@@ -436,21 +872,93 @@
   border-radius: var(--radius-m);
   border: 1px solid var(--c-border);
   background: var(--c-surface-2);
+  box-shadow: var(--bevel-top);
   text-align: left;
 }
 
-.toggleState {
-  flex: none;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: var(--c-surface-3);
-  font-size: var(--font-xs);
-  font-weight: 700;
+.toggleText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0);
 }
 
-.toggleOn {
+.toggleControl {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.toggleStateText {
+  min-width: 1em;
+  font-size: var(--font-xs);
+  font-weight: var(--fw-bold);
+  color: var(--c-text-dim);
+  text-align: right;
+}
+
+/* 軌道與圓鈕尺寸用 rem：字體放大時開關一起放大。 */
+.toggleTrack {
+  --toggle-w: 2.75rem;
+  --toggle-h: 1.5rem;
+  --toggle-knob: 1.125rem;
+  --toggle-border: 1px;
+  position: relative;
+  width: var(--toggle-w);
+  height: var(--toggle-h);
+  border-radius: var(--radius-pill);
+  background: var(--c-surface-3);
+  border: var(--toggle-border) solid var(--c-border-strong);
+  box-shadow: var(--well);
+  transition: background var(--duration-fast);
+}
+
+.toggleKnob {
+  position: absolute;
+  top: 50%;
+  left: var(--space-0);
+  width: var(--toggle-knob);
+  height: var(--toggle-knob);
+  margin-top: calc(var(--toggle-knob) / -2);
+  border-radius: 50%;
+  background: var(--c-text-muted);
+  box-shadow: var(--elev-1);
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    background var(--duration-fast);
+}
+
+.toggleOn .toggleStateText {
+  color: var(--sel-text);
+}
+
+.toggleOn .toggleTrack {
   background: var(--c-accent);
-  color: var(--c-accent-ink);
+  border-color: var(--c-accent-strong);
+}
+
+.toggleOn .toggleKnob {
+  background: var(--c-text);
+  transform: translateX(calc(var(--toggle-w) - var(--toggle-knob) - 2 * var(--space-0) - 2 * var(--toggle-border)));
+}
+
+.toggle:disabled {
+  opacity: var(--disabled-opacity);
+  box-shadow: none;
+}
+
+/* ── 資源數量 ── */
+.currency {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-0);
+  white-space: nowrap;
+}
+
+.currencyIcon {
+  font-size: 1.1em;
 }
 
 .empty {

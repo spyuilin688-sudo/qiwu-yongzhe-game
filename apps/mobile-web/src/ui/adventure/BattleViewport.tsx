@@ -1,330 +1,171 @@
-import { RESOURCE_LABELS, SUIT_NAMES, UNIT_LABELS, bossStageLocalNumber, getStageAt, type ResourceId } from '@qiwu/content';
-import { availabilityOf, assertCanStartBoss, type BattleView, type EnemyView } from '@qiwu/game-core';
-import { memo, useEffect, useRef, useState } from 'react';
-import { useBattleView, useCatalog, useGame, useHostEvents, useSend } from '../../app/GameContext.tsx';
-import { useOpenSheet, useUi } from '../../app/uiStore.tsx';
-import { usePrefs } from '../../app/prefs.tsx';
-import { formatClock, formatCompact } from '../format/format.ts';
-import { AddArt, HeroArt, MapBackdrop, MonsterArt, UnitArt, heroLookFor } from '../../art/index.ts';
-import { ActionButton } from '../components/primitives.tsx';
+import { UNIT_LABELS } from '@qiwu/content';
+import type { BattleView, EnemyView } from '@qiwu/game-core';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { useBattleView, useCatalog, useGame, useHostEvents } from '../../app/GameContext.tsx';
+import { MapBackdrop, UnitArt, heroLookFor } from '../../art/index.ts';
 import styles from './battle.module.css';
+import { BossHud } from './battle/BossHud.tsx';
+import { EnemyActor } from './battle/EnemyActor.tsx';
+import { FloatLayer, floatTargetFromBook } from './battle/FloatLayer.tsx';
+import { addFloatHits, pruneFloats, type FloatHit, type FloatText } from './battle/floats.ts';
+import { HeroActor, type CompanionView, type HeroBeat } from './battle/HeroActor.tsx';
+import { CENTER_SLOT, FLOAT_LIFETIME_MS, SKILL_POP_MS, STAGE_GEOMETRY_STYLE, enemySlotX, type EnemySlot } from './battle/layout.ts';
+import { UNIT_BOOK_KEY, allocateSlots, assignEnemySlots, emptySlotBook, unitSlotRules, type SlotBook } from './battle/slots.ts';
+import { SummonDock, useSummonDockVisible } from './battle/SummonDock.tsx';
+import { secondsLeft } from './battle/tags.ts';
+import { useStageSize } from './battle/useStageSize.ts';
 
-/** 戰場構圖（規格 07）：角色腳點在寬 24%；敵人依 62%、76%、90% 排列，最多 3 敵。 */
-const ENEMY_X = [62, 76, 90] as const;
 /**
- * 模擬每 50ms 一刻、戰場畫面約每 100ms 依快照重繪；向量圖本身與戰況無關（只依職業、怪物、地圖），
- * 以 memo 包裝讓 React 跳過未變動的 SVG 樹，避免每刻重建數百個節點。
+ * 模擬每 50ms 一刻、戰場畫面約每 100ms 依快照重繪；背景圖與戰況無關（只依地圖與區域），
+ * 以 memo 包裝讓 React 跳過未變動的 SVG 樹。
  */
 const BackdropArt = memo(MapBackdrop);
-const HeroPortrait = memo(HeroArt);
-const EnemyPortrait = memo(MonsterArt);
-const AddPortrait = memo(AddArt);
-const UnitPortrait = memo(UnitArt);
+const ZonePortrait = memo(UnitArt);
 
-/** 角色圖寬度（viewBox 64×80）；與 .heroBody 尺寸一致。 */
-const HERO_ART_WIDTH = 56;
-/** 角色身旁召喚物圖寬度（viewBox 40×40）；兩個疊起來不高於角色（見 .units）。 */
-const UNIT_ART_SIZE = 26;
 /** 每張地圖 6 個小區、每區 5 關；第 6 區（26～30 關）為 BOSS 王庭。 */
 const STAGES_PER_ZONE = 5;
+const COMPANION_RULES = unitSlotRules<CompanionView>();
+const NO_BEAT: HeroBeat = { key: 0, skillName: null, skillKey: 0 };
 
 function zoneIndexOf(localStage: number): number {
   return Math.floor((localStage - 1) / STAGES_PER_ZONE);
 }
 
-/** 花色符號只是輔助：畫面顯示「下一張」＋符號，螢幕閱讀器讀隱藏文字中的完整花色名。 */
-const SUIT_GLYPHS = ['♥', '♦', '♣', '♠'] as const;
-const BOSS_BODY_X = 76;
-const FLOAT_LIFETIME_MS = 800;
-const FLOAT_MERGE_MS = 160;
-const MAX_FLOATS = 20;
-
-interface FloatText {
-  id: number;
-  uid: number;
-  amount: number;
-  crit: boolean;
-  source: string;
-  createdAt: number;
+/** 依事件決定角色本輪是否出手、放了哪個技能；普攻不會清掉還在顯示的技能名稱。 */
+function nextBeat(current: HeroBeat, castSkillName: string | null | undefined): HeroBeat {
+  const key = current.key + 1;
+  if (castSkillName === undefined) return { ...current, key };
+  return { key, skillName: castSkillName, skillKey: key };
 }
 
-function enemyPositions(view: BattleView): Map<number, number> {
-  const positions = new Map<number, number>();
-  if (view.boss) {
-    const adds = view.enemies.filter((enemy) => enemy.uid !== view.boss!.bodyUid);
-    positions.set(view.boss.bodyUid, BOSS_BODY_X);
-    adds.forEach((add, index) => positions.set(add.uid, index === 0 ? ENEMY_X[0] : ENEMY_X[2]));
-    return positions;
-  }
-  if (view.enemies.length === 1 && view.enemies[0]!.kind === 'elite') {
-    positions.set(view.enemies[0]!.uid, BOSS_BODY_X);
-    return positions;
-  }
-  // 依生成順序固定站位，前面的怪死亡時後面的怪不換位置，避免畫面跳動。
-  const sorted = [...view.enemies].sort((a, b) => a.uid - b.uid);
-  const base = sorted[0]?.uid ?? 0;
-  for (const enemy of sorted) positions.set(enemy.uid, ENEMY_X[(enemy.uid - base) % ENEMY_X.length]!);
-  return positions;
-}
-
+/**
+ * 戰場（規格 07）。結構：
+ *  .viewport（data-mode／data-compact）
+ *    .fieldTop      BOSS 資訊列或末區提示，在文件流裡，不蓋住舞台；
+ *    .stage         舞台（實際寬高由 useStageSize 寫入 --stage-w／--stage-h）：背景、角色、敵人、區域、飄字；
+ *    SummonDock     BOSS 關的召喚台（下緣操作列），召喚鍵靠右。
+ * 介面只讀戰況快照與事件來顯示，不改任何金幣、裝備或戰鬥結算。
+ */
 export function BattleViewport() {
   const view = useBattleView();
   const catalog = useCatalog();
   const { state } = useGame();
-  const { prefs } = usePrefs();
-  const [floats, setFloats] = useState<FloatText[]>([]);
-  const [heroAction, setHeroAction] = useState<{ key: number; skillName: string | null }>({ key: 0, skillName: null });
-  const nextId = useRef(1);
+  const [floats, setFloats] = useState<readonly FloatText[]>([]);
+  const [beat, setBeat] = useState<HeroBeat>(NO_BEAT);
+  const nextFloatId = useRef(1);
+  const stageRef = useRef<HTMLDivElement>(null);
+  useStageSize(stageRef);
+  // 站位簿只依快照推導、結果穩定（同一波內不換位），重複計算得到相同結果，所以可以在繪製時更新。
+  const enemyBook = useRef<SlotBook<EnemyView>>(emptySlotBook());
+  const unitBook = useRef<SlotBook<CompanionView>>(emptySlotBook(UNIT_BOOK_KEY));
+  enemyBook.current = assignEnemySlots(enemyBook.current, view);
+  const companions = view?.hero.units.filter((unit) => unit.kind !== 'zone') ?? [];
+  unitBook.current = allocateSlots(unitBook.current, UNIT_BOOK_KEY, companions, COMPANION_RULES);
 
   // 定時清除已過期的飄字：波次之間沒有新命中時也不會殘留（減少動態效果時飄字不會自行淡出）。
   useEffect(() => {
-    const timer = setInterval(() => {
-      const now = performance.now();
-      setFloats((previous) => (previous.some((item) => now - item.createdAt >= FLOAT_LIFETIME_MS) ? previous.filter((item) => now - item.createdAt < FLOAT_LIFETIME_MS) : previous));
-    }, FLOAT_LIFETIME_MS / 2);
+    const timer = setInterval(() => setFloats((previous) => pruneFloats(previous, performance.now())), FLOAT_LIFETIME_MS / 2);
     return () => clearInterval(timer);
   }, []);
 
+  // 技能名稱是資訊不是動畫：減少動態效果時照樣顯示，到時由這裡移除（動畫開啟時 CSS 也會先淡出）。
+  useEffect(() => {
+    if (!beat.skillName) return undefined;
+    const skillKey = beat.skillKey;
+    const timer = setTimeout(() => setBeat((current) => (current.skillKey === skillKey ? { ...current, skillName: null } : current)), SKILL_POP_MS);
+    return () => clearTimeout(timer);
+  }, [beat.skillName, beat.skillKey]);
+
   useHostEvents((events) => {
     const now = performance.now();
-    const hits: { uid: number; amount: number; crit: boolean; source: string }[] = [];
-    let action: { skillName: string | null } | null = null;
+    const hits: FloatHit[] = [];
+    let acted = false;
+    let castSkillName: string | null | undefined;
     for (const entry of events) {
       if (entry.type !== 'battle') continue;
       const event = entry.event;
       if (event.type === 'hit') hits.push({ uid: event.targetUid, amount: event.amount, crit: event.crit, source: event.source });
-      else if (event.type === 'skillCast') action = { skillName: catalog.skills.get(event.skillId)?.name ?? null };
-      else if (event.type === 'basicAttack' && !action) action = { skillName: null };
+      else if (event.type === 'skillCast') {
+        acted = true;
+        castSkillName = catalog.skills.get(event.skillId)?.name ?? null;
+      } else if (event.type === 'basicAttack') acted = true;
     }
     if (hits.length > 0) {
-      setFloats((previous) => {
-        const next = previous.filter((item) => now - item.createdAt < FLOAT_LIFETIME_MS).map((item) => ({ ...item }));
-        for (const hit of hits) {
-          // 同目標短時間多段合併顯示；只合併視覺，不丟傷害事件。
-          const merge = next.find((item) => item.uid === hit.uid && item.crit === hit.crit && now - item.createdAt < FLOAT_MERGE_MS);
-          if (merge) merge.amount += hit.amount;
-          else next.push({ id: nextId.current++, createdAt: now, ...hit });
-        }
-        return next.slice(-MAX_FLOATS);
-      });
+      setFloats((previous) => addFloatHits(previous, hits, now, (uid) => floatTargetFromBook(enemyBook.current, uid), () => nextFloatId.current++));
     }
-    if (action && !prefs.reducedMotion) {
-      const skillName = action.skillName;
-      setHeroAction((current) => ({ key: current.key + 1, skillName }));
-    }
+    if (acted) setBeat((current) => nextBeat(current, castSkillName));
   });
 
+  const jobId = state.player.currentJobId;
+  const heroLook = useMemo(() => heroLookFor(catalog, jobId), [catalog, jobId]);
   const mode = state.progress.mode;
-  const positions = view ? enemyPositions(view) : new Map<number, number>();
-  const resources = view ? (Object.entries(view.hero.resources) as [ResourceId, number][]) : [];
-  const heroLook = heroLookFor(catalog, state.player.currentJobId);
-  // 區域（星陣、餘燼）畫在敵群腳下；其餘召喚物排在角色身旁。
+  const showSummon = useSummonDockVisible();
+  const boss = view?.boss ?? null;
+  const top = boss ? 'boss' : mode === 'ENDGAME_FARM' ? 'endgame' : null;
+  const compact = top !== null || showSummon;
   const zones = view?.hero.units.filter((unit) => unit.kind === 'zone') ?? [];
-  const companions = view?.hero.units.filter((unit) => unit.kind !== 'zone') ?? [];
+  const companionSlots = companions.map((unit) => ({ unit, slot: unitBook.current.records.get(unit.uid)?.slot ?? 0 }));
 
-  const showSummon = state.progress.mode === 'BOSS_READY' || state.progress.mode === 'FARM_BLOCKED';
   return (
-    <div className={styles.viewport} data-testid="battle-viewport" data-summon={showSummon}>
-      <div className={styles.backdrop} aria-hidden="true">
-        <BackdropArt mapNumber={state.progress.mapNumber} zoneIndex={zoneIndexOf(state.progress.localStage)} />
-      </div>
-      {view?.boss ? <BossBar view={view} /> : null}
-      {mode === 'FARM_BLOCKED' ? (
-        <p className={styles.hint}>BOSS 未通過：持續刷怪累積古物，先鑑定變強，再手動召喚。</p>
-      ) : null}
-      {mode === 'ENDGAME_FARM' ? <p className={styles.hint}>已完成本版全部 {catalog.mapCount} 張地圖，持續在末區刷怪。</p> : null}
-
-      <div className={styles.hero} style={{ left: '24%' }} aria-label="角色">
-        <div key={heroAction.key} className={[styles.heroBody, heroAction.key > 0 && styles.heroLunge].filter(Boolean).join(' ')}>
-          <HeroPortrait {...heroLook} size={HERO_ART_WIDTH} />
-        </div>
-        {heroAction.skillName ? (
-          <span key={`s${heroAction.key}`} className={styles.skillPop}>
-            {heroAction.skillName}
-          </span>
-        ) : null}
-        {resources.length > 0 || view?.hero.cards ? (
-          <div className={styles.resourcePips} role="group" aria-label="角色資源">
-            {resources.map(([id, value]) => (
-              <span key={id}>
-                {RESOURCE_LABELS[id]} {value}
-              </span>
-            ))}
-            {view?.hero.cards ? (
-              <span className={styles.nextSuit}>
-                下一張
-                <span aria-hidden="true" data-suit={view.hero.cards.nextSuit}>
-                  {SUIT_GLYPHS[view.hero.cards.nextSuit]}
-                </span>
-                <span className="visually-hidden">
-                  {SUIT_NAMES[view.hero.cards.nextSuit]}
-                  {view.hero.cards.setPending ? '（已切牌）' : ''}
-                </span>
-              </span>
-            ) : null}
-          </div>
-        ) : null}
-        {companions.length > 0 ? (
-          <div className={styles.units} role="group" aria-label="召喚物">
-            {companions.map((unit) => (
-              <span
-                key={unit.uid}
-                className={styles.unit}
-                role="img"
-                aria-label={unit.permanent ? `${UNIT_LABELS[unit.kind]}（常駐）` : `${UNIT_LABELS[unit.kind]} 剩 ${Math.ceil(unit.remainingMs / 1000)} 秒`}
-              >
-                <UnitPortrait kind={unit.kind} size={UNIT_ART_SIZE} />
-                {unit.permanent ? null : <small className={`${styles.unitTimer} numeric`}>{Math.ceil(unit.remainingMs / 1000)}</small>}
-              </span>
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      {zones.map((zone) => (
-        <div key={zone.uid} className={styles.zone} style={{ left: `${ENEMY_X[1]}%` }} role="img" aria-label={`${UNIT_LABELS.zone} 剩 ${Math.ceil(zone.remainingMs / 1000)} 秒`}>
-          <UnitPortrait kind="zone" />
-        </div>
-      ))}
-      {view?.enemies.map((enemy) => (
-        <Enemy
-          key={enemy.uid}
-          enemy={enemy}
-          x={positions.get(enemy.uid) ?? ENEMY_X[1]}
-          isBody={enemy.uid === view.boss?.bodyUid}
-          mapNumber={state.progress.mapNumber}
-        />
-      ))}
-
-      {floats.map((item) => (
-        <span
-          key={item.id}
-          className={[styles.float, item.crit && styles.floatCrit, item.source === 'dot' && styles.floatDot, item.source === 'summon' && styles.floatSummon, item.source === 'followUp' && styles.floatFollow]
-            .filter(Boolean)
-            .join(' ')}
-          style={{ left: `${positions.get(item.uid) ?? ENEMY_X[1]}%` }}
-          aria-hidden="true"
-        >
-          {formatCompact(item.amount)}
-        </span>
-      ))}
-
-      {view && view.enemies.length === 0 && !view.boss ? <p className={styles.waiting}>下一波即將出現…</p> : null}
-      <BossButton />
-    </div>
-  );
-}
-
-function Enemy({ enemy, x, isBody, mapNumber }: { enemy: EnemyView; x: number; isBody: boolean; mapNumber: number }) {
-  const large = enemy.kind === 'boss' || enemy.kind === 'elite';
-  return (
-    <div
-      className={[styles.enemy, large && styles.enemyLarge, enemy.kind === 'add' && styles.enemyAdd].filter(Boolean).join(' ')}
-      style={{ left: `${x}%` }}
-      data-enemy-kind={enemy.kind}
-    >
-      {!isBody ? (
-        <div className={styles.enemyHp} role="meter" aria-label={`${enemy.name} 血量`} aria-valuenow={enemy.hp} aria-valuemin={0} aria-valuemax={enemy.maxHp}>
-          <span style={{ width: `${(enemy.hp / enemy.maxHp) * 100}%` }} />
+    <div className={styles.viewport} data-testid="battle-viewport" data-mode={mode} data-summon={showSummon} data-compact={compact} data-top={top ?? undefined}>
+      {top ? (
+        <div className={styles.fieldTop}>
+          {boss ? <BossHud boss={boss} body={bossBodyOf(view)} /> : <p className={styles.hint}>已完成本版全部 {catalog.mapCount} 張地圖，持續在末區刷怪。</p>}
         </div>
       ) : null}
-      <div className={styles.enemyBody} aria-hidden="true">
-        {enemy.kind === 'add' ? <AddPortrait mapNumber={mapNumber} /> : <EnemyPortrait monsterId={enemy.monsterId} />}
-      </div>
-      <span className={styles.enemyName}>{enemy.name}</span>
-      {enemy.statuses.length > 0 || enemy.traits.length > 0 ? (
-        <span className={styles.statusRow}>
-          {enemy.traits.map((trait) => (
-            <span key={trait} className={styles.trait}>
-              {trait}
-            </span>
-          ))}
-          {enemy.statuses.map((status) => (
-            <span key={status.statusId} className={styles.status}>
-              {status.label}
-              {status.stacks > 1 ? <span className="numeric">×{status.stacks}</span> : null}
-            </span>
-          ))}
-        </span>
-      ) : null}
-    </div>
-  );
-}
 
-function BossBar({ view }: { view: BattleView }) {
-  const boss = view.boss!;
-  const catalog = useCatalog();
-  const { state } = useGame();
-  const send = useSend();
-  const { dispatch } = useUi();
-  const attempt = state.boss.active;
-  const percent = Math.max(0, (boss.hp / boss.maxHp) * 100);
-  return (
-    <div className={styles.bossBar} data-testid="boss-bar">
-      <div className={styles.bossTop}>
-        <span className={styles.bossName}>{boss.name}</span>
-        <span className={styles.bossState}>挑戰中・不可重複召喚</span>
-        <span className={styles.bossTimer + ' numeric'} aria-label={`剩餘 ${Math.ceil(boss.remainingMs / 1000)} 秒`}>
-          {formatClock(boss.remainingMs)}
-        </span>
-        {attempt ? (
-          <button
-            type="button"
-            className={styles.abortButton}
-            onClick={() =>
-              dispatch({
-                type: 'openConfirm',
-                confirm: {
-                  title: '退出 BOSS 挑戰？',
-                  message: `退出視為挑戰失敗：留在本圖第 ${bossStageLocalNumber(catalog, state.progress.mapNumber)} 關刷怪，不會失去任何資源；下次需手動召喚。`,
-                  confirmLabel: '退出挑戰',
-                  tone: 'danger',
-                  onConfirm: () => void send({ type: 'abortBossAttempt', payload: { attemptId: attempt.attemptId } }),
-                },
-              })
-            }
+      <div ref={stageRef} className={styles.stage} style={STAGE_GEOMETRY_STYLE}>
+        <div className={styles.backdrop} aria-hidden="true">
+          <BackdropArt mapNumber={state.progress.mapNumber} zoneIndex={zoneIndexOf(state.progress.localStage)} fit="width" />
+        </div>
+
+        {zones.map((zone) => (
+          <div
+            key={zone.uid}
+            className={styles.zone}
+            style={{ left: `${enemySlotX(CENTER_SLOT)}%` }}
+            role="img"
+            aria-label={`${UNIT_LABELS.zone} 剩 ${secondsLeft(zone.remainingMs)} 秒`}
           >
-            退出
-          </button>
+            <ZonePortrait kind="zone" />
+          </div>
+        ))}
+
+        <HeroActor look={heroLook} beat={beat} hero={view?.hero ?? null} companions={companionSlots} />
+
+        {view?.enemies.map((enemy) => (
+          <EnemyActor
+            key={enemy.uid}
+            enemy={enemy}
+            slot={(enemyBook.current.records.get(enemy.uid)?.slot ?? CENTER_SLOT) as EnemySlot}
+            isBossBody={enemy.uid === boss?.bodyUid}
+            mapNumber={state.progress.mapNumber}
+          />
+        ))}
+
+        <FloatLayer floats={floats} book={enemyBook.current} />
+
+        {view && view.enemies.length === 0 && !boss ? (
+          <p className={styles.waiting}>
+            <span className={styles.waitingPill}>
+              下一波即將出現
+              <span className={styles.waitingDots} aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+            </span>
+          </p>
         ) : null}
       </div>
-      <div className={styles.bossHp} role="meter" aria-label="BOSS 血量" aria-valuenow={Math.round(percent)} aria-valuemin={0} aria-valuemax={100}>
-        <span style={{ width: `${percent}%` }} />
-        <em className="numeric">{percent.toFixed(1)}%</em>
-      </div>
-      {boss.phaseLabels.length > 0 ? (
-        <div className={styles.phaseRow}>
-          {boss.phaseLabels.map((label) => (
-            <span key={label} className={styles.trait}>
-              {label}
-            </span>
-          ))}
-        </div>
-      ) : null}
+
+      {showSummon ? <SummonDock /> : null}
     </div>
   );
 }
 
-/** 召喚 BOSS（UI-A04）：非 BOSS 關隱藏；進行中禁用並顯示原因；按戰鬥區右下錨定。 */
-function BossButton() {
-  const catalog = useCatalog();
-  const { state, pendingCount } = useGame();
-  const openSheet = useOpenSheet();
-  const mode = state.progress.mode;
-  const stage = getStageAt(catalog, state.progress.mapNumber, state.progress.localStage);
-  // 挑戰中不再佔用戰場右下角（會蓋住 BOSS 名稱），改在 BOSS 血條列顯示「挑戰中・不可重複召喚」。
-  if (stage.type !== 'boss' || mode === 'ENDGAME_FARM' || mode === 'BOSS_FIGHT') return null;
-  const availability = availabilityOf(() => assertCanStartBoss(state, { catalog }));
-  const disabled = !availability.enabled || pendingCount > 0;
-  return (
-    <ActionButton
-      className={styles.bossButton}
-      variant="primary"
-      label="召喚 BOSS"
-      subLabel={availability.enabled ? (mode === 'FARM_BLOCKED' ? '手動再挑戰' : '確認打王配置') : availability.reason}
-      disabled={disabled}
-      onClick={() => openSheet({ kind: 'bossSummon' })}
-      data-testid="summon-boss"
-    />
-  );
+function bossBodyOf(view: BattleView | null): EnemyView | null {
+  if (!view?.boss) return null;
+  const bodyUid = view.boss.bodyUid;
+  return view.enemies.find((enemy) => enemy.uid === bodyUid) ?? null;
 }

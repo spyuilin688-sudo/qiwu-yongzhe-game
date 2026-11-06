@@ -1,5 +1,5 @@
 import { BG01, BG02, BG03, BG04 } from '../palette.ts';
-import { HORIZON, ZoneTint, ground, sky, topShade, circles, cloud, hills, sparkles, strokes, type SceneDesign } from '../parts.tsx';
+import { BOSS_STAND_X, COURT_FRAME_X, HANGING_TOP, HORIZON, SKY_TOP, W, circles, cloud, courtSpot, ground, hills, sky, sparkles, strokes, zoneTint, type SceneEntry } from '../parts.tsx';
 
 const f = (value: number): number => Math.round(value * 10) / 10;
 
@@ -37,15 +37,59 @@ function onCurve(t: number, p0: readonly [number, number], c: readonly [number, 
   return [f(u * u * p0[0] + 2 * u * t * c[0] + t * t * p1[0]), f(u * u * p0[1] + 2 * u * t * c[1] + t * t * p1[1])];
 }
 
+/** 蜂巢牆：以 BOSS 站位為中心的六角格（欄、列），欄距與列距配合 24 寬的六角形。 */
+const COMB_CELLS = [[-1, 0], [0, 0], [1, 0], [-1, 1], [0, 1], [1, 1], [-2, 1], [2, 1]] as const;
+const COMB_STEP_X = 18;
+const COMB_STEP_Y = 20;
+
+/** 垂掛的蜂窩（約 16×22）：上窄下寬的水滴形。 */
+function hive(x: number, top: number): string {
+  return `M${x} ${top}Q${x + 9} ${top + 3} ${x + 9} ${top + 13}Q${x + 9} ${top + 22} ${x} ${top + 22}Q${x - 9} ${top + 22} ${x - 9} ${top + 13}Q${x - 9} ${top + 3} ${x} ${top}Z`;
+}
+
+/** 一叢銅晶：三根長短不一的晶柱，底部貼地平線；scale 調整整叢大小。 */
+function crystalCluster(cx: number, scale: number): string {
+  const base = HORIZON - 4;
+  const shards = [
+    [-14, 6, 30, -3],
+    [0, 8, 66, 4],
+    [14, 6, 44, 6],
+  ] as const;
+  return shards
+    .map(([dx, half, height, lean]) => {
+      const x = cx + dx * scale;
+      const w = half * scale;
+      const top = base - height * scale;
+      return `M${f(x - w)} ${base}L${f(x - w * 0.8)} ${f(top + 10 * scale)}L${f(x + lean * scale)} ${f(top)}L${f(x + w)} ${f(top + 14 * scale)}L${f(x + w * 0.9)} ${base}Z`;
+    })
+    .join('');
+}
+
+/** 劇場上緣的垂幔：一排向下鼓起的弧，上緣掛在 HANGING_TOP，高螢幕看得到完整的一條布幔。 */
+function valance(): string {
+  const folds = 10;
+  const step = (W + 8) / folds;
+  const hem = 4;
+  const sag = 12;
+  let d = `M-4 ${HANGING_TOP}H${W + 4}V${hem}`;
+  for (let index = folds - 1; index >= 0; index -= 1) {
+    const x = -4 + index * step;
+    d += `Q${f(x + step / 2)} ${hem + sag} ${f(x)} ${hem}`;
+  }
+  return `${d}Z`;
+}
+
 /** 第 1～4 圖：原野、林地、礦山、古鎮。 */
-export const EARLY_SCENES: readonly (readonly [number, SceneDesign])[] = [
-  /** 蘆風原野：遠丘、風車、蘆葦與一條泥土小徑；第 6 區古樹廣場有一棵老樹。 */
-  [
-    1,
-    (k, zone) => {
+export const EARLY_SCENES: readonly SceneEntry[] = [
+  /** 蘆風原野：遠丘、風車、蘆葦與一條泥土小徑；第 6 區古樹廣場以老樹與三角旗框住 BOSS。 */
+  {
+    mapNumber: 1,
+    light: { tone: 'light', rim: BG01.rim },
+    draw: (k, zone) => {
       const P = BG01;
       const s = zone.shift;
       const mill = 44;
+      const [left, right] = COURT_FRAME_X;
       return (
         <>
           {sky(k, [[0, P.skyTop], [0.7, P.skyMid], [1, P.skyLow]])}
@@ -73,9 +117,14 @@ export const EARLY_SCENES: readonly (readonly [number, SceneDesign])[] = [
           ) : null}
           {zone.isCourt ? (
             <>
-              <path d="M356 172Q362 140 358 112L374 112Q370 140 378 172Z" fill={P.trunk} />
-              <path d={circles([[352, 98, 22], [374, 84, 24], [392, 104, 20], [366, 112, 16]])} fill={P.treeDeep} />
-              <path d={circles([[346, 92, 2], [372, 76, 2.2], [386, 98, 2]])} fill={P.flowerA} opacity={0.8} />
+              {/* 古樹廣場：右側老樹、左側木桿三角旗，一左一右框住 BOSS；樹冠收在 390 寬內。 */}
+              <path d={`M${right - 10} 172Q${right - 4} 140 ${right - 8} 112L${right + 8} 112Q${right + 4} 140 ${right + 12} 172Z`} fill={P.trunk} />
+              <path d={circles([[right - 22, 100, 20], [right - 2, 84, 24], [right + 12, 104, 16], [right - 6, 114, 16]])} fill={P.treeDeep} />
+              <path d={circles([[right - 28, 94, 2], [right - 4, 76, 2.2], [right + 10, 98, 2]])} fill={P.flowerA} opacity={0.8} />
+              <g stroke={P.line} strokeWidth={1.4} strokeLinejoin="round" opacity={0.85}>
+                <path d={`M${left} ${HORIZON}V104`} fill="none" strokeWidth={2.4} strokeLinecap="round" />
+                <path d={`M${left + 1} 106L${left + 22} 113L${left + 1} 120Z`} fill={P.millRoof} />
+              </g>
             </>
           ) : null}
           {ground(k, P.groundTop, P.groundLow, P.lip)}
@@ -104,46 +153,53 @@ export const EARLY_SCENES: readonly (readonly [number, SceneDesign])[] = [
             strokeLinecap="round"
           />
           <path d={strokes([[10.6, 204, 11.6, 196], [24.6, 212, 26.2, 204], [371.6, 202, 371, 194], [386, 218, 386.2, 210]])} stroke={P.reedHead} strokeWidth={4.6} strokeLinecap="round" />
-          {topShade(k)}
-          <ZoneTint zone={zone} color={P.dusk} />
+          {zone.isCourt ? courtSpot(k, P.sun) : null}
+          {zoneTint(k, zone, P.dusk)}
         </>
       );
     },
-  ],
+  },
 
   /** 蜜糖林地：琥珀色光從林子深處透出，兩側大樹幹掛著蜂窩，地上有莓果叢與蜜灘。 */
-  [
-    2,
-    (k, zone) => {
+  {
+    mapNumber: 2,
+    light: { tone: 'light', rim: BG02.rim },
+    draw: (k, zone) => {
       const P = BG02;
       const s = zone.shift;
+      const [left, right] = COURT_FRAME_X;
       const farTrunks = ([[60, 10], [118, 14], [170, 9], [236, 16], [296, 11], [324, 12]] as const)
         .map(([x, w]) => `M${f(x + s * 0.5)} 0h${w}v${HORIZON + 2}h${-w}Z`)
         .join('');
       return (
         <>
-          {sky(k, [[0, P.skyTop], [0.5, P.skyMid], [1, P.skyLow]])}
+          {/* 頂棚用樹冠色補天：高螢幕往上看仍是茂密林冠，不會露出一截天空。 */}
+          {sky(k, [[0, P.skyTop], [0.5, P.skyMid], [1, P.skyLow]], P.canopy)}
           <circle cx={200} cy={132} r={180} fill={k.glow(P.light, 0.5)} />
           <path d={farTrunks} fill={P.farTrunk} opacity={0.42} />
           <path d={`M${150 + s * 0.3} 0L${188 + s * 0.3} 0L240 176L182 176ZM${262 + s * 0.3} 0L${280 + s * 0.3} 0L318 176L290 176Z`} fill={P.shaft} opacity={0.13} />
           {zone.isCourt ? (
-            <path
-              d={[0, 1, 2, 3, 4, 5].map((index) => {
-                const cx = 168 + (index % 3) * 26;
-                const cy = 96 + Math.floor(index / 3) * 22 + (index % 2) * 11;
-                return `M${cx - 12} ${cy}L${cx - 6} ${cy - 10}L${cx + 6} ${cy - 10}L${cx + 12} ${cy}L${cx + 6} ${cy + 10}L${cx - 6} ${cy + 10}Z`;
-              }).join('')}
-              fill={P.comb}
-              stroke={P.hiveBand}
-              strokeWidth={2}
-              opacity={0.45}
-            />
+            <>
+              {/* 蜂后王庭：巨大蜂巢牆立在 BOSS 身後，上緣從 BOSS 頭頂露出，像王座的椅背。 */}
+              <circle cx={BOSS_STAND_X} cy={92} r={86} fill={k.glow(P.honey, 0.4)} />
+              <path
+                d={COMB_CELLS.map(([col, row]) => {
+                  const cx = BOSS_STAND_X + col * COMB_STEP_X;
+                  const cy = 70 + row * COMB_STEP_Y + (Math.abs(col) % 2) * (COMB_STEP_Y / 2);
+                  return `M${cx - 12} ${cy}L${cx - 6} ${cy - 10}L${cx + 6} ${cy - 10}L${cx + 12} ${cy}L${cx + 6} ${cy + 10}L${cx - 6} ${cy + 10}Z`;
+                }).join('')}
+                fill={P.comb}
+                stroke={P.hiveBand}
+                strokeWidth={2}
+                opacity={0.5}
+              />
+            </>
           ) : null}
           <path d={hills(166, 6, 2.6, zone.index * 1.1)} fill={P.bush} opacity={0.55} />
           <path d={circles([[0, 8, 42], [52, -2, 34], [102, 12, 30], [152, -4, 36], [206, 6, 30], [256, -6, 38], [312, 8, 32], [368, -2, 42]])} fill={P.canopy} />
           <path d={circles([[30, 30, 14], [124, 34, 12], [230, 30, 14], [334, 36, 13]])} fill={P.canopyLight} opacity={0.8} />
-          <path d="M-6 0L30 0Q26 90 34 158Q40 172 56 178L-6 178Z" fill={P.trunk} />
-          <path d="M396 0L360 0Q366 90 356 158Q350 172 334 178L396 178Z" fill={P.trunk} />
+          <path d={`M-6 ${SKY_TOP}L30 ${SKY_TOP}V0Q26 90 34 158Q40 172 56 178L-6 178Z`} fill={P.trunk} />
+          <path d={`M396 ${SKY_TOP}L360 ${SKY_TOP}V0Q366 90 356 158Q350 172 334 178L396 178Z`} fill={P.trunk} />
           <path d="M12 40Q8 80 16 130M20 100Q22 130 30 160M376 50Q382 90 372 140M368 110Q364 140 356 164" fill="none" stroke={P.bark} strokeWidth={2} strokeLinecap="round" />
           <path d="M26 54Q48 50 70 60" fill="none" stroke={P.trunk} strokeWidth={6} strokeLinecap="round" />
           <g stroke={P.bark} strokeWidth={1.5}>
@@ -152,6 +208,16 @@ export const EARLY_SCENES: readonly (readonly [number, SceneDesign])[] = [
             <ellipse cx={60} cy={89} rx={3.4} ry={2.6} fill={P.bark} />
           </g>
           <path d="M58 96Q57 104 59.5 106Q62 104 61 96Z" fill={P.honey} />
+          {zone.isCourt ? (
+            <>
+              {/* 王庭兩側從樹冠垂下的蜂窩，框住 BOSS；壓低不透明度，不搶傷害數字。 */}
+              <path d={`M${left} 34V78M${right} 30V74`} stroke={P.bark} strokeWidth={1.6} />
+              <g stroke={P.bark} strokeWidth={1.4} opacity={0.75}>
+                <path d={[left, right].map((x, index) => hive(x, 78 - index * 4)).join('')} fill={P.hive} />
+                <path d={[left, right].map((x, index) => `M${x - 8} ${88 - index * 4}Q${x} ${85 - index * 4} ${x + 8} ${88 - index * 4}`).join('')} fill="none" stroke={P.hiveBand} />
+              </g>
+            </>
+          ) : null}
           <path d={circles([[78, 170, 12], [98, 166, 14], [120, 172, 10], [300, 168, 13], [322, 172, 10]])} fill={P.bush} />
           <path d={circles([[90, 162, 2], [104, 160, 2], [112, 168, 1.8], [298, 162, 2], [314, 166, 1.8]])} fill={P.berry} />
           {ground(k, P.groundTop, P.groundLow, P.lip)}
@@ -168,19 +234,21 @@ export const EARLY_SCENES: readonly (readonly [number, SceneDesign])[] = [
           <path d={circles([[14, 238, 1.8], [24, 236, 1.6], [364, 232, 1.4]])} fill={P.stem} />
           {zone.index === 3 ? <path d={circles([[110, 252, 3], [160, 262, 2.6], [250, 246, 3], [290, 262, 2.6], [200, 230, 2.2]])} fill={P.petal} /> : null}
           <path d={sparkles([[140, 90, 3], [220, 64, 2.4], [92, 120, 2.2], [284, 110, 2.6], [190, 140, 2]])} fill={P.pollen} opacity={0.7} />
-          {topShade(k)}
-          <ZoneTint zone={zone} color={P.dusk} />
+          {zone.isCourt ? courtSpot(k, P.honey) : null}
+          {zoneTint(k, zone, P.dusk)}
         </>
       );
     },
-  ],
+  },
 
   /** 銅鈴礦山：坑道內部，木支架掛著油燈，鐵軌伸向深處的隧道口，岩壁嵌著銅礦。 */
-  [
-    3,
-    (k, zone) => {
+  {
+    mapNumber: 3,
+    light: { tone: 'dark', rim: BG03.rim },
+    draw: (k, zone) => {
       const P = BG03;
       const s = zone.shift * 0.4;
+      const [left, right] = COURT_FRAME_X;
       const ceiling = [[0, 30], [18, 40], [30, 24], [52, 46], [70, 22], [96, 34], [118, 18], [146, 42], [166, 22], [196, 30], [214, 16], [240, 40], [262, 20], [290, 34], [312, 18], [338, 44], [356, 24], [376, 36], [390, 26]] as const;
       const sleepers = [182, 192, 206, 224, 248].map((y) => {
         const t = (y - HORIZON) / (272 - HORIZON);
@@ -190,17 +258,24 @@ export const EARLY_SCENES: readonly (readonly [number, SceneDesign])[] = [
       });
       return (
         <>
-          {sky(k, [[0, P.skyTop], [0.6, P.skyMid], [1, P.skyLow]])}
+          {sky(k, [[0, P.skyTop], [0.6, P.skyMid], [1, P.skyLow]], P.ceiling)}
           <path d={hills(140, 16, 1.8, zone.index * 1.3)} fill={P.farRock} />
           <path d={`M${152 + s} ${HORIZON + 2}V130Q${152 + s} 98 ${192 + s} 98Q${232 + s} 98 ${232 + s} 130V${HORIZON + 2}Z`} fill={P.tunnel} />
           <circle cx={192 + s} cy={150} r={22} fill={k.glow(P.lamp, 0.35)} />
-          <path d={`M-10 -2L400 -2L${ceiling.map(([x, y]) => `${x} ${y}`).reverse().join('L')}L-10 30Z`} fill={P.ceiling} />
+          <path d={`M-10 ${SKY_TOP}L400 ${SKY_TOP}L${ceiling.map(([x, y]) => `${x} ${y}`).reverse().join('L')}L-10 30Z`} fill={P.ceiling} />
           <path d="M96 64L104 58L108 68L100 72ZM284 96L292 90L296 100ZM132 120L140 116L138 126ZM250 60L258 56L258 66Z" fill={P.ore} opacity={0.75} />
           <path d={sparkles([[103, 62, 3], [292, 94, 2.6], [256, 60, 2.4], [138, 120, 2]])} fill={P.glint} opacity={0.85} />
-          {zone.index === 2 || zone.isCourt ? (
+          {zone.index === 2 ? (
             <>
-              <circle cx={300} cy={128} r={zone.isCourt ? 56 : 34} fill={k.glow(P.crystal, 0.5)} />
-              <path d="M284 170L290 120L300 104L308 122L304 170ZM304 170L312 134L322 126L326 140L318 170ZM272 170L276 146L284 140L288 170Z" fill={P.crystal} stroke={P.ore} strokeWidth={1.5} opacity={0.85} />
+              <circle cx={300} cy={128} r={34} fill={k.glow(P.crystal, 0.5)} />
+              <path d={crystalCluster(298, 1)} fill={P.crystal} stroke={P.ore} strokeWidth={1.5} opacity={0.85} />
+            </>
+          ) : null}
+          {zone.isCourt ? (
+            <>
+              {/* 礦心巨窟：BOSS 身後一大片礦心光，兩側各一叢銅晶框住 BOSS，右叢收在支架之間。 */}
+              <circle cx={BOSS_STAND_X} cy={128} r={84} fill={k.glow(P.crystal, 0.45)} />
+              <path d={`${crystalCluster(left, 0.9)}${crystalCluster(right - 12, 0.8)}`} fill={P.crystal} stroke={P.ore} strokeWidth={1.5} opacity={0.8} />
             </>
           ) : null}
           {zone.index === 3 ? (
@@ -230,17 +305,18 @@ export const EARLY_SCENES: readonly (readonly [number, SceneDesign])[] = [
           <path d={strokes(sleepers)} stroke={P.sleeper} strokeWidth={4} strokeLinecap="round" />
           <path d={zone.index === 1 ? 'M180 176L148 236M204 176L236 236' : 'M180 176L118 272M204 176L266 272'} fill="none" stroke={P.rail} strokeWidth={2.4} strokeLinecap="round" />
           <path d={circles([[8, 262, 16], [30, 268, 12], [372, 264, 18], [350, 270, 10], [100, 210, 4], [300, 216, 5]])} fill={P.rubble} />
-          {topShade(k)}
-          <ZoneTint zone={zone} color={P.dusk} />
+          {zone.isCourt ? courtSpot(k, P.crystal) : null}
+          {zoneTint(k, zone, P.dusk)}
         </>
       );
     },
-  ],
+  },
 
   /** 霧鐘古鎮：暮色屋頂與鐘樓剪影、街燈與吊著風鈴的繩索，地面是濕潤的石板路。 */
-  [
-    4,
-    (k, zone) => {
+  {
+    mapNumber: 4,
+    light: { tone: 'dark', rim: BG04.rim },
+    draw: (k, zone) => {
       const P = BG04;
       const s = zone.shift * 0.5;
       const roofs = ([[60, 30, 50, 18], [96, 26, 64, 14], [148, 34, 44, 16], [186, 28, 56, 20], [222, 40, 46, 14], [266, 30, 60, 18], [300, 36, 42, 16]] as const)
@@ -297,15 +373,17 @@ export const EARLY_SCENES: readonly (readonly [number, SceneDesign])[] = [
           <ellipse cx={64} cy={232} rx={22} ry={4} fill={P.window} opacity={0.18} />
           {zone.isCourt ? (
             <>
-              <path d="M-4 -2H96Q70 30 62 90Q40 60 -4 70Z" fill={P.curtain} />
-              <path d="M394 -2H294Q320 30 328 90Q350 60 394 70Z" fill={P.curtain} />
-              <path d="M150 0L120 176H270L240 0Z" fill={P.mist} opacity={0.08} />
+              {/* 月影劇場：從天頂打在 BOSS 身上的一道舞台光，兩側紅幕與上緣垂幔框住整個戰場。 */}
+              <path d={`M${BOSS_STAND_X - 30} ${SKY_TOP}L${BOSS_STAND_X - 84} ${HORIZON + 2}H${BOSS_STAND_X + 84}L${BOSS_STAND_X + 30} ${SKY_TOP}Z`} fill={P.mist} opacity={0.1} />
+              <path d={`M-4 ${HANGING_TOP}H96V-2Q70 30 62 90Q40 60 -4 70Z`} fill={P.curtain} />
+              <path d={`M394 ${HANGING_TOP}H294V-2Q320 30 328 90Q350 60 394 70Z`} fill={P.curtain} />
+              <path d={valance()} fill={P.curtain} stroke={P.lampPost} strokeWidth={1.2} />
             </>
           ) : null}
-          {topShade(k)}
-          <ZoneTint zone={zone} color={P.dusk} />
+          {zone.isCourt ? courtSpot(k, P.moon) : null}
+          {zoneTint(k, zone, P.dusk)}
         </>
       );
     },
-  ],
+  },
 ];

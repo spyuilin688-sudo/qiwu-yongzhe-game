@@ -5,8 +5,9 @@ import { SOLID_FILL, TONE_FILL } from './lineStyle.ts';
 /**
  * 介面圖示圖形（24×24 格）。每個圖示的外框由 UiIcon 套上 currentColor 線條樣式。
  * 「古物」刻意畫成封印拓本卷軸，絕不使用寶箱或神燈外型（核心規則）。
+ * 方向類圖示（chevron）一律朝右畫，展開／收合由呼叫端用 CSS 旋轉，避免同一個形狀畫四份。
  */
-export const UI_GLYPHS: Readonly<Record<UiIconName, ReactNode>> = {
+const GLYPHS = {
   adventure: (
     <>
       <path d="M2.4 21Q12 12.6 21.6 21Z" {...TONE_FILL} />
@@ -120,4 +121,45 @@ export const UI_GLYPHS: Readonly<Record<UiIconName, ReactNode>> = {
     </>
   ),
   star: <path d="M12 3.2L14.6 8.7L20.6 9.4L16.2 13.5L17.3 19.5L12 16.6L6.7 19.5L7.8 13.5L3.4 9.4L9.4 8.7Z" {...TONE_FILL} />,
-};
+  // 遺物鑑定台：桌面＋架在支臂上的鏡片（不是寶箱）。
+  bench: (
+    <>
+      <path d="M3.4 13.4H20.6V16.2H3.4Z" {...TONE_FILL} />
+      <path d="M6 16.2V20.6M18 16.2V20.6" />
+      <circle cx="13.8" cy="7.4" r="3.8" {...TONE_FILL} />
+      <path d="M11.1 10.1L8.6 13.4" strokeWidth="2.2" />
+      <path d="M12.2 6.6Q12.7 5.1 14.2 4.8" strokeWidth="1.4" />
+    </>
+  ),
+  unlock: (
+    <>
+      <path d="M8 11V7a4 4 0 0 1 7.6-1.8" />
+      <rect x="5" y="11" width="14" height="10" rx="2.2" {...TONE_FILL} />
+      <path d="M12 15V17.4" strokeWidth="2.2" />
+    </>
+  ),
+  chevron: <path d="M9.2 5.6L15.6 12L9.2 18.4" strokeWidth="2.4" />,
+  plus: <path d="M12 5.2V18.8M5.2 12H18.8" strokeWidth="2.4" />,
+  minus: <path d="M5.2 12H18.8" strokeWidth="2.4" />,
+  info: (
+    <>
+      <circle cx="12" cy="12" r="8.8" {...TONE_FILL} />
+      <path d="M12 11V16.6" strokeWidth="2.2" />
+      <circle cx="12" cy="7.8" r="1.25" {...SOLID_FILL} />
+    </>
+  ),
+} as const satisfies Readonly<Record<string, ReactNode>>;
+
+/**
+ * 全部介面圖示名稱（以圖形表為唯一來源）。舊的 UiIconName（types.ts）是它的子集，仍可使用；
+ * 新增圖示只要在上面的表加一筆，型別與圖示清單會自動跟上。
+ */
+export type UiGlyphName = keyof typeof GLYPHS;
+
+export const UI_GLYPHS: Readonly<Record<UiGlyphName, ReactNode>> = GLYPHS;
+
+/** 依圖形表順序列出的全部名稱：美術總覽與測試用，不必手動維護第二份清單。 */
+export const UI_GLYPH_NAMES = Object.keys(GLYPHS) as readonly UiGlyphName[];
+
+// 編譯期保證：types.ts 舊有的每個 UiIconName 都仍有圖形（舊呼叫端不會壞）。
+GLYPHS satisfies Readonly<Record<UiIconName, ReactNode>>;

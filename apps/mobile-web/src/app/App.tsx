@@ -1,4 +1,5 @@
-import { memo, useEffect, useRef, type ComponentType } from 'react';
+import { memo, useEffect, useId, useRef, type ComponentType } from 'react';
+import { UiIcon, type UiGlyphName } from '../art/index.ts';
 import { BottomNav } from '../ui/components/BottomNav.tsx';
 import { ActionButton, primitiveStyles } from '../ui/components/primitives.tsx';
 import { ResourceHeader } from '../ui/components/ResourceHeader.tsx';
@@ -9,7 +10,7 @@ import { SkillsScreen } from '../ui/screens/SkillsScreen.tsx';
 import { SheetHost } from '../ui/sheets/SheetHost.tsx';
 import styles from './App.module.css';
 import { ScreenActiveContext, useCatalog, useGame, useHost, useHostEvents } from './GameContext.tsx';
-import { useUi, type TabId } from './uiStore.tsx';
+import { useUi, type ConfirmRequest, type TabId, type Toast } from './uiStore.tsx';
 
 /** 頁面以 memo 包裝：App 因面板／提示變動重繪時，不連帶重繪四個頁面；各頁只依自己的訂閱更新。 */
 const SCREENS: readonly { id: TabId; Component: ComponentType }[] = [
@@ -57,11 +58,15 @@ function DevSpeedBadge() {
   return devSpeed > 1 ? <span className={styles.devBadge}>開發加速 ×{devSpeed}</span> : null;
 }
 
+/** 條列的附帶條件；uiStore 的 ConfirmRequest 尚未定義 details 前先以選用欄位讀取（沒有就不顯示）。 */
+type ConfirmWithDetails = ConfirmRequest & { readonly details?: readonly string[] };
+
 function ConfirmLayer() {
   const { state, dispatch } = useUi();
-  const confirm = state.confirm;
+  const confirm: ConfirmWithDetails | null = state.confirm;
   const cancelRef = useRef<HTMLButtonElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
+  const messageId = useId();
   useEffect(() => {
     if (!confirm) return;
     // 預設焦點放在不會造成後果的按鈕；只需確認的說明則放在唯一的按鈕上。
@@ -76,12 +81,38 @@ function ConfirmLayer() {
     return () => window.removeEventListener('keydown', onKey, true);
   }, [confirm, dispatch]);
   if (!confirm) return null;
+  const danger = confirm.tone === 'danger';
   return (
     <div className={primitiveStyles.confirmLayer}>
       <button type="button" className={primitiveStyles.sheetBackdrop} aria-label="取消" onClick={() => dispatch({ type: 'closeConfirm' })} tabIndex={-1} />
-      <div className={primitiveStyles.confirmBox} role="alertdialog" aria-modal="true" aria-label={confirm.title}>
-        <h2>{confirm.title}</h2>
-        <p>{confirm.message}</p>
+      <div
+        className={[primitiveStyles.confirmBox, danger && primitiveStyles.confirmDanger].filter(Boolean).join(' ')}
+        role="alertdialog"
+        aria-modal="true"
+        aria-label={confirm.title}
+        aria-describedby={messageId}
+      >
+        <div className={primitiveStyles.confirmBody}>
+          <h2 className={primitiveStyles.confirmTitle}>
+            {/* 不可復原的操作在標題前加警告圖示，不只靠按鈕顏色區分語氣。 */}
+            {danger ? (
+              <span className={primitiveStyles.confirmTitleIcon}>
+                <UiIcon name="warning" size="em" />
+              </span>
+            ) : null}
+            <span>{confirm.title}</span>
+          </h2>
+          <div id={messageId}>
+            <p className={primitiveStyles.confirmMessage}>{confirm.message}</p>
+            {confirm.details && confirm.details.length > 0 ? (
+              <ul className={primitiveStyles.confirmDetails}>
+                {confirm.details.map((detail) => (
+                  <li key={detail}>{detail}</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        </div>
         <div className={primitiveStyles.confirmActions}>
           {confirm.acknowledgeOnly ? null : (
             <ActionButton ref={cancelRef} label="取消" variant="ghost" onClick={() => dispatch({ type: 'closeConfirm' })} />
@@ -89,7 +120,7 @@ function ConfirmLayer() {
           <ActionButton
             ref={confirmRef}
             label={confirm.confirmLabel}
-            variant={confirm.tone === 'danger' ? 'danger' : 'primary'}
+            variant={danger ? 'danger' : 'primary'}
             onClick={() => {
               dispatch({ type: 'closeConfirm' });
               confirm.onConfirm();
@@ -103,9 +134,19 @@ function ConfirmLayer() {
 
 const TOAST_MS = 2600;
 
+/** 提示語氣圖示：語氣不只靠顏色（圖示 aria-hidden，讀屏內容仍是文字）。 */
+const TOAST_ICON: Readonly<Record<Toast['tone'], UiGlyphName>> = {
+  info: 'info',
+  success: 'check',
+  warning: 'warning',
+  danger: 'close',
+};
+
 function ToastRegion() {
   const { state, dispatch } = useUi();
   const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
+  // 有面板或確認對話時改疊在被遮罩壓暗的資源列上，不壓住面板表頭（面板頂端保留 --sheet-top-reserve）。
+  const overlay = state.sheet !== null || state.confirm !== null;
   useEffect(() => {
     for (const toast of state.toasts) {
       if (timers.current.has(toast.id)) continue;
@@ -119,10 +160,13 @@ function ToastRegion() {
     }
   }, [state.toasts, dispatch]);
   return (
-    <div className={primitiveStyles.toastRegion} role="status" aria-live="polite">
+    <div className={[primitiveStyles.toastRegion, overlay && primitiveStyles.toastRegionOverlay].filter(Boolean).join(' ')} role="status" aria-live="polite">
       {state.toasts.map((toast) => (
-        <div key={toast.id} className={[primitiveStyles.toast, primitiveStyles[`toast_${toast.tone}`]].filter(Boolean).join(' ')}>
-          {toast.text}
+        <div key={toast.id} className={[primitiveStyles.toast, primitiveStyles[`toast_${toast.tone}`]].filter(Boolean).join(' ')} data-testid="toast" data-tone={toast.tone}>
+          <span className={primitiveStyles.toastIcon} aria-hidden="true">
+            <UiIcon name={TOAST_ICON[toast.tone]} />
+          </span>
+          <span className={primitiveStyles.toastText}>{toast.text}</span>
         </div>
       ))}
     </div>
@@ -137,42 +181,48 @@ function HostBlocker() {
   if (game.status === 'running' || game.status === 'booting') return null;
   return (
     <div className={styles.blocker} role="alertdialog" aria-modal="true" aria-labelledby="host-blocker-title" data-testid="host-blocker">
-      {game.status === 'conflict' ? (
-        <>
-          <h2 id="host-blocker-title">遊戲已在其他分頁執行</h2>
-          <p>同一時間只允許一個分頁推進戰鬥，避免重複刷資源或互相覆蓋存檔。</p>
-          <ActionButton label="在此分頁接管" variant="primary" onClick={() => host.takeOver()} />
-        </>
-      ) : null}
-      {game.status === 'readonly' ? (
-        <>
-          <h2 id="host-blocker-title">此分頁已被接管</h2>
-          <p>{game.statusMessage}</p>
-          <ActionButton label="重新接管" variant="primary" onClick={() => host.takeOver()} />
-        </>
-      ) : null}
-      {game.status === 'loadError' ? (
-        <>
-          <h2 id="host-blocker-title">無法讀取存檔</h2>
-          <p>{game.statusMessage}</p>
-          <ActionButton
-            label="清除本機存檔並重新開始"
-            variant="danger"
-            onClick={() =>
-              dispatch({
-                type: 'openConfirm',
-                confirm: {
-                  title: '清除本機存檔？',
-                  message: '目前存檔將被刪除且無法復原，角色會從 Lv1 重新開始。',
-                  confirmLabel: '清除並重新開始',
-                  tone: 'danger',
-                  onConfirm: () => host.resetSave(),
-                },
-              })
-            }
-          />
-        </>
-      ) : null}
+      <div className={styles.blockerCard}>
+        <span className={styles.blockerIcon} aria-hidden="true">
+          <UiIcon name="warning" size="xl" />
+        </span>
+        {game.status === 'conflict' ? (
+          <>
+            <h2 id="host-blocker-title">遊戲已在其他分頁執行</h2>
+            <p>同一時間只允許一個分頁推進戰鬥，避免重複刷資源或互相覆蓋存檔。</p>
+            <ActionButton label="在此分頁接管" variant="primary" block onClick={() => host.takeOver()} />
+          </>
+        ) : null}
+        {game.status === 'readonly' ? (
+          <>
+            <h2 id="host-blocker-title">此分頁已被接管</h2>
+            <p>{game.statusMessage}</p>
+            <ActionButton label="重新接管" variant="primary" block onClick={() => host.takeOver()} />
+          </>
+        ) : null}
+        {game.status === 'loadError' ? (
+          <>
+            <h2 id="host-blocker-title">無法讀取存檔</h2>
+            <p>{game.statusMessage}</p>
+            <ActionButton
+              label="清除本機存檔並重新開始"
+              variant="danger"
+              block
+              onClick={() =>
+                dispatch({
+                  type: 'openConfirm',
+                  confirm: {
+                    title: '清除本機存檔？',
+                    message: '目前存檔將被刪除且無法復原，角色會從 Lv1 重新開始。',
+                    confirmLabel: '清除並重新開始',
+                    tone: 'danger',
+                    onConfirm: () => host.resetSave(),
+                  },
+                })
+              }
+            />
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

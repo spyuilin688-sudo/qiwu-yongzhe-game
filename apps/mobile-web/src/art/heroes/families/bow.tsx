@@ -1,11 +1,11 @@
-import { ACCENT, FAMILY_TONES, GLOW, HAIR, INK, LEATHER, LINEN, METAL, WOOD, type Tone } from '../palette.ts';
-import { Aura, Cape, Held, Sparkle, Strap } from '../props.tsx';
+import { ACCENT, FAMILY_TONES, GLOW, HAIR, LEATHER, LINE, LINEN, METAL, WOOD, type Tone } from '../palette.ts';
+import { Aura, Cape, FurCollar, Held, InkedLine, Sparkles, Strap } from '../props.tsx';
 import { FRONT_HAND, type HeroDesign } from '../rig.tsx';
 import type { HeroStage } from '../stage.ts';
 
 /**
  * 弓手系：兜帽＋弓＋背後箭袋。
- * A 線（神射手→星隼遊俠）：比人還高的長弓、羽飾兜帽，三轉加隼翼與星光。
+ * A 線（神射手→星隼遊俠）：比人還高的長弓、羽飾兜帽、皮革射手手套，三轉加隼翼與星光。
  * B 線（馴獸師→獸王獵手）：獸耳／獸角兜帽、毛皮肩披、腰間號角與反曲弓。
  */
 
@@ -21,17 +21,15 @@ function Bow({ shape, wood, arrow, gem }: { shape: BowShape; wood: Tone; arrow: 
   const bow = BOW_LIMBS[shape];
   return (
     <g fill="none">
-      <path d={bow.string} stroke={ACCENT.feather} strokeWidth="0.9" />
+      <path d={bow.string} stroke={ACCENT.feather} strokeWidth={LINE.detail} />
       {arrow ? (
         <>
-          <path d="M-1 0H13" stroke={INK} strokeWidth="2.8" />
-          <path d="M-1 0H13" stroke={WOOD.light} strokeWidth="1.2" />
-          <path d="M12 -2.2L16 0L12 2.2Z" fill={METAL.steel.base} strokeWidth="1.2" />
+          <InkedLine d="M-1 0H13" color={WOOD.light} width={1.2} weight="part" />
+          <path d="M12 -2.2L16 0L12 2.2Z" fill={METAL.steel.base} strokeWidth={LINE.detail} />
         </>
       ) : null}
-      <path d={bow.limb} stroke={INK} strokeWidth="4.6" />
-      <path d={bow.limb} stroke={wood.base} strokeWidth="2.4" />
-      {gem ? <circle cx="2.6" cy="0" r="2.2" fill={gem} strokeWidth="1.4" /> : null}
+      <InkedLine d={bow.limb} color={wood.base} width={2.4} />
+      {gem ? <circle cx="2.6" cy="0" r="2.2" fill={gem} strokeWidth={LINE.part} /> : null}
     </g>
   );
 }
@@ -39,10 +37,10 @@ function Bow({ shape, wood, arrow, gem }: { shape: BowShape; wood: Tone; arrow: 
 function Quiver({ fletch }: { fletch: string }) {
   return (
     <Held at={{ x: 25, y: 57 }} angle={-26}>
-      <path d="M-2.6 -22.6L-0.8 -27.4L0.6 -22.6Z" fill={fletch} strokeWidth="1.4" />
-      <path d="M0.4 -22.6L2.6 -26.6L3.4 -22.6Z" fill={ACCENT.feather} strokeWidth="1.4" />
+      <path d="M-2.6 -22.6L-0.8 -27.4L0.6 -22.6Z" fill={fletch} strokeWidth={LINE.part} />
+      <path d="M0.4 -22.6L2.6 -26.6L3.4 -22.6Z" fill={ACCENT.feather} strokeWidth={LINE.part} />
       <rect x="-3.4" y="-22" width="7" height="22" rx="2.2" fill={LEATHER.base} />
-      <path d="M-3.4 -18.4H3.6" stroke={LEATHER.shade} strokeWidth="1.6" />
+      <path d="M-3.4 -18.4H3.6" stroke={LEATHER.shade} strokeWidth={LINE.part} />
     </Held>
   );
 }
@@ -53,56 +51,41 @@ const HOOD =
 function Hood({ tone, ornament }: { tone: Tone; ornament: 'none' | 'feather' | 'wing' | 'ears' | 'horns' }) {
   return (
     <>
-      {ornament === 'ears' ? (
-        <g fill={ACCENT.furShade}>
-          <path d="M21.4 13.6L20.6 4.6L28 10.6Z" />
-          <path d="M33.6 10.4L38.6 3.4L41.2 12.6Z" />
-        </g>
-      ) : null}
+      {/* 一對獸耳／獸角同色，合成一條路徑。 */}
+      {ornament === 'ears' ? <path d="M21.4 13.6L20.6 4.6L28 10.6ZM33.6 10.4L38.6 3.4L41.2 12.6Z" fill={ACCENT.furShade} /> : null}
       {ornament === 'horns' ? (
-        <g fill={ACCENT.horn}>
-          <path d="M22.6 12.6C17 9.8 13 5.8 13.8 2.2C16.6 5.6 21.4 6.8 26.6 9.8Z" />
-          <path d="M34.6 10.4C37.6 5.4 42.6 2.6 47 3.4C43.6 5 40.6 8.6 39.8 12.6Z" />
-        </g>
+        <path
+          d="M22.6 12.6C17 9.8 13 5.8 13.8 2.2C16.6 5.6 21.4 6.8 26.6 9.8ZM34.6 10.4C37.6 5.4 42.6 2.6 47 3.4C43.6 5 40.6 8.6 39.8 12.6Z"
+          fill={ACCENT.horn}
+        />
       ) : null}
       <path d={HOOD} fill={tone.base} />
       <path d="M16.4 34C15.2 28 15.6 24 16.8 21L9.6 17.4C13 14 16.6 12 20.6 11Q17.6 20 21.6 41Q18 39 16.4 34Z" fill={tone.shade} stroke="none" />
-      <path d="M47.2 24.4C44.6 22.4 41.8 21.6 38.6 21.8C35 22 31.8 23 30 25.2" fill="none" stroke={tone.shade} strokeWidth="1.6" />
-      <path d="M26 13.4Q31.4 11.4 37.4 12.6" fill="none" stroke={tone.light} strokeWidth="1.2" />
+      <path d="M47.2 24.4C44.6 22.4 41.8 21.6 38.6 21.8C35 22 31.8 23 30 25.2" fill="none" stroke={tone.shade} strokeWidth={LINE.part} />
+      <path d="M26 13.4Q31.4 11.4 37.4 12.6" fill="none" stroke={tone.light} strokeWidth={LINE.detail} />
       {ornament === 'feather' ? (
         <>
-          <path d="M27 14.6C22 12 17.6 8.6 15.6 4.4C21 5.4 26 8.6 29 12.6Z" fill={ACCENT.feather} />
-          <path d="M28 13.4L18.4 6.6" fill="none" strokeWidth="1" />
+          <path d="M27 14.6C22 12 17.6 8.6 15.6 4.4C21 5.4 26 8.6 29 12.6Z" fill={ACCENT.feather} strokeWidth={LINE.part} />
+          <path d="M28 13.4L18.4 6.6" fill="none" strokeWidth={LINE.detail} />
         </>
       ) : null}
       {ornament === 'wing' ? (
         <>
-          <path d="M26 16.6C19.6 15.6 13.4 12.6 10 7.6C13.6 8.4 15.8 8.2 17.6 7.2C17.6 9.2 19 10.4 20.8 10.6C20.4 8.6 21.4 7 23.4 6.4C23.4 9.4 25.4 12 28.6 13Z" fill={ACCENT.feather} />
-          <circle cx="28.4" cy="15" r="1.8" fill={GLOW.star} strokeWidth="1.3" />
+          <path d="M26 16.6C19.6 15.6 13.4 12.6 10 7.6C13.6 8.4 15.8 8.2 17.6 7.2C17.6 9.2 19 10.4 20.8 10.6C20.4 8.6 21.4 7 23.4 6.4C23.4 9.4 25.4 12 28.6 13Z" fill={ACCENT.feather} strokeWidth={LINE.part} />
+          <circle cx="28.4" cy="15" r="1.8" fill={GLOW.star} strokeWidth={LINE.part} />
         </>
       ) : null}
     </>
   );
 }
 
+/** 馴獸師線的毛皮肩披：和狂劍士的毛領同一個鋸齒外形，三轉加寬並掛上兩顆獸牙。 */
 function FurMantle({ grand }: { grand: boolean }) {
   return (
     <>
-      <path
-        d={
-          grand
-            ? 'M21.4 40Q20.4 47.4 23.6 48.6L25.4 51.4L27.8 48.8L30.4 51.8L32.8 48.8L35.4 51.6L37.6 48.6L40.4 50.4Q43.2 47 42.2 40Z'
-            : 'M22.6 40.4Q22 46 24.8 46.6L26.4 48.6L28.4 46.8L30.6 49L32.6 46.8L34.8 48.8L36.6 46.6L38.8 48.2Q41.6 46.4 41.2 40.4Z'
-        }
-        fill={ACCENT.fur}
-      />
+      <FurCollar color={ACCENT.fur} grand={grand} />
       <path d="M23.4 41.4Q23.4 45.6 25.6 46.4L26.6 47.6Q24 42.6 26.4 40.6Z" fill={ACCENT.furShade} stroke="none" />
-      {grand ? (
-        <g fill={ACCENT.horn} strokeWidth="1.2">
-          <path d="M28.6 48.4L29.8 52.6L31 48.4Z" />
-          <path d="M33.2 48.4L34.4 52.6L35.6 48.4Z" />
-        </g>
-      ) : null}
+      {grand ? <path d="M28.6 48.4L29.8 52.6L31 48.4ZM33.2 48.4L34.4 52.6L35.6 48.4Z" fill={ACCENT.horn} strokeWidth={LINE.detail} /> : null}
     </>
   );
 }
@@ -114,9 +97,9 @@ function FurMantle({ grand }: { grand: boolean }) {
 function HoodMantle({ tone, trim }: { tone: Tone; trim?: string }) {
   return (
     <>
-      <path d="M21.4 40.6Q20.6 46.6 23 49Q27.6 48.4 32 52.2Q36.4 48.4 41 49Q43.4 46.6 42.6 40.6Q32 37.8 21.4 40.6Z" fill={tone.base} />
+      <path d="M21.4 40.6Q20.6 46.6 23 49Q27.6 48.4 32 52.2Q36.4 48.4 41 49Q43.4 46.6 42.6 40.6Q32 37.8 21.4 40.6Z" fill={tone.base} strokeWidth={LINE.part} />
       <path d="M21.4 40.6Q20.6 46.6 23 49Q25.4 48.6 27.6 49.4Q24.6 45 25.8 39.8Q23.4 40 21.4 40.6Z" fill={tone.shade} stroke="none" />
-      {trim ? <path d="M23.4 48.6Q27.8 48.2 32 51.4Q36.2 48.2 40.6 48.6" fill="none" stroke={trim} strokeWidth="1.4" /> : null}
+      {trim ? <path d="M23.4 48.6Q27.8 48.2 32 51.4Q36.2 48.2 40.6 48.6" fill="none" stroke={trim} strokeWidth={LINE.part} /> : null}
     </>
   );
 }
@@ -124,8 +107,8 @@ function HoodMantle({ tone, trim }: { tone: Tone; trim?: string }) {
 function HuntingHorn() {
   return (
     <>
-      <path d="M28.2 56.4C29.6 61.6 35.4 62.6 38.6 58.4L36.6 56.4C34.6 59 31.6 58.8 30.6 56Z" fill={ACCENT.horn} />
-      <path d="M36.4 55.2L39.6 58.8" stroke={METAL.brass.base} strokeWidth="2.2" />
+      <path d="M28.2 56.4C29.6 61.6 35.4 62.6 38.6 58.4L36.6 56.4C34.6 59 31.6 58.8 30.6 56Z" fill={ACCENT.horn} strokeWidth={LINE.part} />
+      <path d="M36.4 55.2L39.6 58.8" stroke={METAL.brass.base} strokeWidth={2.2} />
     </>
   );
 }
@@ -141,6 +124,7 @@ export function bowDesign({ tier, branch, uid }: HeroStage): HeroDesign {
       frontHand: 'grip',
       backHand: 'low',
       hideEar: true,
+      coversCrown: true,
       behind: <Quiver fletch={ACCENT.plume} />,
       torsoOver: strap,
       headOver: <Hood tone={FAMILY_TONES.bow} ornament="none" />,
@@ -156,13 +140,14 @@ export function bowDesign({ tier, branch, uid }: HeroStage): HeroDesign {
     const tone = grand ? FAMILY_TONES.bowStar : FAMILY_TONES.bowA;
     return {
       // 亞麻內衫＋彩色兜帽披肩：與一轉「整身同色」的剪影拉開，一眼看出是升級後的斗篷遊俠。
-      outfit: { top: LINEN, sleeve: tone, legs: '#3a3a3a', boots: LEATHER, belt: grand ? METAL.gold.shade : LEATHER.shade, hair: HAIR.ginger },
+      outfit: { top: LINEN, sleeve: tone, legs: '#3a3a3a', boots: LEATHER, belt: grand ? METAL.gold.shade : LEATHER.shade, hair: HAIR.ginger, gloves: LEATHER },
       cut: 'tunic',
       hair: 'short',
       mood: 'focus',
       frontHand: 'grip',
       backHand: 'low',
       hideEar: true,
+      coversCrown: true,
       aura: grand ? <Aura id={`${uid}-aura`} color={GLOW.star} /> : undefined,
       behind: (
         <>
@@ -183,11 +168,14 @@ export function bowDesign({ tier, branch, uid }: HeroStage): HeroDesign {
         </Held>
       ),
       front: grand ? (
-        <>
-          <Sparkle x={58} y={24} size={3} color={GLOW.star} />
-          <Sparkle x={9} y={50} size={2.4} color={GLOW.star} />
-          <Sparkle x={60} y={66} size={2} color={GLOW.star} />
-        </>
+        <Sparkles
+          spots={[
+            { x: 58, y: 24, size: 3.8 },
+            { x: 9, y: 50, size: 3.2 },
+            { x: 59.6, y: 66, size: 3.2 },
+          ]}
+          color={GLOW.star}
+        />
       ) : undefined,
     };
   }
@@ -200,6 +188,7 @@ export function bowDesign({ tier, branch, uid }: HeroStage): HeroDesign {
     frontHand: 'grip',
     backHand: 'low',
     hideEar: true,
+    coversCrown: true,
     aura: grand ? <Aura id={`${uid}-aura`} color={GLOW.beast} /> : undefined,
     behind: (
       <>
@@ -220,10 +209,13 @@ export function bowDesign({ tier, branch, uid }: HeroStage): HeroDesign {
       </Held>
     ),
     front: grand ? (
-      <>
-        <Sparkle x={58} y={26} size={2.8} color={GLOW.beast} />
-        <Sparkle x={8} y={46} size={2.2} color={GLOW.beast} />
-      </>
+      <Sparkles
+        spots={[
+          { x: 58, y: 26, size: 3.6 },
+          { x: 8, y: 46, size: 3.2 },
+        ]}
+        color={GLOW.beast}
+      />
     ) : undefined,
   };
 }

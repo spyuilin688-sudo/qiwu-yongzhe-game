@@ -26,7 +26,8 @@
   --c-success-soft: rgba(134, 207, 134, 0.14);
   --c-info: #7fbde8;
   --c-boss: #e0614f;
-  --c-focus: #ffd27a;
+  /* 焦點框用接近白的羊皮紙色，和金色「選取」內框分得開（選取在內、焦點在外並留 2px 間隙）。 */
+  --c-focus: #fff3d6;
 
   /* 品質：一律同時顯示文字，顏色只是輔助（規格 04）。 */
   --q1: #cfc8bc;
@@ -79,29 +80,82 @@
   --c-white: #fff;
   --c-black: #000;
 
+  /* 狀態語意色：顏色只是輔助，一律同時顯示狀態文字（或圖示）。 */
+  --c-state-current: var(--c-accent-strong);
+  --c-state-available: var(--c-success);
+  --c-state-locked: var(--c-text-dim);
+  --c-state-blocked: var(--c-danger);
+  /* 數值變化：依「對玩家是好是壞」上色，不是依數字變大變小。 */
+  --c-delta-better: var(--c-success);
+  --c-delta-worse: var(--c-danger);
+  --c-delta-same: var(--c-text-muted);
+
+  /* 停用：去掉凸面與底色，只留細框與暗字；文字對 surface 仍 ≥ 4.5:1（--c-text-dim 約 6:1）。 */
+  --disabled-bg: transparent;
+  --disabled-border: var(--c-border);
+  --disabled-text: var(--c-text-dim);
+  /* 「已選但目前不生效」的勾號、開關圓鈕等標記淡化程度。 */
+  --disabled-mark-opacity: 0.45;
+  /* 整塊卡片（開關列、職業卡、單選列）停用時的淡化程度。 */
+  --disabled-opacity: 0.55;
+
+  /* 選取（單選、模式切換、卡片選取）：一律內框＋淡金底＋金字；整顆金色只留給多選篩選與主要按鈕。 */
+  --sel-ring: inset 0 0 0 2px var(--c-accent);
+  --sel-bg: color-mix(in srgb, var(--c-accent) 14%, var(--c-surface-3));
+  --sel-text: var(--c-accent-strong);
+
+  --space-0: 2px;
   --space-1: 4px;
+  --space-1h: 6px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-5: 24px;
   --gutter: 16px;
+  /* 列內距（清單列、資源格、小型列）：統一取代散落的 5px／7px。 */
+  --pad-row: var(--space-1h);
 
+  --radius-2xs: 4px;
+  --radius-xs: 6px;
   --radius-s: 8px;
   --radius-m: 12px;
   --radius-l: 18px;
+  --radius-pill: 999px;
+  /* 外框內的內鈕（分段切換的選項、卡片內的小鍵）：比外框少 2px，邊緣才會同心。 */
+  --radius-inner: calc(var(--radius-m) - 2px);
 
   --touch: 48px;
+  --icon-s: 14px;
+  --icon-m: 20px;
   --icon: 24px;
+  --icon-l: 28px;
+  --icon-xl: 32px;
 
+  /* 進度條高度：全部用 pill 圓角與 --hp-track 底色（共用元件 Meter）。 */
+  --bar-thin: 4px;
+  --bar-m: 6px;
+  --bar-boss: 14px;
+
+  /* 字級：11px（--font-2xs）是一般介面下限；10px（--font-3xs）只給戰場角標等空間極小處。 */
+  --font-3xs: 0.625rem;
+  --font-2xs: 0.6875rem;
   --font-xs: 0.75rem;
   --font-s: 0.8125rem;
   --font-m: 0.9375rem;
+  --font-lead: 1rem;
   --font-l: 1.125rem;
   --font-xl: 1.25rem;
+  /* 字重只收斂成三級。粉圓（Huninn）沒有粗體檔，用它的地方靠字級與顏色強調，不靠字重。 */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-bold: 700;
   --font-family: 'PingFang TC', 'Noto Sans TC', 'Noto Sans CJK TC', 'Microsoft JhengHei', 'Heiti TC', system-ui, -apple-system, sans-serif;
   /* 粉圓（Huninn，OFL）只有一種字重：標題、按鈕、數字用它表現遊戲感，內文維持系統字型以利閱讀與流量。 */
   --font-display: 'Huninn', var(--font-family);
   --font-numeric: 'Huninn', ui-rounded, 'SF Pro Rounded', var(--font-family);
+  /* 疊在戰場美術上的文字描邊：亮暗背景都讀得到。 */
+  --text-outline: 0 1px 2px var(--c-black);
+  --text-outline-strong: 0 1px 0 var(--c-black), 0 0 3px var(--shade-60);
 
   --app-max-width: 480px;
   --h-header: 60px;
@@ -120,10 +174,39 @@
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
 
+  /* 面板最高時在頂端保留的空間：讓單行提示（Toast）落在面板上緣之外，不壓住面板表頭。 */
+  --sheet-top-reserve: 56px;
+
+  /* 高度系統（由低到高）：凹槽 → 平面 → 凸面 → 黃銅主鍵 → 操作區 → 面板。box-shadow 不影響版面尺寸。 */
+  --well: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  --bevel-top: inset 0 1px 0 rgba(255, 236, 200, 0.07);
+  --bevel-primary: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --elev-1: 0 1px 0 rgba(0, 0, 0, 0.45);
+  --brass-lip: 0 2px 0 var(--brass-3);
+  --elev-dock: 0 -6px 16px rgba(0, 0, 0, 0.35);
+  --elev-toast: 0 6px 18px var(--shade-45);
   --shadow-sheet: 0 -8px 32px rgba(0, 0, 0, 0.55);
+  /* 黃銅飾邊（面板上緣、操作區分隔線）：中間亮、兩端淡出。 */
+  --edge-brass: linear-gradient(90deg, transparent, var(--brass-2), transparent);
+  /* 舊名已棄用：請改用 --bevel-top。 */
+  --bevel-hi: var(--bevel-top);
+
+  /* 按下回饋：小控制項縮放、卡片類只提亮；減少動態時縮放改為 1。 */
+  --press-scale: 0.97;
+  --press-scale-strong: 0.94;
+  --press-depth: 1px;
+  --press-brightness: 1.12;
+
   --duration-fast: 120ms;
   --duration-m: 240ms;
   --duration-reveal: 600ms;
+  /* 戰鬥畫面每次更新的間隔：血條等跟著戰鬥數值走的過渡用它，才不會落後或跳格。 */
+  --duration-tick: 100ms;
+  /* 戰場表現時長：TS 端（例如飄字存活時間）應由元件以同名自訂屬性覆寫，讓 CSS 與 TS 同一來源。 */
+  --duration-lunge: 260ms;
+  --duration-pop: 900ms;
+  --duration-float: 800ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 /* 窄版 320：技能按鈕與間距略縮，但觸控區仍 ≥ 48。 */
@@ -134,10 +217,20 @@
   }
 }
 
+/* 短螢幕：操作區列距很小，黃銅主鍵的下緣厚度減半，避免貼到下一列。 */
+@media (max-height: 719px) {
+  :root {
+    --brass-lip: 0 1px 0 var(--brass-3);
+  }
+}
+
 :root[data-reduced-motion='true'] {
   --duration-fast: 0ms;
   --duration-m: 0ms;
   --duration-reveal: 0ms;
+  --press-scale: 1;
+  --press-scale-strong: 1;
+  --press-depth: 0px;
 }
 
 /* 減少動態效果：移除位移、飄字與閃光動畫；不改變實際戰鬥速度或傷害事件。 */
@@ -153,6 +246,9 @@
     --duration-fast: 0ms;
     --duration-m: 0ms;
     --duration-reveal: 0ms;
+    --press-scale: 1;
+    --press-scale-strong: 1;
+    --press-depth: 0px;
   }
   :root:not([data-reduced-motion='false']) *,
   :root:not([data-reduced-motion='false']) *::before,

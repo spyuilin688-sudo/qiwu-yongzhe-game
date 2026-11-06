@@ -46,6 +46,15 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/*
+ * 全域關閉了點擊高亮，所以每顆可按的按鈕都要有自己的按下回饋：預設只提亮（:where 權重為 0，元件可覆寫）。
+ * 小控制項另在元件內加縮放（--press-scale，減少動態時為 1）。只作用在按住的那一個元素，不影響大量清單效能。
+ */
+:where(button:active:not(:disabled)) {
+  filter: brightness(var(--press-brightness));
+}
+
+/* 焦點在外、選取在內：outline 與元件之間留 2px 間隙，和金色選取內框（--sel-ring）一眼分開。 */
 :focus-visible {
   outline: 3px solid var(--c-focus);
   outline-offset: 2px;
@@ -71,8 +80,20 @@ h2,
 h3,
 .display {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: var(--fw-regular);
   letter-spacing: 0.02em;
+}
+
+/*
+ * 粉圓只有 Regular：即使元件要求 700，也不讓瀏覽器合成假粗體（中文筆畫會糊成一團）。
+ * 只限用粉圓的元素；系統字型有真正的粗體，不受影響。需要強調時改用字級或顏色。
+ */
+.numeric,
+h1,
+h2,
+h3,
+.display {
+  font-synthesis-weight: none;
 }
 
 .q-Q1 {

@@ -2,7 +2,8 @@ import { loadDefaultCatalog } from '@qiwu/content';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { MapBackdrop } from '../backgrounds/MapBackdrop.tsx';
-import { cloud } from '../backgrounds/parts.tsx';
+import { H, SKY_TOP, cloud } from '../backgrounds/parts.tsx';
+import { SCENE_ENTRIES, backdropLightFor, backdropToneFor } from '../backgrounds/registry.ts';
 import { AddArt, BossArt } from '../monsters/BossArt.tsx';
 
 const catalog = loadDefaultCatalog();
@@ -153,6 +154,75 @@ describe('地圖背景', () => {
     expectCleanSvg(markup);
     expectResolvedRefs(markup);
     expect(maps.map((map) => backdrop(map.number))).not.toContain(markup);
+  });
+});
+
+describe('地圖背景：寬度貼齊與王庭', () => {
+  /** 舊版場景頂端畫的壓暗色；寬度貼齊後改由戰場 CSS 負責，場景裡不可再出現。 */
+  const LEGACY_TOP_SHADE = '#120c08';
+
+  it('天空往上延伸到 SKY_TOP，高螢幕寬度貼齊時不會露底；場景頂端不再畫暗帶', () => {
+    for (const map of maps) {
+      for (const zone of ZONES) {
+        const markup = backdrop(map.number, zone);
+        expect(markup, `map ${map.number} zone ${zone}`).toContain(`y="${SKY_TOP}"`);
+        expect(markup, `map ${map.number} zone ${zone}`).not.toContain(LEGACY_TOP_SHADE);
+      }
+    }
+    expect(backdrop(42)).toContain(`y="${SKY_TOP}"`);
+  });
+
+  it('第 2 區起的暮色也從 SKY_TOP 蓋到底部；起點區沒有暮色', () => {
+    const tintHeight = `height="${H - SKY_TOP}"`;
+    for (const map of maps) {
+      expect(backdrop(map.number, 0), `map ${map.number}`).not.toContain(tintHeight);
+      for (const zone of ZONES.slice(1)) expect(backdrop(map.number, zone), `map ${map.number} zone ${zone}`).toContain(tintHeight);
+    }
+  });
+
+  it('王庭區有地面暗角與 BOSS 腳下聚光，其他區沒有', () => {
+    const vignette = /<radialGradient[^>]*cx="0.5" cy="0" r="1"/;
+    for (const map of maps) {
+      expect(backdrop(map.number, 5), `map ${map.number}`).toMatch(vignette);
+      for (const zone of ZONES.slice(0, 5)) expect(backdrop(map.number, zone), `map ${map.number} zone ${zone}`).not.toMatch(vignette);
+    }
+  });
+});
+
+describe('背景光線（給戰場決定邊光）', () => {
+  /** 實測角色身後亮度約 0.03～0.17 的地圖：礦山、古鎮、火山、花園、書庫。 */
+  const DARK_MAPS = [3, 4, 8, 10, 12];
+  /** 邊光太亮會像「已選取」的框，透明度上限 0.6。 */
+  const RIM_ALPHA_MAX = 0.6;
+
+  it('每張地圖都登記一次，起點區的暗色圖符合實測', () => {
+    expect(SCENE_ENTRIES.map((entry) => entry.mapNumber)).toEqual(maps.map((map) => map.number));
+    expect(maps.filter((map) => backdropToneFor(map.number) === 'dark').map((map) => map.number)).toEqual(DARK_MAPS);
+  });
+
+  it('邊光顏色都是含透明度的 rgba，且不超過上限', () => {
+    for (const map of maps) {
+      const { rim } = backdropLightFor(map.number);
+      const alpha = Number(/^rgba\(\d+, \d+, \d+, ([\d.]+)\)$/.exec(rim)?.[1]);
+      expect(alpha, `map ${map.number} ${rim}`).toBeGreaterThan(0);
+      expect(alpha, `map ${map.number} ${rim}`).toBeLessThanOrEqual(RIM_ALPHA_MAX);
+    }
+  });
+
+  it('暮色加深的後段區域可由亮轉暗（發條王城第 5、6 區），區域編號超出範圍會夾回', () => {
+    expect(backdropToneFor(9, 0)).toBe('light');
+    expect(backdropToneFor(9, 3)).toBe('light');
+    expect(backdropToneFor(9, 4)).toBe('dark');
+    expect(backdropToneFor(9, 99)).toBe('dark');
+    expect(backdropToneFor(9, -3)).toBe('light');
+    expect(backdropToneFor(1, 5)).toBe('light');
+    expect(backdropToneFor(3)).toBe('dark');
+    expect(backdropLightFor(9, 5).rim).toBe(backdropLightFor(9, 0).rim);
+  });
+
+  it('未知地圖保守地當成暗色，仍有邊光顏色', () => {
+    expect(backdropToneFor(42)).toBe('dark');
+    expect(backdropLightFor(42).rim).toMatch(/^rgba\(/);
   });
 });
 

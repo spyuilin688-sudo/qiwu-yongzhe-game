@@ -1,0 +1,107 @@
+/*
+ * 背景環境動態（審查 bf-17）：每張地圖 1～2 個很淡的小動態，疊在寬度貼齊的背景上。
+ * 每個動態是自己一張小 SVG，只動 transform 或 opacity，交給合成器處理，大張背景 SVG 不會每格重繪。
+ * 「減少動態效果」由 tokens.css 的全域規則停用（animation: none），停用後停在靜止的基本樣式。
+ * 位移量（--ambience-travel）由 ambience.tsx 依各動態的資料寫入，這裡只放節奏。
+ */
+.ambience {
+  /* 週期慢、幅度小：背景只是陪襯，不和戰鬥搶注意力。 */
+  --ambience-drift-ms: 28s;
+  --ambience-rise-ms: 6s;
+  --ambience-pulse-ms: 2.8s;
+  --ambience-pulse-low: 0.45;
+  --ambience-twinkle-ms: 1.9s;
+  --ambience-twinkle-low: 0.2;
+  --ambience-fall-ms: 18s;
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.item {
+  position: absolute;
+  display: block;
+  overflow: visible;
+}
+
+.drift {
+  will-change: transform;
+  animation: ambienceDrift var(--ambience-drift-ms) ease-in-out infinite alternate;
+}
+
+.rise {
+  will-change: transform, opacity;
+  animation: ambienceRise var(--ambience-rise-ms) linear infinite;
+}
+
+.pulse {
+  will-change: opacity;
+  animation: ambiencePulse var(--ambience-pulse-ms) ease-in-out infinite alternate;
+}
+
+.twinkle {
+  will-change: opacity;
+  animation: ambienceTwinkle var(--ambience-twinkle-ms) ease-in-out infinite alternate;
+}
+
+/* 落雪：外框裁切；圖層高兩倍、上下兩份相同的雪花，往下移半張剛好接回原位，循環沒有接縫。 */
+.clip {
+  position: absolute;
+  overflow: hidden;
+}
+
+.fallLayer {
+  position: absolute;
+  left: 0;
+  top: -100%;
+  display: block;
+  width: 100%;
+  height: 200%;
+}
+
+.fall {
+  will-change: transform;
+  animation: ambienceFall var(--ambience-fall-ms) linear infinite;
+}
+
+@keyframes ambienceDrift {
+  to {
+    transform: translateX(var(--ambience-travel));
+  }
+}
+
+@keyframes ambienceRise {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(var(--ambience-travel));
+  }
+}
+
+@keyframes ambiencePulse {
+  to {
+    opacity: var(--ambience-pulse-low);
+  }
+}
+
+@keyframes ambienceTwinkle {
+  to {
+    opacity: var(--ambience-twinkle-low);
+  }
+}
+
+@keyframes ambienceFall {
+  to {
+    transform: translateY(50%);
+  }
+}

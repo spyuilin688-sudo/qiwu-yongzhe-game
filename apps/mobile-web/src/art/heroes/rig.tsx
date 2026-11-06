@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { BLUSH, EYE_SHINE, GROUND_SHADOW, INK, SKIN, type Tone } from './palette.ts';
+import { BLUSH, EYE_SHINE, GROUND_SHADOW, INK, LINE, SKIN, type Tone } from './palette.ts';
 import { capsulePath, circlesPath, ellipsePath } from './shapes.ts';
 
 /**
@@ -38,7 +38,8 @@ export const BACK_HAND = {
 export type FrontHandPose = keyof typeof FRONT_HAND;
 export type BackHandPose = keyof typeof BACK_HAND;
 export type HairStyle = 'short' | 'tuft' | 'spiky' | 'long' | 'bun' | 'swept';
-export type FaceMood = 'smile' | 'fierce' | 'calm' | 'sly' | 'focus';
+/** calm 是閉眼微笑（祈禱感）；serene 是半睜眼，用在施法中的三轉，戰鬥時看起來仍醒著。 */
+export type FaceMood = 'smile' | 'fierce' | 'calm' | 'serene' | 'sly' | 'focus';
 export type BodyCut = 'tunic' | 'robe';
 
 export interface Outfit {
@@ -50,6 +51,8 @@ export interface Outfit {
   /** null 表示不畫腰帶（例如長袍改由飾帶表現）。 */
   readonly belt: string | null;
   readonly hair: Tone;
+  /** 手套：穿盔甲、拿重工具的職業不畫光手。省略時是膚色手。 */
+  readonly gloves?: Tone;
 }
 
 /** 一個職業階段的完整外觀：骨架參數＋依繪製順序的道具圖層。 */
@@ -62,6 +65,8 @@ export interface HeroDesign {
   readonly backHand: BackHandPose;
   /** 戴兜帽、頭盔時耳朵被遮住。 */
   readonly hideEar?: boolean;
+  /** 帽子、兜帽、頭盔蓋住頭頂時不畫頭髮高光：反正看不見，省下的元素留給三轉細節。 */
+  readonly coversCrown?: boolean;
   /** 最底層：三轉光暈等。 */
   readonly aura?: ReactNode;
   /** 身體後方：披風、箭袋、背負物。 */
@@ -88,11 +93,26 @@ function bootPath(x: number): string {
   return `M${x} 76.5V71.5Q${x} 69.5 ${x + 2} 69.5H${x + 5}Q${x + 7} 69.5 ${x + 7} 71.5V72.3H${x + 8.3}Q${x + 10} 72.3 ${x + 10} 74.4V76.5Z`;
 }
 
-const TUNIC = 'M23.2 41.5Q23.4 39.6 25.5 39.6H38.5Q40.6 39.6 40.8 41.5L42.8 61.2Q43 63.4 40.8 63.4H23.2Q21 63.4 21.2 61.2Z';
+/** 上衣輪廓；也給幻術師殘影組合真身形剪影。 */
+export const TUNIC = 'M23.2 41.5Q23.4 39.6 25.5 39.6H38.5Q40.6 39.6 40.8 41.5L42.8 61.2Q43 63.4 40.8 63.4H23.2Q21 63.4 21.2 61.2Z';
 const TUNIC_SHADE = 'M23.2 41.5L21.2 61.2Q21 63.4 23.2 63.4H28.4Q26.4 55 27.2 39.8H25.5Q23.4 39.6 23.2 41.5Z';
 const ROBE = 'M23.2 41.5Q23.4 39.6 25.5 39.6H38.5Q40.6 39.6 40.8 41.5L44.6 70.4Q44.8 72.8 42.5 72.8H21.5Q19.2 72.8 19.4 70.4Z';
 const ROBE_SHADE = 'M23.2 41.5L19.4 70.4Q19.2 72.8 21.5 72.8H28.6Q26.2 60 27.2 39.8H25.5Q23.4 39.6 23.2 41.5Z';
 const TOP_LIGHT = 'M37.4 42.2Q39.6 42 39.8 44.2L40.7 52.5Q38.4 48.4 37.4 42.2Z';
+
+const TUNIC_LEGS =
+  'M27.6 59H29.2Q31.2 59 31.2 61V70Q31.2 72 29.2 72H27.6Q25.6 72 25.6 70V61Q25.6 59 27.6 59ZM35.2 59H36.8Q38.8 59 38.8 61V70Q38.8 72 36.8 72H35.2Q33.2 72 33.2 70V61Q33.2 59 35.2 59Z';
+
+/**
+ * 角色全身剪影（頭、上衣、腿、靴），給殘影、分身這類「同一個人」的效果用。
+ * 頭部圓改成順時針繪製：和其他子路徑同向，重疊處才不會被非零填色規則挖成空洞。
+ */
+export const BODY_SILHOUETTE =
+  `M${HEAD.cx - HEAD.r} ${HEAD.cy}a${HEAD.r} ${HEAD.r} 0 1 1 ${HEAD.r * 2} 0a${HEAD.r} ${HEAD.r} 0 1 1 ${-HEAD.r * 2} 0Z` +
+  TUNIC +
+  TUNIC_LEGS +
+  bootPath(BOOT_BACK_X) +
+  bootPath(BOOT_FRONT_X);
 
 export function GroundShadow() {
   return <ellipse cx="33" cy="76.6" rx="15" ry="2.4" fill={GROUND_SHADOW} opacity="0.32" stroke="none" />;
@@ -102,7 +122,7 @@ function Legs({ outfit, cut }: { outfit: Outfit; cut: BodyCut }) {
   return (
     <>
       {cut === 'tunic' ? (
-        <path d="M27.6 59H29.2Q31.2 59 31.2 61V70Q31.2 72 29.2 72H27.6Q25.6 72 25.6 70V61Q25.6 59 27.6 59ZM35.2 59H36.8Q38.8 59 38.8 61V70Q38.8 72 36.8 72H35.2Q33.2 72 33.2 70V61Q33.2 59 35.2 59Z" fill={outfit.legs} />
+        <path d={TUNIC_LEGS} fill={outfit.legs} />
       ) : null}
       <path d={bootPath(BOOT_BACK_X)} fill={outfit.boots.shade} />
       <path d={bootPath(BOOT_FRONT_X)} fill={outfit.boots.base} />
@@ -117,7 +137,7 @@ function Torso({ outfit, cut }: { outfit: Outfit; cut: BodyCut }) {
       <path d={isRobe ? ROBE : TUNIC} fill={outfit.top.base} />
       <path d={isRobe ? ROBE_SHADE : TUNIC_SHADE} fill={outfit.top.shade} stroke="none" />
       <path d={TOP_LIGHT} fill={outfit.top.light} stroke="none" opacity="0.7" />
-      {outfit.belt && !isRobe ? <rect x="22" y="52.2" width="20" height="3.2" rx="0.8" fill={outfit.belt} strokeWidth="1.6" /> : null}
+      {outfit.belt && !isRobe ? <rect x="22" y="52.2" width="20" height="3.2" rx="0.8" fill={outfit.belt} strokeWidth={LINE.part} /> : null}
     </>
   );
 }
@@ -126,11 +146,11 @@ const ARM_RADIUS = 2.9;
 const HAND_RADIUS = 2.7;
 
 /** 手臂是單一膠囊路徑（自帶描邊），任意角度都不必另算旋轉。 */
-function Arm({ from, to, sleeve }: { from: Point; to: Point; sleeve: string }) {
+function Arm({ from, to, sleeve, hand }: { from: Point; to: Point; sleeve: string; hand: string }) {
   return (
     <>
-      <path d={capsulePath(from, to, ARM_RADIUS)} fill={sleeve} strokeWidth="1.8" />
-      <circle cx={to.x} cy={to.y} r={HAND_RADIUS} fill={SKIN.base} strokeWidth="1.8" />
+      <path d={capsulePath(from, to, ARM_RADIUS)} fill={sleeve} strokeWidth={LINE.silhouette} />
+      <circle cx={to.x} cy={to.y} r={HAND_RADIUS} fill={hand} strokeWidth={LINE.silhouette} />
     </>
   );
 }
@@ -150,12 +170,24 @@ const HAIR_CAP: Record<HairStyle, string> = {
     'M18.3 31C17.2 19.5 23.5 12.6 32.5 12.6C40 12.6 45 16.6 46.4 21.8C43.2 21.2 40.4 21.8 38.2 23.6C36.8 22.4 34.6 22.2 32.6 23.2C30.6 24.2 29.8 25.6 29.8 27.4C27.6 27.4 26 29 25.8 31.4C23.8 33.8 20 34 18.3 31Z',
 };
 
-const HAIR_LIGHT = 'M21.6 21.6Q24.4 15.6 30.4 14.8Q26.2 17.6 24.4 22.4Z';
+/**
+ * 頭髮高光放在前額頂（面向敵人那側）：和衣服、武器一致採「主光從前方右上」。
+ * 包包頭的髮帽比較低，高光跟著往下移，才不會蓋到外輪廓。
+ */
+const HAIR_LIGHT_CROWN = 'M34.8 14.6Q40.8 14.8 43.6 19.6Q40 17.6 35.8 17.4Z';
+const HAIR_LIGHT: Record<HairStyle, string> = {
+  short: HAIR_LIGHT_CROWN,
+  tuft: HAIR_LIGHT_CROWN,
+  spiky: HAIR_LIGHT_CROWN,
+  long: HAIR_LIGHT_CROWN,
+  swept: HAIR_LIGHT_CROWN,
+  bun: 'M34.4 16.6Q39.6 16.8 42.4 20.6Q39 19.2 35.2 19.2Z',
+};
 /** 長髮在頭部後方垂到肩下。 */
 const HAIR_BACK_LONG = 'M19.4 24C15.8 32 16 40.8 19.6 46.6Q23.8 48.2 26.6 44.6L27.6 30Z';
 const BUN = { cx: 20.6, cy: 17.4, r: 4.4 } as const;
 
-function Hair({ style, tone, layer }: { style: HairStyle; tone: Tone; layer: 'back' | 'front' }) {
+function Hair({ style, tone, layer, lit }: { style: HairStyle; tone: Tone; layer: 'back' | 'front'; lit: boolean }) {
   if (layer === 'back') {
     if (style === 'long') return <path d={HAIR_BACK_LONG} fill={tone.shade} />;
     if (style === 'bun') return <circle cx={BUN.cx} cy={BUN.cy} r={BUN.r} fill={tone.base} />;
@@ -164,13 +196,16 @@ function Hair({ style, tone, layer }: { style: HairStyle; tone: Tone; layer: 'ba
   return (
     <>
       <path d={HAIR_CAP[style]} fill={tone.base} />
-      <path d={HAIR_LIGHT} fill={tone.light} stroke="none" opacity="0.8" />
+      {lit ? <path d={HAIR_LIGHT[style]} fill={tone.light} stroke="none" opacity="0.8" /> : null}
     </>
   );
 }
 
 const EYE_NEAR: Point = { x: 36, y: 29.2 };
 const EYE_FAR: Point = { x: 41.6, y: 29.2 };
+
+/** 半睜眼時瞳孔下移，上緣才讓給眼瞼線。 */
+const SERENE_EYE_DROP = 0.3;
 
 function Eyes({ mood }: { mood: FaceMood }) {
   if (mood === 'calm') {
@@ -179,18 +214,21 @@ function Eyes({ mood }: { mood: FaceMood }) {
       <path
         d={`M${EYE_NEAR.x - 1.7} ${EYE_NEAR.y}Q${EYE_NEAR.x} ${EYE_NEAR.y + 1.6} ${EYE_NEAR.x + 1.7} ${EYE_NEAR.y}M${EYE_FAR.x - 1.5} ${EYE_FAR.y}Q${EYE_FAR.x} ${EYE_FAR.y + 1.5} ${EYE_FAR.x + 1.5} ${EYE_FAR.y}`}
         fill="none"
-        strokeWidth="1.4"
+        strokeWidth={LINE.feature}
       />
     );
   }
-  const ry = mood === 'sly' || mood === 'focus' ? 1.5 : 2.1;
+  const ry = mood === 'sly' || mood === 'focus' || mood === 'serene' ? 1.5 : 2.1;
+  const drop = mood === 'serene' ? SERENE_EYE_DROP : 0;
+  // 半睜眼的反光放低到瞳孔中心，避免被眼瞼線蓋掉。
+  const shineLift = mood === 'serene' ? 0.1 : 0.7;
   return (
     <>
-      <path d={ellipsePath(EYE_NEAR.x, EYE_NEAR.y, 1.5, ry) + ellipsePath(EYE_FAR.x, EYE_FAR.y, 1.35, ry)} fill={INK} stroke="none" />
+      <path d={ellipsePath(EYE_NEAR.x, EYE_NEAR.y + drop, 1.5, ry) + ellipsePath(EYE_FAR.x, EYE_FAR.y + drop, 1.35, ry)} fill={INK} stroke="none" />
       <path
         d={circlesPath([
-          { cx: EYE_NEAR.x + 0.5, cy: EYE_NEAR.y - 0.7, r: 0.6 },
-          { cx: EYE_FAR.x + 0.45, cy: EYE_FAR.y - 0.7, r: 0.55 },
+          { cx: EYE_NEAR.x + 0.5, cy: EYE_NEAR.y + drop - shineLift, r: 0.6 },
+          { cx: EYE_FAR.x + 0.45, cy: EYE_FAR.y + drop - shineLift, r: 0.55 },
         ])}
         fill={EYE_SHINE}
         stroke="none"
@@ -199,8 +237,10 @@ function Eyes({ mood }: { mood: FaceMood }) {
   );
 }
 
+/** 眉毛；serene 這一格畫的是壓在眼睛上緣的眼瞼線，同一條路徑不多佔元素。 */
 const BROWS: Partial<Record<FaceMood, string>> = {
   fierce: 'M33.8 25.4L37.6 26.6M39.8 26.6L43.2 25.2',
+  serene: 'M34 28.4Q36 27.5 38 28.4M39.9 28.4Q41.6 27.6 43.3 28.4',
   sly: 'M34 26.4L37.8 26.2M39.8 26.2L43.2 26.6',
   focus: 'M34 26L37.8 26.6M39.8 26.6L43.2 26',
 };
@@ -208,6 +248,7 @@ const BROWS: Partial<Record<FaceMood, string>> = {
 const MOUTH: Record<FaceMood, string> = {
   smile: 'M37.8 33.8Q39 35.1 40.2 33.8',
   calm: 'M38 34Q39 34.9 40 34',
+  serene: 'M38 34Q39 34.9 40 34',
   fierce: 'M37.4 33.6H40.8Q40.4 35.8 39.1 35.8Q37.8 35.8 37.4 33.6Z',
   sly: 'M37.6 34Q39.2 34.8 40.6 33.4',
   focus: 'M38 34.2H40.2',
@@ -221,36 +262,48 @@ function Face({ mood }: { mood: FaceMood }) {
     <>
       <path d={BLUSH_PATH} fill={BLUSH} stroke="none" opacity="0.55" />
       <Eyes mood={mood} />
-      {brows ? <path d={brows} fill="none" strokeWidth="1.3" /> : null}
-      <path d={MOUTH[mood]} fill={mood === 'fierce' ? INK : 'none'} strokeWidth="1.2" />
+      {brows ? <path d={brows} fill="none" strokeWidth={LINE.feature} /> : null}
+      <path d={MOUTH[mood]} fill={mood === 'fierce' ? INK : 'none'} strokeWidth={LINE.feature} />
     </>
   );
 }
+
+/**
+ * 下巴到頸部的陰影，加上背側臉頰的一彎暗面（同色同透明度，併成一條路徑）。
+ * 臉頰暗面沿頭部圓內側（半徑 12.4，避開 1 單位的外框內緣）畫，不會蓋掉下巴輪廓；
+ * 主光從前方右上來，所以暗面在背側下方，臉才有圓潤的體積而不像貼紙。
+ */
+const FACE_SHADE =
+  'M22.6 35.6Q27.4 40.6 35 40.2Q28.4 38.6 22.6 35.6Z' + 'M20.02 30.21A12.4 12.4 0 0 0 30.92 39.35Q24.6 35.4 20.02 30.21Z';
 
 /** 依固定圖層順序組合角色；各職業只提供 HeroDesign，不直接碰骨架。 */
 export function HeroRig({ design }: { design: HeroDesign }) {
   const { outfit, cut } = design;
   const sleeve = outfit.sleeve ?? outfit.top;
+  const lit = !design.coversCrown;
+  // 後手在身體陰影裡：手套用暗面色，光手用膚色暗面，和後袖一致。
+  const backHand = outfit.gloves?.shade ?? SKIN.shade;
+  const frontHand = outfit.gloves?.base ?? SKIN.base;
   return (
-    <g stroke={INK} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
+    <g stroke={INK} strokeWidth={LINE.silhouette} strokeLinejoin="round" strokeLinecap="round">
       {design.aura}
       <GroundShadow />
       {design.behind}
       {design.backItem}
-      <Arm from={SHOULDER_BACK} to={BACK_HAND[design.backHand]} sleeve={sleeve.shade} />
+      <Arm from={SHOULDER_BACK} to={BACK_HAND[design.backHand]} sleeve={sleeve.shade} hand={backHand} />
       <Legs outfit={outfit} cut={cut} />
       <Torso outfit={outfit} cut={cut} />
       {design.torsoOver}
-      <Hair style={design.hair} tone={outfit.hair} layer="back" />
+      <Hair style={design.hair} tone={outfit.hair} layer="back" lit={lit} />
       <circle cx={HEAD.cx} cy={HEAD.cy} r={HEAD.r} fill={SKIN.base} />
-      <path d="M22.6 35.6Q27.4 40.6 35 40.2Q28.4 38.6 22.6 35.6Z" fill={SKIN.shade} stroke="none" opacity="0.8" />
+      <path d={FACE_SHADE} fill={SKIN.shade} stroke="none" opacity="0.8" />
       <Face mood={design.mood} />
       {design.faceOver}
-      <Hair style={design.hair} tone={outfit.hair} layer="front" />
-      {design.hideEar ? null : <ellipse cx="26.4" cy="30.6" rx="2.1" ry="2.7" fill={SKIN.base} strokeWidth="1.7" />}
+      <Hair style={design.hair} tone={outfit.hair} layer="front" lit={lit} />
+      {design.hideEar ? null : <ellipse cx="26.4" cy="30.6" rx="2.1" ry="2.7" fill={SKIN.base} strokeWidth={LINE.part} />}
       {design.headOver}
       {design.handItem}
-      <Arm from={SHOULDER_FRONT} to={FRONT_HAND[design.frontHand]} sleeve={sleeve.base} />
+      <Arm from={SHOULDER_FRONT} to={FRONT_HAND[design.frontHand]} sleeve={sleeve.base} hand={frontHand} />
       {design.front}
     </g>
   );

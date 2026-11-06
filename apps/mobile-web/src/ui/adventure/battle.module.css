@@ -1,90 +1,230 @@
+/*
+ * 戰場版面（規格 07）。結構：.viewport → .fieldTop（BOSS 資訊列／提示，文件流）→ .stage（舞台）→ .summonDock（召喚台，文件流）。
+ * 元件層級 Tokens 寫在 .viewport／.stage；舞台幾何（地面比例、美術影子內縮、動畫時長）由 battle/layout.ts
+ * 依背景座標（W／H／HORIZON）與美術 viewBox 推導後寫在 .stage 的 style 上，這裡只引用變數名。
+ * 所有角色與敵人以「腳底」錨定在同一條地面線（bottom: var(--foot-bottom)），文字標籤一律掛在腳下，字放大也不會把身體頂高。
+ */
 .viewport {
+  /* 腳下標籤列（血條＋名稱一行＋狀態一行）需要的高度，以 rem 計算、隨字級放大；地面線至少留這麼高。 */
+  --label-line: 1.2;
+  --tag-line: 1.5;
+  --label-room: calc(var(--bar-m) + var(--font-2xs) * var(--label-line) + var(--font-3xs) * var(--tag-line) + var(--space-0) * 2 + var(--space-1));
+  /* 舞台最小高度：一般刷怪沿用 --battle-min；上下有資訊列或召喚台時舞台可以矮一些，戰場整體仍 ≥ 180。 */
+  --stage-min: var(--battle-min);
+  --stage-min-compact: 150px;
+  /* 地面線以上至少要放得下角色（約 67）與頭頂技能名稱（約 17），或最小的 BOSS 與飄字。 */
+  --stage-headroom: 84px;
+  /* 副目標站前排：腳底比 BOSS 低一點，重疊看起來是前後景深，而不是橫切 BOSS。 */
+  --add-front-drop: var(--space-2);
+  --top-shade: color-mix(in srgb, var(--c-bg) 45%, transparent);
+  --top-shade-h: 48px;
+
   position: relative;
   flex: 1;
-  min-height: var(--battle-min);
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* clip 不是捲動容器：在可捲動的冒險頁裡，戰場高度至少等於內容（資訊列＋舞台最小高），不會被壓扁。 */
+  overflow: clip;
   isolation: isolate;
+  /* 背景圖延伸不到的地方（極高螢幕的天空、載入前）用的底色。 */
+  background: linear-gradient(180deg, var(--battle-sky-top), var(--battle-sky-bottom) 64%, var(--battle-ground) 64%, var(--battle-ground-deep));
+}
+
+.viewport[data-compact='true'] {
+  --stage-min: max(var(--stage-min-compact), calc(var(--label-room) + var(--stage-headroom)));
+}
+
+.viewport[data-mode='BOSS_FIGHT'] {
+  --stage-min: max(var(--stage-min-compact), calc(var(--label-room) + var(--add-front-drop) + var(--stage-headroom)));
+}
+
+/* 高度 ≥ 720 時冒險頁不捲動，戰場吃剩餘空間；舞台下限只保留放得下角色的高度，不把下方操作區擠出畫面。 */
+@media (min-height: 720px) {
+  .viewport {
+    --stage-min-compact: 0px;
+    /* 剛好 720 高時頭頂技能名稱可能略為躲到 BOSS 資訊列後面，換取下方篩選列不被底部導覽蓋住。 */
+    --stage-headroom: 78px;
+  }
+}
+
+@supports not (overflow: clip) {
+  .viewport {
+    overflow: hidden;
+    min-height: var(--battle-min);
+  }
+}
+
+/* ── 上方資訊列（文件流內） ── */
+.fieldTop {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  padding: var(--space-1h) var(--gutter) var(--space-1);
+  background: linear-gradient(180deg, var(--top-shade), transparent);
+}
+
+.hint {
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-s);
+  background: var(--c-pop-bg);
+  font-size: var(--font-xs);
+  color: var(--c-text);
+  text-align: center;
+  text-wrap: pretty;
+}
+
+/* ── 舞台 ── */
+.stage {
+  --foot-ratio: var(--ground-ratio);
+  /*
+   * 舞台寬高的 1%（--stage-w／--stage-h 由 useStageSize 量測寫入，量到之前用基準尺寸）。
+   * 作用同容器查詢單位 cqw／cqh，但不建立尺寸容器（實測尺寸容器讓戰鬥中的樣式計算變慢約 3 倍）。
+   */
+  --sw: calc(var(--stage-w, 390px) / 100);
+  --sh: calc(var(--stage-h, 180px) / 100);
+  /* 地面帶高度與舞台寬度成正比（背景寬度貼齊、底部對齊），腳點離底部 = 比例 × 舞台寬。 */
+  --ground-foot: calc(var(--foot-ratio) * 100 * var(--sw));
+  --foot-bottom: max(var(--ground-foot), var(--label-room));
+  /* 精靈尺寸：依舞台高度放大，再以欄寬封頂，三隻並排時不互相重疊。 */
+  --sprite-hero: clamp(56px, 21 * var(--sh), 84px);
+  --sprite-mob: min(clamp(44px, 16 * var(--sh), 64px), 13.5 * var(--sw));
+  --sprite-elite: min(clamp(72px, 28 * var(--sh), 112px), 28 * var(--sw));
+  --sprite-add: calc(var(--sprite-mob) * 0.85);
+  /* BOSS 依「地面線到舞台頂」的空間決定大小，頭頂留 --boss-headroom 給飄字，永遠不會頂到上方血條。 */
+  --boss-floor: 56px;
+  --boss-max: 148px;
+  --boss-headroom: 28px;
+  --sprite-boss: min(42 * var(--sw), clamp(var(--boss-floor), calc(100 * var(--sh) - var(--foot-bottom) - var(--boss-headroom)), var(--boss-max)));
+  --sprite-unit: clamp(30px, 11 * var(--sh), 40px);
+  --sprite-beast: calc(var(--sprite-unit) * 1.2);
+  --zone-w: min(46 * var(--sw), 200px);
+  /* 腳下名稱欄寬＝相鄰兩欄的間距（62／76／90%），三個名稱不會互相疊到。 */
+  --label-w-narrow: calc(14 * var(--sw));
+  --label-w-wide: calc(26 * var(--sw));
+  --lunge-x: calc(var(--sprite-hero) * 0.18);
+  --z-zone: 0;
+  --z-actor: 1;
+  --z-front: 2;
+  --z-text: 3;
+  --z-float: 4;
+
+  position: relative;
+  flex: 1 0 var(--stage-min);
+  min-height: var(--stage-min);
+  isolation: isolate;
+}
+
+/* BOSS 戰與召喚台出現時腳點放深一點（地面帶 60%），讓出頭頂空間；BOSS 戰還要容納前排副目標下沉的距離。 */
+.viewport[data-compact='true'] .stage {
+  --foot-ratio: var(--ground-ratio-compact);
+}
+
+.viewport[data-mode='BOSS_FIGHT'] .stage {
+  --foot-bottom: max(var(--ground-foot), calc(var(--label-room) + var(--add-front-drop)));
 }
 
 .backdrop {
   position: absolute;
   inset: 0;
   z-index: -1;
-  /* 背景圖載入前與裁切邊緣的底色。 */
-  background: linear-gradient(180deg, var(--battle-sky-top) 0%, var(--battle-sky-bottom) 64%, var(--battle-ground) 64%, var(--battle-ground-deep) 100%);
+  pointer-events: none;
 }
 
+/* 寬度貼齊、底部對齊：天空往上延伸到資訊列後方（場景往上多畫的部分以 overflow visible 顯示）。 */
 .backdrop > svg {
-  display: block;
-}
-
-.hint,
-.waiting {
   position: absolute;
-  left: var(--gutter);
-  right: var(--gutter);
-  top: var(--space-2);
-  margin: 0;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-s);
-  background: var(--shade-45);
-  font-size: var(--font-xs);
-  color: var(--c-text-muted);
-  text-align: center;
+  left: 0;
+  bottom: 0;
 }
 
-.waiting {
-  top: 40%;
-  background: transparent;
+/* 頂部暗化：固定高度、不隨背景縮放；有上方資訊列時改由 .fieldTop 自己的漸層負責。 */
+.backdrop::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--top-shade-h);
+  background: linear-gradient(180deg, var(--top-shade), transparent);
+}
+
+.viewport[data-top] .backdrop::after {
+  display: none;
 }
 
 /* ── 角色：沒有血條或魔條（C-02） ── */
 .hero {
   position: absolute;
-  top: 74%;
-  transform: translate(-50%, -100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
+  left: var(--hero-x);
+  bottom: var(--foot-bottom);
+  width: var(--sprite-hero);
+  translate: -50% 0;
+  isolation: isolate;
+  z-index: var(--z-actor);
 }
 
-.heroBody {
-  width: 56px;
-  height: 70px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  filter: drop-shadow(0 2px 2px var(--shade-45));
+/* 出手動作：兩組內容相同的 keyframes 依 data-beat 交替，換名稱就重播，不必重掛立繪。 */
+.heroActor {
+  animation-duration: var(--duration-lunge);
+  animation-timing-function: var(--ease-out);
 }
 
-.heroLunge {
-  animation: lunge 260ms ease-out;
+.heroActor[data-act][data-beat='0'] {
+  animation-name: heroLungeA;
 }
 
-@keyframes lunge {
+.heroActor[data-act][data-beat='1'] {
+  animation-name: heroLungeB;
+}
+
+@keyframes heroLungeA {
   40% {
-    transform: translateX(10px);
+    transform: translateX(var(--lunge-x));
   }
 }
 
+@keyframes heroLungeB {
+  40% {
+    transform: translateX(var(--lunge-x));
+  }
+}
+
+/* 立繪影子中心（而不是 SVG 底邊）對齊地面線。 */
+.heroBody {
+  margin-bottom: calc(var(--sprite-hero) * var(--foot-inset-hero) * -1);
+  filter: drop-shadow(0 2px 2px var(--shade-45));
+}
+
+.heroBody > svg {
+  display: block;
+}
+
+/* 技能名稱永遠在頭頂上方；寬度不超過角色到畫面左緣的兩倍，字放大也不會跑出畫面。 */
 .skillPop {
   position: absolute;
-  top: -22px;
+  left: 50%;
+  bottom: calc(100% + var(--space-1));
+  translate: -50% 0;
+  max-width: min(10em, calc(var(--hero-x-ratio) * 200 * var(--sw) - var(--space-2)));
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  padding: 0 6px;
-  border-radius: 6px;
+  padding: 0 var(--space-1h);
+  border-radius: var(--radius-xs);
   background: var(--c-pop-bg);
   color: var(--c-accent-strong);
   font-size: var(--font-xs);
-  font-weight: 700;
-  animation: pop 900ms ease-out forwards;
+  font-weight: var(--fw-bold);
+  z-index: var(--z-text);
+  pointer-events: none;
+  animation: skillPop var(--duration-pop) ease-out forwards;
 }
 
-@keyframes pop {
+@keyframes skillPop {
   0% {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(var(--space-1h));
   }
   20% {
     opacity: 1;
@@ -98,23 +238,47 @@
   }
 }
 
+/* 資源與增益掛在腳下；寬度不超過角色兩側的召喚物秒數，不會互相疊到。 */
+.heroTags {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 50%;
+  translate: -50% 0;
+  max-width: calc(var(--sprite-hero) * 1.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-0);
+  pointer-events: none;
+}
+
+/* 沒有召喚物時腳下兩側都空著：標籤可以放寬到角色與畫面左緣距離的兩倍（字放大時「下一張♠」不被裁掉）。 */
+.hero:not(:has(> .units)) > .heroTags {
+  max-width: calc(var(--hero-x-ratio) * 200 * var(--sw) - var(--space-2));
+}
+
 .resourcePips {
-  font-size: 0.6875rem;
-  padding: 0 6px;
-  border-radius: 6px;
-  background: var(--shade-45);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+  padding: 0 var(--space-1h);
+  border-radius: var(--radius-xs);
+  background: var(--shade-45);
+  font-size: var(--font-2xs);
+  line-height: var(--label-line);
+  text-shadow: var(--text-outline);
+}
+
+.resourcePips > * + * {
+  margin-left: var(--space-1h);
 }
 
 .nextSuit {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--space-0);
   white-space: nowrap;
-}
-
-.resourcePips > * + * {
-  margin-left: 6px;
 }
 
 .nextSuit [data-suit='0'],
@@ -127,87 +291,160 @@
   color: var(--suit-black);
 }
 
-/* 召喚物排在角色背後：由下往上每欄最多 2 個，再往左換欄，總高不超過角色，不會頂到 BOSS 血條。 */
+.buffRow {
+  display: flex;
+  gap: var(--space-0);
+  max-width: 100%;
+}
+
+.buff {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-2xs);
+  background: var(--shade-55);
+  color: var(--c-success);
+  font-size: var(--font-3xs);
+  line-height: var(--tag-line);
+}
+
+/* ── 召喚物：前排 0、1 站在角色與敵人之間的地面，後排 2、3 站在角色身後（較低圖層） ── */
 .units {
   position: absolute;
-  right: calc(100% - 6px);
+  left: 0;
+  right: 0;
   bottom: 0;
-  display: flex;
-  flex-direction: column-reverse;
-  flex-wrap: wrap-reverse;
-  max-height: 58px;
-  gap: 2px;
+  height: 0;
 }
 
 .unit {
-  position: relative;
-  display: flex;
-  filter: drop-shadow(0 1px 1px var(--shade-45));
-}
-
-.unit > svg {
+  --unit-w: var(--sprite-unit);
+  --unit-gap: var(--space-0);
+  --unit-tuck: calc(var(--sprite-unit) * 0.3);
+  position: absolute;
+  bottom: 0;
+  width: var(--unit-w);
   display: block;
 }
 
-/* 剩餘秒數貼在召喚物右下角；常駐單位（戰獸）不顯示。 */
+.unit[data-unit-kind='beast'] {
+  --unit-w: var(--sprite-beast);
+}
+
+.unit[data-slot='0'] {
+  left: calc(100% + var(--unit-gap));
+}
+
+.unit[data-slot='1'] {
+  left: calc(100% + var(--unit-gap) * 2 + var(--sprite-unit));
+}
+
+.units:has(> .unit[data-slot='0'][data-unit-kind='beast']) > .unit[data-slot='1'] {
+  left: calc(100% + var(--unit-gap) * 2 + var(--sprite-beast));
+}
+
+.unit[data-slot='2'] {
+  right: calc(100% - var(--unit-tuck));
+  z-index: -1;
+}
+
+.unit[data-slot='3'] {
+  right: calc(100% - var(--unit-tuck) + var(--sprite-unit) * 0.6);
+  bottom: var(--space-1);
+  scale: 0.9;
+  z-index: -2;
+}
+
+.unitBody {
+  display: block;
+  margin-bottom: calc(var(--unit-w) * var(--foot-inset-unit) * -1);
+  filter: drop-shadow(0 1px 1px var(--shade-45));
+}
+
+.unitBody > svg {
+  display: block;
+}
+
+/* 剩餘秒數是腳下的小膠囊（召喚物沒有血量，不做成橫條）；完整秒數在無障礙名稱裡。 */
 .unitTimer {
+  --unit-timer-font-max: 12px;
   position: absolute;
-  right: -4px;
-  bottom: -2px;
+  top: calc(100% + var(--space-0));
+  left: 50%;
+  translate: -50% 0;
   min-width: 1.6em;
   padding: 0 0.25em;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--c-pop-bg);
   color: var(--c-text);
-  font-size: 0.5625rem;
-  line-height: 1.5;
+  font-size: min(var(--font-3xs), var(--unit-timer-font-max));
+  line-height: 1.4;
   text-align: center;
 }
 
-/* 區域持續技（星陣、餘燼區域）鋪在敵群腳下，位於敵人圖層之下。 */
+/* 區域持續技（星陣、餘燼區域）：陣心對齊敵群腳下的地面線，位於敵人圖層之下。 */
 .zone {
   position: absolute;
-  top: 82%;
-  width: 46%;
-  max-width: 200px;
-  transform: translate(-50%, -100%);
+  bottom: calc(var(--foot-bottom) - var(--zone-w) * var(--foot-inset-zone));
+  width: var(--zone-w);
+  translate: -50% 0;
   pointer-events: none;
   opacity: 0.9;
+  z-index: var(--z-zone);
 }
 
 .zone > svg {
   display: block;
 }
 
-.viewport[data-summon='true'] .zone {
-  top: 61%;
-}
-
 /* ── 敵人 ── */
 .enemy {
+  --sprite: var(--sprite-mob);
+  --foot-inset: var(--foot-inset-creature);
+  --hp-w: calc(var(--sprite) * 0.8);
+  --label-w: var(--label-w-narrow);
   position: absolute;
-  top: 76%;
-  width: 13.5%;
-  max-width: 64px;
-  transform: translate(-50%, -100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  animation: spawn var(--duration-m) ease-out;
+  bottom: var(--foot-bottom);
+  width: var(--sprite);
+  translate: -50% 0;
+  z-index: var(--z-actor);
 }
 
-@keyframes spawn {
+.enemy[data-enemy-kind='elite'] {
+  --sprite: var(--sprite-elite);
+  --hp-w: var(--sprite);
+  --label-w: max(var(--sprite), var(--label-w-wide));
+}
+
+.enemy[data-enemy-kind='boss'] {
+  --sprite: var(--sprite-boss);
+  --foot-inset: var(--foot-inset-boss);
+}
+
+.enemy[data-enemy-kind='add'] {
+  --sprite: var(--sprite-add);
+  --foot-inset: var(--foot-inset-add);
+  --hp-w: calc(var(--sprite) * 0.9);
+  bottom: calc(var(--foot-bottom) - var(--add-front-drop));
+  z-index: var(--z-front);
+}
+
+/* 穩定的動畫掛點：出場、受擊、倒下都掛在這一層，外層 .enemy 只負責站位。 */
+.enemyActor {
+  animation: enemySpawn var(--duration-m) var(--ease-out);
+}
+
+@keyframes enemySpawn {
   from {
     opacity: 0;
-    transform: translate(-50%, -90%);
+    transform: translateY(-10%);
   }
 }
 
-/* 一般怪物填滿所在欄位（約 13.5% 寬），最大 56px；三隻並排時不互相重疊。小首領與 BOSS 另由下方規則放大。 */
 .enemyBody {
-  width: 100%;
-  max-width: 56px;
+  margin-bottom: calc(var(--sprite) * var(--foot-inset) * -1);
   filter: drop-shadow(0 2px 2px var(--shade-45));
 }
 
@@ -215,69 +452,63 @@
   display: block;
 }
 
-.enemyLarge {
-  width: 30%;
-  max-width: 128px;
+/* 副目標腳下的虛線圈：表示「可單獨擊破的目標」。 */
+.enemy[data-enemy-kind='add'] .enemyActor::after {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: calc(var(--sprite) * var(--foot-inset) * -1 - var(--space-0));
+  height: calc(var(--sprite) * 0.18);
+  border: 1px dashed color-mix(in srgb, var(--c-text) 60%, transparent);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
-.enemyLarge .enemyBody {
-  width: 88px;
-  max-width: 100%;
+.enemy[data-enemy-kind='add'] .enemyActor {
+  position: relative;
 }
 
-.enemy[data-enemy-kind='boss'] .enemyBody {
-  width: 112px;
-  max-width: 100%;
-}
-
-.enemyAdd .enemyBody {
-  width: 34px;
+.enemyLabel {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 50%;
+  translate: -50% 0;
+  width: var(--label-w);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-0);
+  pointer-events: none;
 }
 
 .enemyName {
   max-width: 100%;
-  font-size: 0.6875rem;
-  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-2xs);
+  line-height: var(--label-line);
   text-align: center;
   color: var(--c-white);
-  text-shadow: 0 1px 2px var(--c-black);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-}
-
-.enemyHp {
-  width: 100%;
-  max-width: 64px;
-  height: 5px;
-  border-radius: 3px;
-  background: var(--hp-track);
-  overflow: hidden;
-}
-
-.enemyHp span {
-  display: block;
-  height: 100%;
-  background: var(--hp-enemy);
-  transition: width 100ms linear;
+  text-shadow: var(--text-outline);
 }
 
 .statusRow {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
-  gap: 2px;
-  max-width: 110px;
+  gap: var(--space-0);
+  max-width: 100%;
 }
 
 .status,
 .trait {
-  padding: 0 4px;
-  border-radius: 4px;
-  font-size: 0.625rem;
-  line-height: 1.5;
+  flex: none;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-2xs);
+  font-size: var(--font-3xs);
+  line-height: var(--tag-line);
   background: var(--shade-55);
   white-space: nowrap;
 }
@@ -286,24 +517,90 @@
   color: var(--c-accent-strong);
 }
 
-/* ── 傷害飄字 ── */
-.float {
+/* ── 血條（敵人與 BOSS 共用 HpBar：Meter＋扣血殘影） ── */
+.hpBar {
+  --hp-trail: #ffe3b0;
+  --hp-trail-duration: 380ms;
+  --hp-trail-delay: 140ms;
+  position: relative;
+  border-radius: var(--radius-pill);
+  background: var(--hp-track);
+  box-shadow: 0 0 0 1px var(--shade-60);
+  overflow: hidden;
+}
+
+.hpTrail {
   position: absolute;
-  top: 38%;
-  transform: translateX(-50%);
-  font-weight: 800;
-  font-size: var(--font-m);
+  inset: 0;
+  background: var(--hp-trail);
+  transform-origin: left center;
+  transition: transform var(--hp-trail-duration) var(--ease-out) var(--hp-trail-delay);
+}
+
+/* Meter 自己的底色改由外框提供，殘影才看得到。 */
+.hpBar > .hpMeter {
+  background: transparent;
+}
+
+.enemyHp {
+  width: var(--hp-w);
+  max-width: 100%;
+}
+
+/* 小首領血條加金框，順便標示「這是小首領」。 */
+.enemy[data-enemy-kind='elite'] .hpBar {
+  box-shadow: 0 0 0 1px var(--c-accent);
+}
+
+.enemy[data-enemy-kind='add'] .hpBar > .hpMeter {
+  --meter-h: var(--bar-thin);
+}
+
+/* ── 傷害飄字：從目標頭頂冒出，同目標接連命中分層錯開 ── */
+.float {
+  --float-gap: var(--space-1);
+  --float-lift: calc(var(--sprite-mob) + var(--float-gap));
+  --float-lane-step: 14px;
+  --float-jitter: var(--space-1h);
+  --float-dir: -1;
+  --float-rise: calc(var(--space-5) * -1);
+  --float-size-max: 22px;
+  --float-crit-size-max: 28px;
+  --crit-pop: 1.35;
+  --float-ink: var(--c-bg);
+  --float-outline: 1px 0 0 var(--float-ink), -1px 0 0 var(--float-ink), 0 1px 0 var(--float-ink), 0 -1px 0 var(--float-ink), 0 2px 0 var(--float-ink);
+  position: absolute;
+  bottom: calc(var(--foot-bottom) + var(--float-lift));
+  translate: calc(-50% + var(--float-side, 1) * var(--float-jitter)) calc(var(--float-lane, 0) * var(--float-lane-step) * var(--float-dir));
+  z-index: var(--z-float);
+  font-family: var(--font-numeric);
+  font-size: min(var(--font-m), var(--float-size-max));
+  line-height: 1;
   color: var(--c-white);
-  text-shadow:
-    0 1px 0 var(--c-black),
-    0 0 4px var(--c-black);
+  text-shadow: var(--float-outline);
+  white-space: nowrap;
   pointer-events: none;
-  animation: float 800ms ease-out forwards;
+  animation: floatRise var(--duration-float) var(--ease-out) forwards;
+}
+
+.float[data-anchor='elite'] {
+  --float-lift: calc(var(--sprite-elite) + var(--float-gap));
+}
+
+.float[data-anchor='add'] {
+  --float-lift: calc(var(--sprite-add) + var(--float-gap) - var(--add-front-drop));
+}
+
+/* BOSS 頭頂只留 --boss-headroom：數字貼著頭頂，疊層往下（往身上）錯開，不會躲到上方資訊列後面。 */
+.float[data-anchor='boss'] {
+  --float-lift: calc(var(--sprite-boss) + var(--space-0));
+  --float-dir: 1;
 }
 
 .floatCrit {
   color: var(--float-crit);
-  font-size: var(--font-l);
+  font-size: min(var(--font-xl), var(--float-crit-size-max));
+  animation-name: floatCritRise;
 }
 
 .floatDot {
@@ -321,123 +618,270 @@
   font-size: var(--font-s);
 }
 
-@keyframes float {
+@keyframes floatRise {
   from {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
   }
   to {
     opacity: 0;
-    transform: translate(-50%, -26px);
+    transform: translateY(var(--float-rise));
   }
 }
 
-/* ── BOSS ── */
-.bossBar {
-  position: absolute;
-  left: var(--gutter);
-  right: var(--gutter);
-  top: var(--space-2);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  z-index: 2;
+/* 暴擊：前 15% 由放大彈回原尺寸，再和一般數字一樣上飄淡出。 */
+@keyframes floatCritRise {
+  0% {
+    opacity: 1;
+    transform: scale(var(--crit-pop));
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(var(--float-rise));
+  }
 }
 
-.bossTop {
+/* ── 波次之間 ── */
+.waiting {
+  --enemy-zone-start: 50%;
+  --waiting-dot-cycle: 1200ms;
+  --waiting-dot-step: 200ms;
+  position: absolute;
+  left: var(--enemy-zone-start);
+  right: var(--gutter);
+  bottom: calc(var(--foot-bottom) + var(--space-5));
+  margin: 0;
   display: flex;
+  justify-content: center;
+  z-index: var(--z-text);
+  pointer-events: none;
+}
+
+.waitingPill {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-s);
+  background: var(--c-pop-bg);
+  color: var(--c-text);
+  font-size: var(--font-xs);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.waitingDots {
+  white-space: nowrap;
+}
+
+.waitingDots > i {
+  display: inline-block;
+  width: 0.3em;
+  height: 0.3em;
+  margin-left: 0.15em;
+  border-radius: 50%;
+  background: currentColor;
+  animation: waitingDot var(--waiting-dot-cycle) ease-in-out infinite;
+}
+
+.waitingDots > i:nth-child(2) {
+  animation-delay: var(--waiting-dot-step);
+}
+
+.waitingDots > i:nth-child(3) {
+  animation-delay: calc(var(--waiting-dot-step) * 2);
+}
+
+@keyframes waitingDot {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+/* ── BOSS 資訊列：名稱｜倒數｜退出，下一列血條，再下一列機制與狀態標籤 ── */
+.bossBar {
+  --exit-size: 44px;
+  display: grid;
+  /* 100% 字級：名稱優先，機制與狀態標籤排在名稱後面、空間不夠時先被裁掉；整列約 56px 高。 */
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'name tags timer exit'
+    'hp hp hp exit';
   align-items: center;
-  gap: var(--space-2);
+  column-gap: var(--space-2);
+  padding: var(--space-1h) var(--space-2);
+  border-radius: var(--radius-m);
+  background: var(--c-pop-bg);
+  box-shadow: var(--elev-1);
 }
 
 .bossName {
-  flex: 1;
+  grid-area: name;
   min-width: 0;
-  font-weight: 800;
-  font-size: var(--font-m);
-  text-shadow: 0 1px 2px var(--c-black);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: var(--font-m);
+  color: var(--c-text);
+  text-shadow: var(--text-outline);
 }
-
-.bossState {
-  font-size: 0.625rem;
-  color: var(--c-text-muted);
-  white-space: nowrap;
-}
-
-/* 召喚按鈕出現時（第 30 關刷怪）角色與敵人基準線上移，讓右下角按鈕不蓋住敵人名稱。 */
-.viewport[data-summon='true'] .enemy,
-.viewport[data-summon='true'] .hero {
-  top: 55%;
-}
-
 
 .bossTimer {
-  font-weight: 800;
+  grid-area: timer;
+  display: inline-block;
   font-size: var(--font-l);
   color: var(--c-timer);
-  text-shadow: 0 1px 2px var(--c-black);
+  text-shadow: var(--text-outline);
+}
+
+/* 剩不到 10 秒：轉警示色並每秒輕微放大（減少動態效果時只變色）。 */
+.bossTimer[data-urgent] {
+  --urgent-scale: 1.08;
+  color: var(--c-danger);
+  animation: timerPulse 1s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+  50% {
+    transform: scale(var(--urgent-scale));
+  }
 }
 
 .abortButton {
-  min-height: 36px;
-  min-width: var(--touch);
+  grid-area: exit;
+  position: relative;
+  min-width: var(--exit-size);
+  min-height: var(--exit-size);
   padding: 0 var(--space-2);
   border-radius: var(--radius-s);
   border: 1px solid var(--c-danger);
   background: var(--shade-50);
+  color: var(--c-text);
   font-size: var(--font-xs);
-  font-weight: 700;
-  position: relative;
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
 }
 
-/* 視覺高度 36，但觸控區延伸至 48。 */
+/* 視覺 44，觸控區延伸到 --touch（48）。 */
 .abortButton::after {
   content: '';
   position: absolute;
-  inset: -6px 0;
+  inset: calc((var(--exit-size) - var(--touch)) / 2);
 }
 
 .bossHp {
-  position: relative;
-  height: 14px;
-  border-radius: 7px;
-  background: var(--hp-track);
+  grid-area: hp;
+  margin-top: var(--space-1);
+}
+
+.bossTags {
+  grid-area: tags;
+  min-width: 0;
   overflow: hidden;
-  border: 1px solid var(--shade-60);
+  justify-content: flex-start;
 }
 
-.bossHp span {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, var(--hp-boss-deep), var(--hp-boss));
-  transition: width 100ms linear;
+/* 字體放大：名稱獨佔一列，倒數與退出下一列，血條再下一列；退出鍵永遠完整在畫面內。 */
+:global(html[data-text-scale='1.5']) .bossBar,
+:global(html[data-text-scale='2']) .bossBar {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name name exit'
+    'timer hp hp'
+    'tags tags tags';
+  row-gap: var(--space-1);
 }
 
-.bossHp em {
-  position: absolute;
-  inset: 0;
-  font-style: normal;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  line-height: 14px;
-  text-align: center;
-  text-shadow: 0 1px 1px var(--c-black);
+:global(html[data-text-scale='1.5']) .bossHp,
+:global(html[data-text-scale='2']) .bossHp {
+  margin-top: 0;
 }
 
-.phaseRow {
+:global(html[data-text-scale='1.5']) .bossTags,
+:global(html[data-text-scale='2']) .bossTags {
+  flex-wrap: wrap;
+  margin-top: var(--space-1);
+}
+
+:global(html[data-text-scale='1.5']) .bossTimer,
+:global(html[data-text-scale='2']) .bossTimer {
+  justify-self: start;
+}
+
+/* ── 召喚台（UI-A04）：戰場內下緣的操作列，召喚鍵靠右 ── */
+.summonDock {
+  --summon-min-w: 128px;
+  --summon-glow-cycle: 2s;
+  position: relative;
+  z-index: 1;
+  flex: none;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-1h) var(--gutter);
+  background: var(--c-surface);
+  box-shadow: var(--elev-dock);
+}
+
+.summonDock::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: var(--edge-brass);
+}
+
+.summonHint {
+  flex: 1 1 9em;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--c-text-muted);
+  text-wrap: pretty;
+}
+
+.summonSlot {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  max-width: 100%;
 }
 
 .bossButton {
+  flex: 1 1 auto;
+  min-width: var(--summon-min-w);
+  max-width: 100%;
+}
+
+/* 第一次可召喚時的柔和外光（只動 opacity）；減少動態效果時停用。 */
+.summonSlot[data-invite]::before {
+  content: '';
   position: absolute;
-  right: var(--gutter);
-  bottom: var(--gutter);
-  min-width: 128px;
-  max-width: 45%;
-  z-index: 3;
+  inset: calc(var(--space-1) * -1);
+  border-radius: var(--radius-l);
+  background: radial-gradient(closest-side, var(--c-accent-glow), transparent);
+  opacity: 0;
+  pointer-events: none;
+  animation: summonGlow var(--summon-glow-cycle) ease-in-out infinite;
+}
+
+@keyframes summonGlow {
+  50% {
+    opacity: 1;
+  }
+}
+
+:global(html[data-text-scale='1.5']) .summonSlot,
+:global(html[data-text-scale='2']) .summonSlot {
+  flex: 1 1 100%;
 }

@@ -1,8 +1,8 @@
 import type { ContentCatalog } from '@qiwu/content';
 import { useCatalog, useGame, useHost, useSend } from '../../app/GameContext.tsx';
-import { TEXT_SCALES, usePrefs } from '../../app/prefs.tsx';
+import { TEXT_SCALES, usePrefs, useSystemReducedMotion, type MotionPreference } from '../../app/prefs.tsx';
 import { useUi } from '../../app/uiStore.tsx';
-import { ActionButton, Chip, Sheet, Toggle, primitiveStyles as ps } from '../components/primitives.tsx';
+import { ActionButton, Segmented, Sheet, Toggle, primitiveStyles as ps } from '../components/primitives.tsx';
 import { formatFull } from '../format/format.ts';
 import type { FixtureName } from '../../host/devTools.ts';
 import styles from './sheets.module.css';
@@ -17,6 +17,18 @@ const LEDGER_LABELS: Record<string, string> = {
 };
 
 const RESOURCE_LABELS: Record<string, string> = { GOLD: '金幣', XP: '經驗', RELIC: '古物', BENCH_LEVEL: '台等' };
+
+const MOTION_OPTIONS: readonly { value: MotionPreference; label: string }[] = [
+  { value: 'system', label: '跟隨系統' },
+  { value: 'on', label: '開' },
+  { value: 'off', label: '關' },
+];
+
+// 字體大小是單選：用分段切換（radiogroup），不用多選晶片。值以字串傳給 Segmented，寫回時轉回數字。
+const TEXT_SCALE_OPTIONS: readonly { value: string; label: string }[] = TEXT_SCALES.map((scale) => ({
+  value: String(scale),
+  label: `${Math.round(scale * 100)}%`,
+}));
 
 const DEV_FIXTURES: readonly { name: FixtureName; label: string }[] = [
   { name: 'fresh', label: '全新角色' },
@@ -74,6 +86,7 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
   const game = useGame();
   const send = useSend();
   const { prefs, update } = usePrefs();
+  const systemReducedMotion = useSystemReducedMotion();
   const { dispatch } = useUi();
   const { state } = game;
   const recentLedger = [...state.ledger].reverse().filter((entry) => entry.eventType !== 'RELIC_GRANTED').slice(0, 20);
@@ -82,20 +95,14 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
   return (
     <Sheet title="更多" onClose={onClose} testId="settings-sheet">
       <h3 className={ps.sectionTitle}>聲音與畫面</h3>
-      <Toggle label="聲音" description="原型尚無音效；聲音不會是唯一的資訊來源" on={false} onChange={() => undefined} disabled />
-      <div style={{ height: 'var(--space-2)' }} />
-      <Toggle
-        label="減少動態效果"
-        description="移除震動、閃光與位移動畫；不改變實際戰鬥速度"
-        on={prefs.reducedMotion}
-        onChange={(next) => update({ reducedMotion: next })}
-      />
+      <Toggle label="聲音" description="尚未提供：原型沒有音效；聲音也不會是唯一的資訊來源" on={false} onChange={() => undefined} disabled />
+      <h3 className={ps.sectionTitle}>減少動態效果</h3>
+      <Segmented<MotionPreference> label="減少動態效果" options={MOTION_OPTIONS} value={prefs.motion} onChange={(motion) => update({ motion })} />
+      <p className={ps.note}>
+        系統目前：{systemReducedMotion ? '開' : '關'}・實際：{prefs.reducedMotion ? '已減少' : '正常播放'}。減少時移除震動、閃光與位移動畫；不改變實際戰鬥速度。
+      </p>
       <h3 className={ps.sectionTitle}>字體大小</h3>
-      <div className={ps.chipRow} role="group" aria-label="字體大小">
-        {TEXT_SCALES.map((scale) => (
-          <Chip key={scale} label={`${Math.round(scale * 100)}%`} on={prefs.textScale === scale} onClick={() => update({ textScale: scale })} />
-        ))}
-      </div>
+      <Segmented label="字體大小" options={TEXT_SCALE_OPTIONS} value={String(prefs.textScale)} onChange={(scale) => update({ textScale: Number(scale) })} />
 
       <h3 className={ps.sectionTitle}>BOSS</h3>
       <Toggle

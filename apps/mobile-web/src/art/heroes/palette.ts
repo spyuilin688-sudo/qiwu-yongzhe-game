@@ -7,6 +7,17 @@
 /** 全部角色共用的暖深色描邊，讓不同職業在同一畫面中風格一致。 */
 export const INK = '#1f1610';
 
+/**
+ * 線寬分層：外輪廓粗、部件次之、細節最細。56px 顯示時 1 單位約 0.9px，
+ * 全部用同一粗線會讓胸口、臉部這類細節密集處糊成黑塊，所以依層級遞減。
+ *  silhouette：頭、軀幹、手臂、靴子、披風、大型武器、盾。
+ *  part：腰帶、背帶、領口、帽帶、毛皮、彈帶、身體外的小道具。
+ *  feature：眉、嘴、閉眼線等五官線；介於部件與細節之間，表情才不會太淡。
+ *  detail：縫線、刻紋、書頁線、身上的小飾品，以及彩色反光線。
+ */
+export const LINE = { silhouette: 2, part: 1.5, feature: 1.3, detail: 1 } as const;
+export type LineWeight = keyof typeof LINE;
+
 /** 一種材質的三階色：底色、陰影、小高光。 */
 export interface Tone {
   readonly base: string;
@@ -56,6 +67,8 @@ export const FAMILY_TONES = {
   bowB: { base: '#7b8a3a', shade: '#5c6a28', light: '#a8b85c' },
   bowStar: { base: '#2f6a86', shade: '#214d63', light: '#5d9cba' },
   mage: { base: '#6e51ad', shade: '#533b8a', light: '#977bd2' },
+  /** 元素術士：洋紅紫，和一轉的藍紫、三轉的靛紫拉開，二轉換行頭在 56px 下也看得出來。 */
+  mageElement: { base: '#8a4ab0', shade: '#683590', light: '#b77ad8' },
   mageA: { base: '#4a3d96', shade: '#342a72', light: '#7466c4' },
   mageB: { base: '#5aa7d8', shade: '#3e83b5', light: '#a5dcf6' },
   mageWinter: { base: '#3d6fb8', shade: '#2b5290', light: '#7ea8e6' },
@@ -71,6 +84,14 @@ export const FAMILY_TONES = {
   artisan: { base: '#4f7f91', shade: '#3a6070', light: '#7fb0c2' },
   artisanA: { base: '#8f4b30', shade: '#6a3420', light: '#c0704c' },
   artisanB: { base: '#4a7296', shade: '#345573', light: '#79a2c6' },
+} as const satisfies Record<string, Tone>;
+
+/**
+ * 手套色：穿盔甲、拿重工具的職業不該是光手。
+ * 盜賊用深紫灰皮手套，但比墨線亮一階，56px 下手才不會縮成黑點。
+ */
+export const GLOVE = {
+  rogue: { base: '#4a3e5c', shade: '#352b44', light: '#6a5c80' },
 } as const satisfies Record<string, Tone>;
 
 /** 三轉光暈與特效色。 */
