@@ -93,7 +93,7 @@ function EquipmentTab() {
               <button type="button" className={styles.listButton} onClick={() => openSheet({ kind: 'slot', slot })}>
                 <span className={styles.slotName}>{slotLabel(slot)}</span>
                 <span className={[styles.rowArt, `q-${item?.qualityId ?? 'Q1'}`, item ? styles.equipArtFilled : styles.equipArtEmpty].join(' ')} aria-hidden="true">
-                  {item ? <EquipIcon typeName={baseOf(catalog, item).typeName} slot={slot} size={EQUIP_ROW_ICON} /> : <SlotIcon slot={slot} size={EQUIP_ROW_SLOT_ICON} />}
+                  {item ? <EquipIcon baseId={item.baseId} typeName={baseOf(catalog, item).typeName} slot={slot} size={EQUIP_ROW_ICON} /> : <SlotIcon slot={slot} size={EQUIP_ROW_SLOT_ICON} />}
                 </span>
                 <span className={ps.rowMain}>
                   {item ? (
@@ -249,7 +249,7 @@ function BagTab() {
               aria-label={`${qualityName(catalog, item.qualityId)} ${baseOf(catalog, item).name} Lv${item.level}${refs.length ? '，使用中' : ''}${item.locked ? '，已鎖定' : ''}`}
             >
               <span className={styles.itemArt} aria-hidden="true">
-                <EquipIcon typeName={baseOf(catalog, item).typeName} slot={item.slot} size={30} />
+                <EquipIcon baseId={item.baseId} typeName={baseOf(catalog, item).typeName} slot={item.slot} size={30} />
               </span>
               <span className={styles.itemSlot}>{slotLabel(item.slot, true)}</span>
               <span className={styles.itemQuality}>{qualityName(catalog, item.qualityId)}</span>

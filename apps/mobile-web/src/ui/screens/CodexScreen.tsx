@@ -180,7 +180,7 @@ function EquipmentCodexTab() {
         {bases.map((base) => (
           <li key={base.id} className={ps.listRow}>
             <span className={[styles.rowArt, !discovered.has(base.id) && styles.silhouette].filter(Boolean).join(' ')} aria-hidden="true">
-              <EquipIcon typeName={base.typeName} slot={base.slot} size={40} />
+              <EquipIcon baseId={base.id} typeName={base.typeName} slot={base.slot} size={40} />
             </span>
             <span className={ps.rowMain}>
               <span className={ps.rowTitle}>

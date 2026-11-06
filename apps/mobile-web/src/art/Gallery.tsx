@@ -104,7 +104,7 @@ export function Gallery({ catalog }: { catalog: ContentCatalog }) {
           const base = catalog.equipment.get(id)!;
           return (
             <Cell key={id} label={base.name}>
-              <EquipIcon typeName={base.typeName} slot={base.slot} size={48} />
+              <EquipIcon baseId={base.id} typeName={base.typeName} slot={base.slot} size={48} />
             </Cell>
           );
         })}

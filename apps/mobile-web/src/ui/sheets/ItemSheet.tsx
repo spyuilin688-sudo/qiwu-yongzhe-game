@@ -123,7 +123,7 @@ export function ItemSheet({ itemId, mode, identify, onClose }: { itemId: string;
       title={
         <span className={styles.itemTitle}>
           <span className={`${styles.itemArt} q-${item.qualityId}`} aria-hidden="true">
-            <EquipIcon typeName={base.typeName} slot={item.slot} size={SHEET_ART_SIZE} />
+            <EquipIcon baseId={base.id} typeName={base.typeName} slot={item.slot} size={SHEET_ART_SIZE} />
           </span>
           <QualityBadge catalog={catalog} qualityId={item.qualityId} />
           <span className={`${styles.itemName} q-${item.qualityId}`}>{base.name}</span>

@@ -61,7 +61,7 @@ export function EquipmentGrid() {
             >
               <span className={styles.equipSlot}>
                 <span className={styles.equipIcon} aria-hidden="true">
-                  {item ? <EquipArt typeName={baseOf(catalog, item).typeName} slot={slot} size={EQUIP_ICON_SIZE} /> : <SlotArt slot={slot} size={SLOT_ICON_SIZE} />}
+                  {item ? <EquipArt baseId={item.baseId} typeName={baseOf(catalog, item).typeName} slot={slot} size={EQUIP_ICON_SIZE} /> : <SlotArt slot={slot} size={SLOT_ICON_SIZE} />}
                 </span>
                 {label}
               </span>
