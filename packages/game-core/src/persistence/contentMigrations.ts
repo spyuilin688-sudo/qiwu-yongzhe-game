@@ -24,7 +24,7 @@ export const CONTENT_UPGRADES: readonly ContentUpgrade[] = [
   {
     from: '0.2-proto.1',
     to: '0.2-proto.2',
-    summary: '同花迴響改為任何本體出牌都會重演；數值平衡與怪物成長曲線調整。',
+    summary: '同花迴響改為湊成同花後的下一張本體牌都會重演；二轉清怪招與獵伴戰獸下修、連環牌擊在 BOSS 戰集中主目標、千面幻術師打王預設配置調整。',
   },
 ];
 

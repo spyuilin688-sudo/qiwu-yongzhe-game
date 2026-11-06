@@ -25,7 +25,17 @@ function runRoute(routeJobId: string, seed: number): Promise<RouteProgress> {
       output += chunk.toString();
     });
     child.on('error', reject);
-    child.on('close', (code) => (code === 0 ? resolve(JSON.parse(output) as RouteProgress) : reject(new Error(`${routeJobId} 結束碼 ${code}`))));
+    child.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error(`${routeJobId} 結束碼 ${code}`));
+        return;
+      }
+      try {
+        resolve(JSON.parse(output) as RouteProgress);
+      } catch {
+        reject(new Error(`${routeJobId} 沒有輸出可解析的結果（收到 ${output.length} 字元）`));
+      }
+    });
   });
 }
 

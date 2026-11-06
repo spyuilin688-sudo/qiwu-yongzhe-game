@@ -82,6 +82,8 @@ interface StoredRelease {
   readonly skillId?: string;
   /** nextCard：這張牌的基礎倍率（不含黑桃等花色加成），給 cardBase 的追加換算。 */
   readonly cardBaseCoefBp?: number;
+  /** 同一次行動存的也可以領（「下一張牌」逐張判定，存與領不會發生在同一張）。 */
+  readonly includeSameAction?: boolean;
 }
 
 interface StoredExtraHit {
@@ -94,7 +96,7 @@ interface StoredExtraHit {
   readonly coefBasis: 'flat' | 'cardBase';
   readonly timing: StoredTiming;
   readonly skillId: string | null;
-  /** 存入時的行動 ID：同一次行動不能領回自己存的追加（同花迴響由飛牌湊成對時，給的是下一張飛牌）。 */
+  /** 存入時的行動 ID：同一次行動不能領回自己存的追加（「下一張牌」例外，見 releaseStored 的 includeSameAction）。 */
   readonly storedByActionId: number | null;
   charges: number;
 }
@@ -132,7 +134,6 @@ interface CastContext {
   retained: boolean;
   firstDamageTargetCount: number | null;
   hasDamage: boolean;
-  firstCardPlayed: boolean;
 }
 
 /** 由被動與傳說組合出的靜態規則；配置改變時整份重建。 */
@@ -1497,7 +1498,6 @@ export class BattleSim {
       retained: false,
       firstDamageTargetCount: null,
       hasDamage: false,
-      firstCardPlayed: false,
     };
     for (const step of effect.steps) this.executeStep(step, ctx);
 
@@ -2015,10 +2015,9 @@ export class BattleSim {
       const other = this.otherThan(target);
       if (other) this.pushFollowUp(other, scaleBp(suits.clubExtraCoefBp, effectMultBp), ctx.actionId, atMs);
     }
-    if (!ctx.firstCardPlayed) {
-      ctx.firstCardPlayed = true;
-      this.releaseStored('nextCard', target, ctx.actionId, atMs, { cardBaseCoefBp: step.coefBp });
-    }
+    // 「下一張牌」：每張本體牌都會領走之前存的追加，同一次施放的下一張也算（連環牌擊第 2 張可領第 1 張湊成的同花迴響）。
+    // 領取在本張判定同花之前，所以湊成同花的這一張不會領到自己剛存的重演。
+    this.releaseStored('nextCard', target, ctx.actionId, atMs, { cardBaseCoefBp: step.coefBp, includeSameAction: true });
     if (suit === null) return;
     this.emit({ type: 'cardPlayed', atMs: ctx.now, suit, actionId: ctx.actionId });
     this.cards.streak = this.cards.lastSuit === suit ? this.cards.streak + 1 : 1;
@@ -2137,7 +2136,10 @@ export class BattleSim {
 
   private releaseStored(timing: StoredTiming, target: EnemyState, actionId: number, atMs: number, release: StoredRelease = {}): void {
     const due = this.stored.filter(
-      (entry) => entry.timing === timing && entry.storedByActionId !== actionId && (timing !== 'nextSkillId' || entry.skillId === release.skillId),
+      (entry) =>
+        entry.timing === timing &&
+        (release.includeSameAction === true || entry.storedByActionId !== actionId) &&
+        (timing !== 'nextSkillId' || entry.skillId === release.skillId),
     );
     if (due.length === 0) return;
     for (const entry of due) {

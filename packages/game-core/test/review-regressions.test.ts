@@ -224,7 +224,7 @@ describe('忠實度回歸：追加的目標', () => {
     for (const hit of followUps) expect(hit.targetUid).not.toBe(mainUid);
   });
 
-  it('同花迴響（PS028）：重演給下一張本體出牌（連環牌擊、四象牌陣也算），倍率是那張牌基礎的 40%，不是湊成同花的同一次施放', () => {
+  it('同花迴響（PS028）：重演給湊成同花後的下一張本體牌（同一次施放的下一張也算），倍率是那張牌基礎的 40%（不含黑桃加成）', () => {
     // 命運魔術師預設不帶飛牌；舊實作只認飛牌，所以這條被動在預設配裝完全不發動。
     const run = (passiveIds: string[]) =>
       runUntil(sim(hero('JOB28', ['SK053', 'SK054'], { ultimateId: 'SK056', passiveIds }), stats({ attack: 100, basicIntervalMs: NO_BASICS_MS })), 60_000);
@@ -236,42 +236,57 @@ describe('忠實度回歸：追加的目標', () => {
     expect(echoes.length).toBeGreaterThan(1);
     for (const echo of echoes) expect(echo.source).toBe('followUp');
 
-    const castOf = new Map(
-      withEcho.filter((event): event is Extract<BattleEvent, { type: 'skillCast' }> => event.type === 'skillCast').map((event) => [event.actionId, event.skillId]),
-    );
+    // 每張牌：花色（cardPlayed 依出牌順序）對上該次施放依時間排序的牌面命中。
+    const cardSkills = new Set(['SK054', 'SK056']);
     const cards = withEcho.filter((event): event is Extract<BattleEvent, { type: 'cardPlayed' }> => event.type === 'cardPlayed');
-    // 依規則推算：湊成同花時存一筆（已有就不囤），之後「別的施放」打出的第一張牌領走。
-    const expectedEchoActions: number[] = [];
-    const seenActions = new Set<number>();
-    let storedBy: number | null = null;
+    const cardHitsByAction = new Map<number, HitEvent[]>();
+    for (const hit of hitsOf(withEcho, (candidate) => candidate.source !== 'followUp' && cardSkills.has(candidate.skillId ?? ''))) {
+      cardHitsByAction.set(hit.actionId, [...(cardHitsByAction.get(hit.actionId) ?? []), hit]);
+    }
+    const seenInAction = new Map<number, number>();
+    const played = cards.map((card) => {
+      const index = seenInAction.get(card.actionId) ?? 0;
+      seenInAction.set(card.actionId, index + 1);
+      const hit = cardHitsByAction.get(card.actionId)?.[index];
+      expect(hit, `第 ${card.actionId} 次施放的第 ${index + 1} 張牌應有命中`).toBeDefined();
+      return { suit: card.suit, hit: hit! };
+    });
+
+    // 依規則推算：湊成同花時存一筆（已有就不囤），下一張本體牌先領再判定自己的同花。
+    const expectedReleases: (typeof played)[number][] = [];
+    let pending = false;
     let lastSuit: number | null = null;
     let streak = 0;
-    for (const card of cards) {
-      if (!seenActions.has(card.actionId)) {
-        seenActions.add(card.actionId);
-        if (storedBy !== null && storedBy !== card.actionId) {
-          expectedEchoActions.push(card.actionId);
-          storedBy = null;
-        }
+    for (const card of played) {
+      if (pending) {
+        expectedReleases.push(card);
+        pending = false;
       }
       streak = lastSuit === card.suit ? streak + 1 : 1;
       lastSuit = card.suit;
       if (streak >= 2) {
         streak = 0;
         lastSuit = null;
-        storedBy ??= card.actionId;
+        pending = true;
       }
     }
-    expect(echoes.map((echo) => echo.actionId)).toEqual(expectedEchoActions);
-    for (const echo of echoes) expect(['SK054', 'SK056']).toContain(castOf.get(echo.actionId));
+    expect(echoes.map((echo) => `${echo.actionId}@${echo.atMs}`)).toEqual(expectedReleases.map((card) => `${card.hit.actionId}@${card.hit.atMs}`));
+    expect(expectedReleases.some((card) => played.indexOf(card) > 0 && played[played.indexOf(card) - 1]!.hit.actionId === card.hit.actionId)).toBe(true);
 
-    // 四象牌陣每張 2.20A、連環牌擊每張 1.20A：同為 40% 時，兩者重演的比例約 2.2 : 1.2。
-    const meanOf = (skillId: string) => {
-      const amounts = echoes.filter((echo) => castOf.get(echo.actionId) === skillId).map((echo) => echo.amount);
-      expect(amounts.length, `${skillId} 應該領到重演`).toBeGreaterThan(0);
-      return amounts.reduce((sum, value) => sum + value, 0) / amounts.length;
-    };
-    expect(meanOf('SK056') / meanOf('SK054')).toBeCloseTo(22 / 12, 0);
+    // 倍率：重演 = 40% × 該牌基礎倍率；黑桃牌面多 0.40A，但不算進重演的基礎。
+    const SPADE = 3;
+    const spadeBonusBp = 4000;
+    const baseOf = (hit: HitEvent) => (hit.skillId === 'SK056' ? 22000 : 12000);
+    let checkedSpade = false;
+    echoes.forEach((echo, index) => {
+      const card = expectedReleases[index]!;
+      expect(echo.targetUid).toBe(card.hit.targetUid);
+      const base = baseOf(card.hit);
+      const expectedRatio = (0.4 * base) / (base + (card.suit === SPADE ? spadeBonusBp : 0));
+      if (card.suit === SPADE) checkedSpade = true;
+      expect(Math.abs(echo.amount / card.hit.amount - expectedRatio), `重演 ${echo.amount} ／ 牌面 ${card.hit.amount}`).toBeLessThan(0.04);
+    });
+    expect(checkedSpade, '至少要驗到一次由黑桃牌領走的重演').toBe(true);
   });
 
   it('琥珀項鍊（EQ084）「下一次常規技能」：沒有直接傷害的常規技能（幻影、替身）也會釋放', () => {

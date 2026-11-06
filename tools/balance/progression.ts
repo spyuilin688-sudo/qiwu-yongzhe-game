@@ -1,3 +1,5 @@
+import { realpathSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { loadDefaultCatalog, type ContentCatalog, type JobDef } from '@qiwu/content';
 import {
   GameEngine,
@@ -33,8 +35,13 @@ export const BOSS_RETRY_MS = 5 * 60_000;
 const STEP_MS = 1_000;
 /** 同一張圖卡王超過這麼久就判定為「牆」並停止這條路線。 */
 export const WALL_LIMIT_MS = 4 * 60 * 60_000;
+type SucceededResponse = Extract<CommandResponse, { status: 'succeeded' }>;
+
 /** 量測換圖前後產出的視窗。 */
 const RATE_WINDOW_MS = 3 * 60_000;
+/** 操作 ID：引擎要求至少 8 個字元，補零讓每個 ID 長度固定。 */
+const OPERATION_ID_PREFIX = 'sim-op-';
+const OPERATION_ID_DIGITS = 7;
 
 export interface MapProgress {
   readonly mapNumber: number;
@@ -110,9 +117,18 @@ class ProgressionBot {
     return this.engine.getState();
   }
 
-  private send(command: Command): CommandResponse {
+  /**
+   * 送出正式命令。玩家模型送出前都已檢查條件，所以任何拒絕都代表模擬本身有錯：直接中止，
+   * 不能默默略過（曾因操作 ID 太短被拒，前 17 分鐘都無法鑑定，報告數字因此失真）。
+   */
+  private send(command: Command): SucceededResponse {
     this.serial += 1;
-    return this.engine.execute({ operationId: `sim-${this.serial}`, command }, this.now);
+    const operationId = `${OPERATION_ID_PREFIX}${String(this.serial).padStart(OPERATION_ID_DIGITS, '0')}`;
+    const response = this.engine.execute({ operationId, command }, this.now);
+    if (response.status !== 'succeeded') {
+      throw new Error(`模擬命令被拒（${command.type}，${operationId}，${Math.round(this.now / 1000)} 秒）：${response.error.code} ${response.error.message}`);
+    }
+    return response;
   }
 
   private tracker(mapNumber: number): MapTracker {
@@ -200,7 +216,6 @@ class ProgressionBot {
     if (this.state.progress.mode === 'BOSS_FIGHT') return;
     while (this.state.wallet.relics > 0) {
       const response = this.send({ type: 'identify', payload: {} });
-      if (response.status !== 'succeeded') return;
       this.identified += 1;
       this.handleNewItem((response.result as IdentifyResult).item);
     }
@@ -223,7 +238,7 @@ class ProgressionBot {
       const replaced: string[] = [];
       for (const purpose of ['farm', 'boss'] as const) {
         const response = this.send({ type: 'equipItem', payload: { itemId: item.id, purpose } });
-        const previous = response.status === 'succeeded' ? (response.result as { replacedItemId: string | null }).replacedItemId : null;
+        const previous = (response.result as { replacedItemId: string | null }).replacedItemId;
         if (previous) replaced.push(previous);
       }
       this.sellIfFree([...new Set(replaced)]);
@@ -245,8 +260,7 @@ class ProgressionBot {
     while (this.state.progress.mode !== 'BOSS_FIGHT') {
       const cost = benchUpgradeCost(this.state, { catalog: this.catalog });
       if (cost === null || this.state.wallet.gold < cost) return;
-      const response = this.send({ type: 'upgradeBench', payload: { expectedBenchLevel: this.state.wallet.benchLevel } });
-      if (response.status !== 'succeeded') return;
+      this.send({ type: 'upgradeBench', payload: { expectedBenchLevel: this.state.wallet.benchLevel } });
     }
   }
 
@@ -255,7 +269,7 @@ class ProgressionBot {
     if (state.progress.mode === 'BOSS_FIGHT') return;
     const next = this.chain.find((job) => !state.player.unlockedJobIds.includes(job.id));
     if (!next || state.player.level < next.unlockLevel) return;
-    if (this.send({ type: 'unlockJob', payload: { jobId: next.id } }).status !== 'succeeded') return;
+    this.send({ type: 'unlockJob', payload: { jobId: next.id } });
     const plan = planJobSwitch(this.state, this.catalog, next.id);
     this.send({ type: 'switchJob', payload: { jobId: next.id, ackUnequipItemIds: [...plan.unequippedItemIds].sort() } });
     const settings = this.state.identifySettings;
@@ -284,7 +298,7 @@ class ProgressionBot {
     if (progress.mode === 'FARM_BLOCKED' && this.now < this.nextRetryAt) return;
     const map = this.catalog.maps.get(progress.mapNumber)!;
     const stageId = map.stageIds[map.stageIds.length - 1]!;
-    if (this.send({ type: 'startBossAttempt', payload: { stageId } }).status !== 'succeeded') return;
+    this.send({ type: 'startBossAttempt', payload: { stageId } });
     tracker.attempts += 1;
     this.nextRetryAt = this.now + this.catalog.globals.bossDurationMs + BOSS_RETRY_MS;
   }
@@ -325,7 +339,8 @@ export function withTuningOverrides(catalog: ContentCatalog, overrides: Record<s
 }
 
 /** 直接執行：node tools/balance/progression.ts JOB03 [seed] [覆寫 JSON] [--json] */
-if (import.meta.url === `file://${process.argv[1]}`) {
+// 路徑含空白、中文或經過符號連結時，import.meta.url 是編碼後的實際路徑，必須用同樣方式轉換才比得起來。
+if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const [routeJobId = 'JOB03', seedText = '1', overridesText = '{}'] = process.argv.slice(2).filter((arg) => arg !== '--json');
   const catalog = withTuningOverrides(loadDefaultCatalog(), JSON.parse(overridesText) as Record<string, Record<string, unknown>>);
   const started = performance.now();

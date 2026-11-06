@@ -186,7 +186,7 @@ out(`1. 清怪驗收：14 條三轉路線 ${outliers.length === 0 ? `全部在�
 out(`2. 打王比較：${bossOutliers.length === 0 ? '全部在 ±15% 內' : `${bossOutliers.join('、')} 超出 ±15%`}。proto.2 起連環牌擊在 BOSS 戰集中主目標（副目標零產出）；千面幻術師打王配置以飛牌取代替身爆彈（偏離規格表 P，原因見 defaultLoadouts.ts）。`);
 out(`3. 成長曲線：本表的同投入（Q3 主屬性、L=10m）在第 ${allFailMaps.length > 0 ? allFailMaps.join('、') : '—'} 圖所有路線都打不贏王，但這是「L=10m、只計 Q3 主屬性」假設的結果，不代表實際遊玩。實際的過王等級、卡王時間與是否有牆，以真實進度模擬為準（docs/PROGRESSION_REPORT.md，npm run balance:progression）。`);
 out(`4. 換圖收益（同投入、同等級比較）：每分鐘古物增加 ${pct(Math.min(...transitionGains))}～${pct(Math.max(...transitionGains))}，因為下一圖第 1 關血量約為本圖第 29 關的一半、每隻產出 ×1.4。真實進度下角色在每張圖內也持續成長，換圖差異較小（見真實進度報告表二）；HP(m,n) 與 w(m) 維持規格公式。`);
-out(`5. 二轉：${tier2Outliers.length === 0 ? `14 條路線全部在中位數 ±${TOLERANCE * 100}% 內` : `${tier2Outliers.join('、')} 超出 ±15%`}（proto.2 下修各二轉的範圍招，調整清單見 balanceAdjustments.ts）。`);
+out(`5. 二轉：${tier2Outliers.length === 0 ? `14 條路線全部在中位數 ±${TOLERANCE * 100}% 內` : `${tier2Outliers.join('、')} 超出 ±15%`}（proto.2 下修二轉清怪主力與一轉共用的散射、獵伴戰獸，上修影襲；調整清單見 balanceAdjustments.ts）。`);
 out(`6. 鑑定台：以本模型推算每升一級只需 ${fixed(Math.min(...benchMinutes), 1)}～${fixed(Math.max(...benchMinutes), 1)} 分鐘（全部出售）；實際遊玩時的台等以真實進度報告表二「過王台等」為準，暫不調整費用。`);
 out();
 
