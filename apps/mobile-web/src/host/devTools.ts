@@ -4,7 +4,7 @@ import type { LocalGameHost } from './LocalGameHost.ts';
 import { STORAGE_KEYS, type KeyValueStorage } from './storage.ts';
 
 /**
- * 僅開發模式的測試輔助（正式建置不會呼叫 installDevTools）。
+ * 開發模式與手機試玩版的測試輔助（一般正式建置不會呼叫 installDevTools，見 buildFlags.ts）。
  * 夾具只用來建立「測試前置狀態」（例如已到第 30 關、已有金幣），
  * 被測行為仍必須透過介面按鈕與正式命令流程完成。
  */

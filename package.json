@@ -15,6 +15,7 @@
   "scripts": {
     "dev": "npm run dev -w @qiwu/mobile-web",
     "build": "npm run build -w @qiwu/mobile-web",
+    "build:playtest": "npm run build:playtest -w @qiwu/mobile-web",
     "preview": "npm run preview -w @qiwu/mobile-web",
     "typecheck": "tsc -p packages/content --noEmit && tsc -p packages/game-core --noEmit && tsc -p apps/mobile-web --noEmit && tsc -p tools --noEmit",
     "test": "vitest run",

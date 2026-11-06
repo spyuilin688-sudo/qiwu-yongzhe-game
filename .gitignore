@@ -8,3 +8,4 @@ apps/mobile-web/playwright-report/
 apps/mobile-web/e2e/__screenshots__/
 .DS_Store
 *.log
+dist-playtest/

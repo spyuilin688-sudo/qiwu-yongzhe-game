@@ -14,7 +14,7 @@ import type { FamilyKey, UiIconName } from './types.ts';
 import { UnitArt } from './units/UnitArt.tsx';
 
 /**
- * 美術總覽（僅開發模式：網址加 ?gallery=1）。用來在手機與桌面檢查全部原創 SVG 資產，
+ * 美術總覽（開發模式與手機試玩版：網址加 ?gallery=1）。用來在手機與桌面檢查全部原創 SVG 資產，
  * 也是視覺審查與截圖的固定入口；正式建置不會載入。
  */
 export const UI_ICON_NAMES: readonly UiIconName[] = [

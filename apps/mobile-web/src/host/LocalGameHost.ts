@@ -65,7 +65,7 @@ export interface LocalGameHostOptions {
   readonly storage: KeyValueStorage;
   /** 模擬伺服器往返延遲，讓「等待回覆」狀態可被看見與測試。 */
   readonly latencyMs?: number;
-  /** 僅開發模式：以倍速推進時間（等同時間流逝），正式版固定 1。 */
+  /** 開發模式與手機試玩版：以倍速推進時間（等同時間流逝），一般正式版固定 1。 */
   readonly devSpeed?: number;
   readonly now?: () => number;
   readonly randomSeed?: () => number;

@@ -30,6 +30,7 @@
 npm install              # 安裝依賴（版本已鎖定）
 npm run dev              # 開發伺服器 http://localhost:5173（手機可連同網段 IP）
 npm run build            # 正式建置到 apps/mobile-web/dist
+npm run build:playtest   # 手機試玩版到 apps/mobile-web/dist-playtest：React 正式版（速度與正式版相同），但保留下方的開發小工具；路徑採相對位置，可放在任何網址底下
 npm run preview          # 預覽正式建置 http://localhost:4173
 ```
 
@@ -45,7 +46,7 @@ npm run balance:breakdown -- JOB03 JOB28   # 指定路線的傷害來源拆解
 npm run balance:progression   # 14 條三轉路線從 Lv1 玩到通關的真實進度模擬，輸出 docs/PROGRESSION_REPORT.md（4 核心約 9 分鐘）
 ```
 
-開發模式小工具（只在 `npm run dev` 有效，正式建置不會包含）：
+開發模式小工具（`npm run dev` 與 `npm run build:playtest` 有效；一般 `npm run build` 不會包含）：
 - 網址加 `?devSpeed=10` 以 10 倍時間推進（畫面上會顯示「開發加速」標記）。
 - 瀏覽器主控台 `window.__qiwuDev.loadFixture('bossReady')` 載入測試前置狀態；可用名稱：`fresh`、`gold`、`lv10`、`bossReady`、`bossStrong`、`fullBag`、`swordSaint`、`mechCommander`，以及 14 條三轉路線的 `route:JOB03`～`route:JOB35`（Lv80、全身稀有）。手機上可在「更多 → 開發測試」直接點選。
 - 網址加 `?gallery=1` 開啟美術總覽（角色、怪物、BOSS、背景、圖示、召喚物）。

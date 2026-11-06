@@ -6,6 +6,7 @@ import { ActionButton, Chip, Sheet, Toggle, primitiveStyles as ps } from '../com
 import { formatFull } from '../format/format.ts';
 import type { FixtureName } from '../../host/devTools.ts';
 import styles from './sheets.module.css';
+import { DEV_TOOLS_ENABLED } from '../../host/buildFlags.ts';
 
 const LEDGER_LABELS: Record<string, string> = {
   ITEM_SOLD: '出售',
@@ -31,13 +32,13 @@ function routeFixtures(catalog: ContentCatalog): { name: FixtureName; label: str
   return [...catalog.jobs.values()].filter((job) => job.tier === 3).map((job) => ({ name: `route:${job.id}` as const, label: `${job.name} Lv80` }));
 }
 
-/** 僅開發模式：在手機上直接載入測試前置狀態，用來檢查二、三轉的差異機制。正式建置不包含。 */
+/** 開發模式與手機試玩版：在手機上直接載入測試前置狀態，用來檢查二、三轉的差異機制。一般正式建置不包含。 */
 function DevFixtures({ onClose }: { onClose: () => void }) {
   const { dispatch } = useUi();
   const catalog = useCatalog();
   return (
     <>
-      <h3 className={ps.sectionTitle}>開發測試（僅開發模式）</h3>
+      <h3 className={ps.sectionTitle}>開發測試（開發模式與試玩版）</h3>
       <p className={ps.note}>載入後會覆蓋目前本機存檔。夾具只建立前置狀態，之後的操作仍走正式命令流程。</p>
       <div className={ps.chipRow}>
         {[...DEV_FIXTURES, ...routeFixtures(catalog)].map((fixture) => (
@@ -159,7 +160,7 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
         </>
       ) : null}
 
-      {import.meta.env.DEV ? <DevFixtures onClose={onClose} /> : null}
+      {DEV_TOOLS_ENABLED ? <DevFixtures onClose={onClose} /> : null}
 
       <h3 className={ps.sectionTitle}>危險操作</h3>
       <ActionButton
