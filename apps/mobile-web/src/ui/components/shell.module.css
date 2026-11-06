@@ -1,0 +1,209 @@
+.header {
+  flex: none;
+  min-height: calc(var(--h-header) + var(--safe-top));
+  padding: calc(var(--safe-top) + 6px) var(--space-3) 6px;
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+  background: linear-gradient(180deg, var(--c-header-top), var(--c-surface));
+  border-bottom: 1px solid var(--c-border);
+}
+
+.profile,
+.resource,
+.more {
+  min-height: var(--touch);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-m);
+  background: var(--c-surface-2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  min-width: 0;
+  text-align: left;
+}
+
+/* 數字優先：金幣／古物格保留約 6 字寬，空間不足時先縮角色區（隱藏職業名）。 */
+.profile {
+  flex: 1 1 0;
+}
+
+.resource {
+  flex: 0 1 auto;
+  min-width: 78px;
+}
+
+.more {
+  flex: none;
+  width: var(--touch);
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.moreLabel {
+  font-size: 0.625rem;
+  color: var(--c-text-dim);
+}
+
+.avatar {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: var(--font-s);
+}
+
+.levelBlock {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.levelText {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-weight: 700;
+  font-size: var(--font-s);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.jobName {
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: var(--c-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resourceText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+  font-weight: 700;
+  font-size: var(--font-m);
+  white-space: nowrap;
+}
+
+.resourceText > span:last-child {
+  overflow: visible;
+}
+
+.resourceLabel {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--c-text-dim);
+}
+
+.coin,
+.relic {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+
+.coin {
+  background: radial-gradient(circle at 35% 35%, var(--coin-light), var(--coin-dark));
+  box-shadow: inset 0 0 0 2px var(--coin-rim);
+}
+
+/* 古物以「帶封蠟的拓印卷」幾何佔位：不畫寶箱或神燈（C-10）。 */
+.relic {
+  border-radius: 4px;
+  background: linear-gradient(135deg, var(--relic-paper) 0 60%, var(--relic-seal) 60% 100%);
+  box-shadow: inset 0 0 0 2px var(--relic-rim);
+}
+
+.nav {
+  flex: none;
+  min-height: calc(var(--h-nav) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border);
+}
+
+.navButton {
+  min-height: var(--h-nav);
+  border: 0;
+  background: transparent;
+  color: var(--c-text-dim);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.navGlyph {
+  display: inline-flex;
+  line-height: 1;
+}
+
+.navActive {
+  color: var(--c-accent-strong);
+  box-shadow: inset 0 3px 0 var(--c-accent);
+}
+
+/* 窄螢幕：先隱藏職業名與頭像，再縮資源格間距；等級與數字永遠完整顯示。 */
+@media (max-width: 379px) {
+  .jobName,
+  .avatar {
+    display: none;
+  }
+  .header {
+    gap: 6px;
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+  }
+  .resource {
+    min-width: 0;
+    gap: 4px;
+    padding: 0 4px;
+  }
+  .coin,
+  .relic {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* 字體放大：資源列改為兩列換行，數字與等級不裁切（規格 07：放大至 200% 改單欄／自動換行）。 */
+:global(html[data-text-scale='1.5']) .header,
+:global(html[data-text-scale='2']) .header {
+  flex-wrap: wrap;
+}
+
+:global(html[data-text-scale='1.5']) .profile,
+:global(html[data-text-scale='2']) .profile {
+  flex: 1 1 100%;
+}
+
+:global(html[data-text-scale='1.5']) .levelText,
+:global(html[data-text-scale='2']) .levelText,
+:global(html[data-text-scale='1.5']) .resourceText,
+:global(html[data-text-scale='2']) .resourceText {
+  white-space: normal;
+}
+
+:global(html[data-text-scale='1.5']) .resource,
+:global(html[data-text-scale='2']) .resource {
+  flex: 1 1 0;
+}

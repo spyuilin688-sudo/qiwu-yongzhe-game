@@ -1,0 +1,460 @@
+/* ── 按鈕 ── */
+.button {
+  min-height: var(--touch);
+  min-width: var(--touch);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--c-border-strong);
+  background: var(--c-surface-3);
+  color: var(--c-text);
+  font-family: var(--font-display);
+  font-size: var(--font-m);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  line-height: 1.2;
+  text-align: center;
+  transition:
+    transform var(--duration-fast),
+    background var(--duration-fast);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.primary {
+  background: linear-gradient(180deg, var(--c-accent-strong), var(--c-accent));
+  border-color: var(--c-accent-strong);
+  color: var(--c-accent-ink);
+}
+
+.danger {
+  background: var(--c-danger-soft);
+  border-color: var(--c-danger);
+  color: var(--c-text);
+}
+
+.ghost {
+  background: transparent;
+  border-color: var(--c-border);
+}
+
+.button:disabled {
+  background: var(--c-surface-2);
+  border-color: var(--c-border);
+  color: var(--c-text-dim);
+}
+
+.large {
+  min-height: 56px;
+  font-size: var(--font-l);
+}
+
+.block {
+  width: 100%;
+}
+
+.labelRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.labelIcon {
+  display: inline-flex;
+}
+
+.labelIcon > svg {
+  display: block;
+}
+
+.subLabel {
+  font-family: var(--font-family);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  letter-spacing: 0;
+  opacity: 0.9;
+  overflow-wrap: anywhere;
+}
+
+/* ── 底部面板 ── */
+.sheetLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.sheetBackdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--c-overlay);
+  border: 0;
+  padding: 0;
+}
+
+.sheet {
+  position: relative;
+  max-height: min(88%, 720px);
+  display: flex;
+  flex-direction: column;
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border-strong);
+  border-radius: var(--radius-l) var(--radius-l) 0 0;
+  box-shadow: var(--shadow-sheet);
+  padding-bottom: var(--safe-bottom);
+  animation: sheetIn var(--duration-m) ease-out;
+}
+
+.sheetCompact {
+  max-height: min(70%, 600px);
+}
+
+@keyframes sheetIn {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+.sheetHeader {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--gutter);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.sheetTitle {
+  flex: 1;
+  margin: 0;
+  font-size: var(--font-l);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.sheetBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-3) var(--gutter);
+}
+
+.sheetFooter {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--gutter);
+  border-top: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+
+.iconButton {
+  width: var(--touch);
+  height: var(--touch);
+  border-radius: var(--radius-m);
+  border: 0;
+  background: transparent;
+  color: var(--c-text-muted);
+  font-size: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+/* ── 分段切換 ── */
+.segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-m);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-border);
+}
+
+.segment {
+  min-height: 44px;
+  border: 0;
+  border-radius: calc(var(--radius-m) - 2px);
+  background: transparent;
+  color: var(--c-text-muted);
+  font-size: var(--font-s);
+  font-weight: 600;
+  padding: 0 var(--space-2);
+}
+
+.segmentActive {
+  background: var(--c-surface-3);
+  color: var(--c-text);
+  box-shadow: inset 0 0 0 1px var(--c-accent);
+}
+
+/* ── 品質標記 ── */
+.quality {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid var(--q);
+  color: var(--q);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+/* ── 進度條 ── */
+.progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--hp-track);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--c-accent);
+  transition: width var(--duration-m) linear;
+}
+
+/* ── 提示 ── */
+.toastRegion {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  top: calc(var(--safe-top) + var(--h-header) + var(--space-2));
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+
+/* 提示只供閱讀，不攔截點擊，避免蓋住地圖列或戰場時吃掉玩家的操作。 */
+.toast {
+  pointer-events: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-m);
+  background: var(--c-surface-3);
+  border: 1px solid var(--c-border-strong);
+  font-size: var(--font-s);
+  box-shadow: 0 6px 18px var(--shade-45);
+}
+
+.toast_success {
+  border-color: var(--c-success);
+}
+.toast_warning {
+  border-color: var(--c-accent);
+}
+.toast_danger {
+  border-color: var(--c-danger);
+}
+
+/* ── 確認對話 ── */
+/* 確認對話必須在分頁衝突／存檔錯誤遮罩之上，否則「清除存檔」的確認按不到。 */
+.confirmLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.confirmBox {
+  position: relative;
+  width: 100%;
+  background: var(--c-surface-2);
+  border-top: 1px solid var(--c-accent);
+  border-radius: var(--radius-l) var(--radius-l) 0 0;
+  padding: var(--space-4) var(--gutter) calc(var(--space-4) + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.confirmBox h2 {
+  margin: 0;
+  font-size: var(--font-l);
+}
+
+.confirmBox p {
+  margin: 0;
+  color: var(--c-text-muted);
+  white-space: pre-line;
+}
+
+.confirmActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+/* ── 通用排版 ── */
+.sectionTitle {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--font-m);
+  color: var(--c-text-muted);
+  font-weight: 700;
+}
+
+.note {
+  margin: var(--space-2) 0;
+  font-size: var(--font-s);
+  color: var(--c-text-muted);
+}
+
+.warning {
+  margin: var(--space-2) 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-s);
+  background: var(--c-accent-soft);
+  border: 1px solid var(--c-accent);
+  font-size: var(--font-s);
+}
+
+.dangerNote {
+  margin: var(--space-2) 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-s);
+  background: var(--c-danger-soft);
+  border: 1px solid var(--c-danger);
+  font-size: var(--font-s);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-s);
+}
+
+.table th,
+.table td {
+  padding: var(--space-2) var(--space-1);
+  border-bottom: 1px solid var(--c-border);
+  text-align: right;
+  vertical-align: top;
+}
+
+.table th:first-child,
+.table td:first-child {
+  text-align: left;
+}
+
+.table th {
+  color: var(--c-text-dim);
+  font-weight: 600;
+}
+
+.positive {
+  color: var(--c-success);
+}
+
+.negative {
+  color: var(--c-danger);
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip {
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  border: 1px solid var(--c-border-strong);
+  background: var(--c-surface-2);
+  color: var(--c-text-muted);
+  font-size: var(--font-s);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* 選取狀態同時用底色、勾號與 aria-pressed 表示，不只靠框線顏色。 */
+.chipOn {
+  background: linear-gradient(180deg, var(--c-accent-strong), var(--c-accent));
+  border-color: var(--c-accent-strong);
+  color: var(--c-accent-ink);
+}
+
+.chipCheck {
+  flex: none;
+}
+
+.listRow {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.rowMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowTitle {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.rowSub {
+  font-size: var(--font-xs);
+  color: var(--c-text-dim);
+  overflow-wrap: anywhere;
+}
+
+.toggle {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface-2);
+  text-align: left;
+}
+
+.toggleState {
+  flex: none;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--c-surface-3);
+  font-size: var(--font-xs);
+  font-weight: 700;
+}
+
+.toggleOn {
+  background: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+
+.empty {
+  padding: var(--space-5) var(--space-3);
+  text-align: center;
+  color: var(--c-text-dim);
+}

@@ -1,0 +1,8461 @@
+{
+  "meta": {
+    "title": "直式放置RPG：完整架構與實作規格",
+    "version": "0.2",
+    "date": "2026-11-05",
+    "status": "design_proposal_not_implemented_or_balanced",
+    "source_files": [
+      "職業技能裝備與介面設計稿.md",
+      "360關卡完整名單.txt",
+      "1000062632.mp4"
+    ],
+    "count": {
+      "classes": 35,
+      "active_skills": 70,
+      "passives": 35,
+      "equipment_bases": 88,
+      "maps": 12,
+      "stages": 360
+    }
+  },
+  "classes": [
+    {
+      "id": "JOB01",
+      "family": "劍士系",
+      "tier": 1,
+      "name": "劍士",
+      "parent": "見習者",
+      "unlock_level": 10,
+      "skill_ids": [
+        "SK001",
+        "SK002"
+      ],
+      "passive_id": "PS001"
+    },
+    {
+      "id": "JOB02",
+      "family": "劍士系",
+      "tier": 2,
+      "name": "狂劍士",
+      "parent": "劍士",
+      "unlock_level": 40,
+      "skill_ids": [
+        "SK003",
+        "SK004"
+      ],
+      "passive_id": "PS002"
+    },
+    {
+      "id": "JOB03",
+      "family": "劍士系",
+      "tier": 3,
+      "name": "劍聖",
+      "parent": "狂劍士",
+      "unlock_level": 80,
+      "skill_ids": [
+        "SK005",
+        "SK006"
+      ],
+      "passive_id": "PS003"
+    },
+    {
+      "id": "JOB04",
+      "family": "劍士系",
+      "tier": 2,
+      "name": "破陣騎士",
+      "parent": "劍士",
+      "unlock_level": 40,
+      "skill_ids": [
+        "SK007",
+        "SK008"
+      ],
+      "passive_id": "PS004"
+    },
+    {
+      "id": "JOB05",
+      "family": "劍士系",
+      "tier": 3,
+      "name": "符文騎士",
+      "parent": "破陣騎士",
+      "unlock_level": 80,
+      "skill_ids": [
+        "SK009",
+        "SK010"
+      ],
+      "passive_id": "PS005"
+    },
+    {
+      "id": "JOB06",
+      "family": "弓手系",
+      "tier": 1,
+      "name": "弓手",
+      "parent": "見習者",
+      "unlock_level": 10,
+      "skill_ids": [
+        "SK011",
+        "SK012"
+      ],
+      "passive_id": "PS006"
+    },
+    {
+      "id": "JOB07",
+      "family": "弓手系",
+      "tier": 2,
+      "name": "神射手",
+      "parent": "弓手",
+      "unlock_level": 40,
+      "skill_ids": [
+        "SK013",
+        "SK014"
+      ],
+      "passive_id": "PS007"
+    },
+    {
+      "id": "JOB08",
+      "family": "弓手系",
+      "tier": 3,
+      "name": "星隼遊俠",
+      "parent": "神射手",
+      "unlock_level": 80,
+      "skill_ids": [
+        "SK015",
+        "SK016"
+      ],
+      "passive_id": "PS008"
+    },
+    {
+      "id": "JOB09",
+      "family": "弓手系",
+      "tier": 2,
+      "name": "馴獸師",
+      "parent": "弓手",
+      "unlock_level": 40,
+      "skill_ids": [
+        "SK017",
+        "SK018"
+      ],
+      "passive_id": "PS009"
+    },
+    {
+      "id": "JOB10",
+      "family": "弓手系",
+      "tier": 3,
+      "name": "獸王獵手",
+      "parent": "馴獸師",
+      "unlock_level": 80,
+      "skill_ids": [
+        "SK019",
+        "SK020"
+      ],
+      "passive_id": "PS010"
+    },
+    {
+      "id": "JOB11",
+      "family": "法師系",
+      "tier": 1,
+      "name": "法師",
+      "parent": "見習者",
+      "unlock_level": 10,
+      "skill_ids": [
+        "SK021",
+        "SK022"
+      ],
+      "passive_id": "PS011"
+    },
+    {
+      "id": "JOB12",
+      "family": "法師系",
+      "tier": 2,
+      "name": "元素術士",
+      "parent": "法師",
+      "unlock_level": 40,
+      "skill_ids": [
+        "SK023",
+        "SK024"
+      ],
+      "passive_id": "PS012"
+    },
+    {
+      "id": "JOB13",
+      "family": "法師系",
+      "tier": 3,
+      "name": "星界賢者",
+      "parent": "元素術士",
+      "unlock_level": 80,
+      "skill_ids": [
+        "SK025",
+        "SK026"
+      ],
+      "passive_id": "PS013"
+    },
+    {
+      "id": "JOB14",
+      "family": "法師系",
+      "tier": 2,
+      "name": "冰咒師",
+      "parent": "法師",
+      "unlock_level": 40,
+      "skill_ids": [
+        "SK027",
+        "SK028"
+      ],
+      "passive_id": "PS014"
+    },
+    {
+      "id": "JOB15",
+      "family": "法師系",
+      "tier": 3,
+      "name": "永冬魔導士",
+      "parent": "冰咒師",
+      "unlock_level": 80,
+      "skill_ids": [
+        "SK029",
+        "SK030"
+      ],
+      "passive_id": "PS015"
+    },
+    {
+      "id": "JOB16",
+      "family": "盜賊系",
+      "tier": 1,
+      "name": "盜賊",
+      "parent": "見習者",
+      "unlock_level": 10,
+      "skill_ids": [
+        "SK031",
+        "SK032"
+      ],
+      "passive_id": "PS016"
+    },
+    {
+      "id": "JOB17",
+      "family": "盜賊系",
+      "tier": 2,
+      "name": "影刃刺客",
+      "parent": "盜賊",
+      "unlock_level": 40,
+      "skill_ids": [
+        "SK033",
+        "SK034"
+      ],
+      "passive_id": "PS017"
+    },
+    {
+      "id": "JOB18",
+      "family": "盜賊系",
+      "tier": 3,
+      "name": "影舞者",
+      "parent": "影刃刺客",
+      "unlock_level": 80,
+      "skill_ids": [
+        "SK035",
+        "SK036"
+      ],
+      "passive_id": "PS018"
+    },
+    {
+      "id": "JOB19",
+      "family": "盜賊系",
+      "tier": 2,
+      "name": "毒刃獵手",
+      "parent": "盜賊",
+      "unlock_level": 40,
+      "skill_ids": [
+        "SK037",
+        "SK038"
+      ],
+      "passive_id": "PS019"
+    },
+    {
+      "id": "JOB20",
+      "family": "盜賊系",
+      "tier": 3,
+      "name": "劇毒使徒",
+      "parent": "毒刃獵手",
+      "unlock_level": 80,
+      "skill_ids": [
+        "SK039",
+        "SK040"
+      ],
+      "passive_id": "PS020"
+    },
+    {
+      "id": "JOB21",
+      "family": "祭司系",
+      "tier": 1,
+      "name": "祭司",
+      "parent": "見習者",
+      "unlock_level": 10,
+      "skill_ids": [
+        "SK041",
+        "SK042"
+      ],
+      "passive_id": "PS021"
+    },
+    {
+      "id": "JOB22",
+      "family": "祭司系",
+      "tier": 2,
+      "name": "聖詠祭司",
+      "parent": "祭司",
+      "unlock_level": 40,
+      "skill_ids": [
+        "SK043",
+        "SK044"
+      ],
+      "passive_id": "PS022"
+    },
+    {
+      "id": "JOB23",
+      "family": "祭司系",
+      "tier": 3,
+      "name": "審判主教",
+      "parent": "聖詠祭司",
+      "unlock_level": 80,
+      "skill_ids": [
+        "SK045",
+        "SK046"
+      ],
+      "passive_id": "PS023"
+    },
+    {
+      "id": "JOB24",
+      "family": "祭司系",
+      "tier": 2,
+      "name": "武僧",
+      "parent": "祭司",
+      "unlock_level": 40,
+      "skill_ids": [
+        "SK047",
+        "SK048"
+      ],
+      "passive_id": "PS024"
+    },
+    {
+      "id": "JOB25",
+      "family": "祭司系",
+      "tier": 3,
+      "name": "修羅武聖",
+      "parent": "武僧",
+      "unlock_level": 80,
+      "skill_ids": [
+        "SK049",
+        "SK050"
+      ],
+      "passive_id": "PS025"
+    },
+    {
+      "id": "JOB26",
+      "family": "小丑系",
+      "tier": 1,
+      "name": "小丑",
+      "parent": "見習者",
+      "unlock_level": 10,
+      "skill_ids": [
+        "SK051",
+        "SK052"
+      ],
+      "passive_id": "PS026"
+    },
+    {
+      "id": "JOB27",
+      "family": "小丑系",
+      "tier": 2,
+      "name": "牌術師",
+      "parent": "小丑",
+      "unlock_level": 40,
+      "skill_ids": [
+        "SK053",
+        "SK054"
+      ],
+      "passive_id": "PS027"
+    },
+    {
+      "id": "JOB28",
+      "family": "小丑系",
+      "tier": 3,
+      "name": "命運魔術師",
+      "parent": "牌術師",
+      "unlock_level": 80,
+      "skill_ids": [
+        "SK055",
+        "SK056"
+      ],
+      "passive_id": "PS028"
+    },
+    {
+      "id": "JOB29",
+      "family": "小丑系",
+      "tier": 2,
+      "name": "幻戲師",
+      "parent": "小丑",
+      "unlock_level": 40,
+      "skill_ids": [
+        "SK057",
+        "SK058"
+      ],
+      "passive_id": "PS029"
+    },
+    {
+      "id": "JOB30",
+      "family": "小丑系",
+      "tier": 3,
+      "name": "千面幻術師",
+      "parent": "幻戲師",
+      "unlock_level": 80,
+      "skill_ids": [
+        "SK059",
+        "SK060"
+      ],
+      "passive_id": "PS030"
+    },
+    {
+      "id": "JOB31",
+      "family": "工匠系",
+      "tier": 1,
+      "name": "工匠",
+      "parent": "見習者",
+      "unlock_level": 10,
+      "skill_ids": [
+        "SK061",
+        "SK062"
+      ],
+      "passive_id": "PS031"
+    },
+    {
+      "id": "JOB32",
+      "family": "工匠系",
+      "tier": 2,
+      "name": "戰鎚鐵匠",
+      "parent": "工匠",
+      "unlock_level": 40,
+      "skill_ids": [
+        "SK063",
+        "SK064"
+      ],
+      "passive_id": "PS032"
+    },
+    {
+      "id": "JOB33",
+      "family": "工匠系",
+      "tier": 3,
+      "name": "熔爐神匠",
+      "parent": "戰鎚鐵匠",
+      "unlock_level": 80,
+      "skill_ids": [
+        "SK065",
+        "SK066"
+      ],
+      "passive_id": "PS033"
+    },
+    {
+      "id": "JOB34",
+      "family": "工匠系",
+      "tier": 2,
+      "name": "機械師",
+      "parent": "工匠",
+      "unlock_level": 40,
+      "skill_ids": [
+        "SK067",
+        "SK068"
+      ],
+      "passive_id": "PS034"
+    },
+    {
+      "id": "JOB35",
+      "family": "工匠系",
+      "tier": 3,
+      "name": "機械統帥",
+      "parent": "機械師",
+      "unlock_level": 80,
+      "skill_ids": [
+        "SK069",
+        "SK070"
+      ],
+      "passive_id": "PS035"
+    }
+  ],
+  "skills": [
+    {
+      "name": "橫掃斬",
+      "description": "攻擊前方最多三名敵人。",
+      "type": "active",
+      "cooldown_ms": 6000,
+      "prototype_effect": "對最多3名敵人各造成1.50A。",
+      "auto_condition": "有敵人即施放",
+      "tags": [
+        "直接",
+        "範圍"
+      ],
+      "id": "SK001",
+      "class_id": "JOB01"
+    },
+    {
+      "name": "破甲斬",
+      "description": "攻擊主目標，暫時降低其護甲。",
+      "type": "active",
+      "cooldown_ms": 8000,
+      "prototype_effect": "主目標1.80A；護甲降低20%，維持6秒，同名只刷新。",
+      "auto_condition": "主目標無破甲或剩餘不足1秒",
+      "tags": [
+        "直接",
+        "破甲"
+      ],
+      "id": "SK002",
+      "class_id": "JOB01"
+    },
+    {
+      "name": "旋風連斬",
+      "description": "持續斬擊周圍敵人。",
+      "type": "active",
+      "cooldown_ms": 8000,
+      "prototype_effect": "對最多3名敵人，每0.25秒打0.55A，共4段。",
+      "auto_condition": "清怪優先；打王亦可施放",
+      "tags": [
+        "直接",
+        "範圍",
+        "多段"
+      ],
+      "id": "SK003",
+      "class_id": "JOB02"
+    },
+    {
+      "name": "斷鋼重斬",
+      "description": "消耗現有戰意，強化單體重擊。",
+      "type": "active",
+      "cooldown_ms": 10000,
+      "prototype_effect": "主目標2.40A；每消耗1層戰意額外0.40A，最多5層。",
+      "auto_condition": "戰意5層；等待最多3秒仍可施放",
+      "tags": [
+        "直接",
+        "單體",
+        "消耗戰意"
+      ],
+      "id": "SK004",
+      "class_id": "JOB02"
+    },
+    {
+      "name": "劍氣縱橫",
+      "description": "劍氣穿過前方多個目標。",
+      "type": "active",
+      "cooldown_ms": 7000,
+      "prototype_effect": "最多3名敵人各2.20A，穿透僅是演出，不重複命中。",
+      "auto_condition": "有敵人即施放",
+      "tags": [
+        "直接",
+        "範圍"
+      ],
+      "id": "SK005",
+      "class_id": "JOB03"
+    },
+    {
+      "name": "萬劍歸流",
+      "description": "固定總傷害分配給存活敵人，只有一個目標時集中命中。",
+      "type": "ultimate",
+      "cooldown_ms": 24000,
+      "prototype_effect": "總量9.00A分配給存活敵人；依序6段，每段重新分配。",
+      "auto_condition": "打王弱點窗口或冷卻完成",
+      "tags": [
+        "絕招",
+        "直接",
+        "固定總量"
+      ],
+      "id": "SK006",
+      "class_id": "JOB03"
+    },
+    {
+      "name": "盾刃突擊",
+      "description": "攻擊主目標並留下破陣標記。",
+      "type": "active",
+      "cooldown_ms": 6000,
+      "prototype_effect": "主目標1.60A；傷害後加1層破陣。",
+      "auto_condition": "有主目標即施放",
+      "tags": [
+        "直接",
+        "破陣生成"
+      ],
+      "id": "SK007",
+      "class_id": "JOB04"
+    },
+    {
+      "name": "震地盾擊",
+      "description": "造成範圍震波，消耗破陣標記時追加傷害。",
+      "type": "active",
+      "cooldown_ms": 9000,
+      "prototype_effect": "最多3名敵人各1.60A；主目標每消耗1層破陣加0.35A。",
+      "auto_condition": "主目標破陣3層；最多等待3秒",
+      "tags": [
+        "直接",
+        "範圍",
+        "破陣消耗"
+      ],
+      "id": "SK008",
+      "class_id": "JOB04"
+    },
+    {
+      "name": "符文刻印",
+      "description": "使接下來的本體攻擊追加符文傷害。",
+      "type": "active",
+      "cooldown_ms": 12000,
+      "prototype_effect": "下3次本體直接攻擊各追加0.35A；8秒內使用，不能觸發自己。",
+      "auto_condition": "沒有未使用刻印時施放",
+      "tags": [
+        "增益",
+        "3次",
+        "8秒"
+      ],
+      "id": "SK009",
+      "class_id": "JOB05"
+    },
+    {
+      "name": "破城聖裁",
+      "description": "集中打擊主目標，餘波波及其他敵人。",
+      "type": "ultimate",
+      "cooldown_ms": 24000,
+      "prototype_effect": "主目標6.50A，其他最多2名敵人各1.80A；不重複波及主目標。",
+      "auto_condition": "有主目標即施放",
+      "tags": [
+        "絕招",
+        "直接",
+        "主次目標"
+      ],
+      "id": "SK010",
+      "class_id": "JOB05"
+    },
+    {
+      "name": "散射",
+      "description": "箭矢分別射向最多三名敵人。",
+      "type": "active",
+      "cooldown_ms": 6000,
+      "prototype_effect": "最多3名敵人各1.50A；不足3名不把空箭全部轉向主目標。",
+      "auto_condition": "清怪優先",
+      "tags": [
+        "直接",
+        "範圍"
+      ],
+      "id": "SK011",
+      "class_id": "JOB06"
+    },
+    {
+      "name": "瞄準射擊",
+      "description": "對主目標造成集中傷害。",
+      "type": "active",
+      "cooldown_ms": 8000,
+      "prototype_effect": "主目標2.20A，發射時記錄屬性。",
+      "auto_condition": "有主目標即施放",
+      "tags": [
+        "直接",
+        "投射物"
+      ],
+      "id": "SK012",
+      "class_id": "JOB06"
+    },
+    {
+      "name": "弱點標記",
+      "description": "標記主目標，強化後續指定射擊。",
+      "type": "active",
+      "cooldown_ms": 10000,
+      "prototype_effect": "主目標0.50A；後續本體射擊傷害加20%，維持8秒。",
+      "auto_condition": "無同名標記或剩餘不足1秒",
+      "tags": [
+        "直接",
+        "弱點"
+      ],
+      "id": "SK013",
+      "class_id": "JOB07"
+    },
+    {
+      "name": "穿甲箭",
+      "description": "部分忽略目標護甲的單體攻擊。",
+      "type": "active",
+      "cooldown_ms": 8000,
+      "prototype_effect": "主目標2.40A；計傷時忽略30%剩餘護甲。",
+      "auto_condition": "優先在弱點標記後",
+      "tags": [
+        "直接",
+        "穿甲"
+      ],
+      "id": "SK014",
+      "class_id": "JOB07"
+    },
+    {
+      "name": "追星箭",
+      "description": "連續射出可轉向新目標的追蹤箭。",
+      "type": "active",
+      "cooldown_ms": 7000,
+      "prototype_effect": "4箭各0.70A；單目標可集中；死亡目標可換一次。",
+      "auto_condition": "清怪或標記後施放",
+      "tags": [
+        "直接",
+        "投射物",
+        "多段"
+      ],
+      "id": "SK015",
+      "class_id": "JOB08"
+    },
+    {
+      "name": "天穹狙擊",
+      "description": "消耗專注，對單一目標造成爆發。",
+      "type": "ultimate",
+      "cooldown_ms": 24000,
+      "prototype_effect": "主目標5.50A；每消耗1層專注加0.90A，最多3層。",
+      "auto_condition": "專注3層；最多等待3秒",
+      "tags": [
+        "絕招",
+        "直接",
+        "消耗專注"
+      ],
+      "id": "SK016",
+      "class_id": "JOB08"
+    },
+    {
+      "name": "掠食標記",
+      "description": "指定戰獸優先攻擊的目標。",
+      "type": "active",
+      "cooldown_ms": 10000,
+      "prototype_effect": "主目標0.40A；戰獸對此目標傷害加25%，8秒。",
+      "auto_condition": "沒有同名標記時優先",
+      "tags": [
+        "直接",
+        "戰獸標記"
+      ],
+      "id": "SK017",
+      "class_id": "JOB09"
+    },
+    {
+      "name": "協同撲擊",
+      "description": "本體與戰獸依序攻擊主目標。",
+      "type": "active",
+      "cooldown_ms": 8000,
+      "prototype_effect": "本體1.30A，戰獸1.50A；兩段各只套用自身來源規則。",
+      "auto_condition": "有標記目標時優先",
+      "tags": [
+        "直接",
+        "戰獸協同"
+      ],
+      "id": "SK018",
+      "class_id": "JOB09"
+    },
+    {
+      "name": "獵群奔襲",
+      "description": "獸影掠過多個敵人，不增加常駐召喚物。",
+      "type": "active",
+      "cooldown_ms": 9000,
+      "prototype_effect": "最多3名敵人各2.20A；獸影屬技能，不增召喚上限。",
+      "auto_condition": "清怪優先",
+      "tags": [
+        "直接",
+        "範圍"
+      ],
+      "id": "SK019",
+      "class_id": "JOB10"
+    },
+    {
+      "name": "獸王號令",
+      "description": "短暫強化戰獸，立即完成一次協同攻擊。",
+      "type": "ultimate",
+      "cooldown_ms": 24000,
+      "prototype_effect": "立即一次本體1.00A＋戰獸1.50A；戰獸傷害加40%持續8秒。",
+      "auto_condition": "戰獸存在時施放",
+      "tags": [
+        "絕招",
+        "增益",
+        "協同"
+      ],
+      "id": "SK020",
+      "class_id": "JOB10"
+    },
+    {
+      "name": "火球術",
+      "description": "攻擊目標並留下燃燒。",
+      "type": "active",
+      "cooldown_ms": 6000,
+      "prototype_effect": "主目標1.40A；另每秒0.18A燃燒，共4次；留火印8秒。",
+      "auto_condition": "有主目標即施放",
+      "tags": [
+        "直接",
+        "燃燒",
+        "火印"
+      ],
+      "id": "SK021",
+      "class_id": "JOB11"
+    },
+    {
+      "name": "冰錐術",
+      "description": "攻擊目標並留下寒霜。",
+      "type": "active",
+      "cooldown_ms": 6000,
+      "prototype_effect": "主目標1.60A；留冰印8秒；冰系分支另加1層寒霜。",
+      "auto_condition": "有主目標即施放",
+      "tags": [
+        "直接",
+        "冰印",
+        "寒霜"
+      ],
+      "id": "SK022",
+      "class_id": "JOB11"
+    },
+    {
+      "name": "連鎖閃電",
+      "description": "雷電在敵人間跳躍，留下雷印。",
+      "type": "active",
+      "cooldown_ms": 7000,
+      "prototype_effect": "最多3名不同敵人各1.50A，每名留雷印8秒。",
+      "auto_condition": "清怪或缺雷印時優先",
+      "tags": [
+        "直接",
+        "範圍",
+        "雷印"
+      ],
+      "id": "SK023",
+      "class_id": "JOB12"
+    },
+    {
+      "name": "元素引爆",
+      "description": "消耗目標的元素印記，結算爆發傷害。",
+      "type": "active",
+      "cooldown_ms": 10000,
+      "prototype_effect": "主目標1.00A；每消耗一種印記加0.80A，最多3種。",
+      "auto_condition": "至少2種印記；最多等待3秒",
+      "tags": [
+        "直接",
+        "印記引爆"
+      ],
+      "id": "SK024",
+      "class_id": "JOB12"
+    },
+    {
+      "name": "流星刻陣",
+      "description": "在敵群中建立持續造成傷害的星陣。",
+      "type": "active",
+      "cooldown_ms": 12000,
+      "prototype_effect": "場上最多1個陣，維持4秒；每秒對最多3名敵人各0.60A。",
+      "auto_condition": "無同名陣時施放",
+      "tags": [
+        "區域持續",
+        "4次"
+      ],
+      "id": "SK025",
+      "class_id": "JOB13"
+    },
+    {
+      "name": "星界崩解",
+      "description": "引爆場上元素印記，對主目標追加集中傷害。",
+      "type": "ultimate",
+      "cooldown_ms": 24000,
+      "prototype_effect": "最多3名敵人各3.00A；各目標每消耗1種印記再加0.80A；主目標另1.50A。",
+      "auto_condition": "主目標至少2種印記時優先",
+      "tags": [
+        "絕招",
+        "直接",
+        "印記引爆"
+      ],
+      "id": "SK026",
+      "class_id": "JOB13"
+    },
+    {
+      "name": "霜環",
+      "description": "對多名敵人施加寒霜。",
+      "type": "active",
+      "cooldown_ms": 7000,
+      "prototype_effect": "最多3名敵人各1.40A，傷害後各加1層寒霜。",
+      "auto_condition": "優先於碎冰",
+      "tags": [
+        "直接",
+        "範圍",
+        "寒霜"
+      ],
+      "id": "SK027",
+      "class_id": "JOB14"
+    },
+    {
+      "name": "碎冰術",
+      "description": "消耗主目標的寒霜層數造成爆發。",
+      "type": "active",
+      "cooldown_ms": 10000,
+      "prototype_effect": "主目標1.30A；每消耗1層寒霜加0.55A。",
+      "auto_condition": "寒霜5層；最多等待3秒",
+      "tags": [
+        "直接",
+        "碎冰"
+      ],
+      "id": "SK028",
+      "class_id": "JOB14"
+    },
+    {
+      "name": "寒晶綻放",
+      "description": "冰晶攻擊多個目標，對主目標追加寒霜。",
+      "type": "active",
+      "cooldown_ms": 9000,
+      "prototype_effect": "最多3名敵人各1.80A；主目標加2層、其他各1層寒霜。",
+      "auto_condition": "主目標未滿5層時優先",
+      "tags": [
+        "直接",
+        "範圍",
+        "寒霜"
+      ],
+      "id": "SK029",
+      "class_id": "JOB15"
+    },
+    {
+      "name": "零度終章",
+      "description": "消耗敵人的寒霜，結算大範圍碎冰傷害。",
+      "type": "ultimate",
+      "cooldown_ms": 24000,
+      "prototype_effect": "最多3名敵人各3.50A；各自每消耗1層寒霜再加0.60A。",
+      "auto_condition": "主目標滿寒霜；最多等待3秒",
+      "tags": [
+        "絕招",
+        "直接",
+        "碎冰"
+      ],
+      "id": "SK030",
+      "class_id": "JOB15"
+    },
+    {
+      "name": "迅影刺",
+      "description": "快速打擊單一敵人。",
+      "type": "active",
+      "cooldown_ms": 5000,
+      "prototype_effect": "主目標2段各0.90A；整次只算1次攻擊行動。",
+      "auto_condition": "有主目標即施放",
+      "tags": [
+        "直接",
+        "單體",
+        "多段"
+      ],
+      "id": "SK031",
+      "class_id": "JOB16"
+    },
+    {
+      "name": "投刃散射",
+      "description": "投擲飛刃攻擊最多三名敵人。",
+      "type": "active",
+      "cooldown_ms": 7000,
+      "prototype_effect": "最多3名敵人各1.60A。",
+      "auto_condition": "清怪優先",
+      "tags": [
+        "直接",
+        "範圍"
+      ],
+      "id": "SK032",
+      "class_id": "JOB16"
+    },
+    {
+      "name": "影襲",
+      "description": "連續斬擊主目標，增加連擊點。",
+      "type": "active",
+      "cooldown_ms": 7000,
+      "prototype_effect": "主目標3段各0.75A；正常行動累積之外，額外加1連擊點。",
+      "auto_condition": "連擊未滿時優先",
+      "tags": [
+        "直接",
+        "多段",
+        "連擊"
+      ],
+      "id": "SK033",
+      "class_id": "JOB17"
+    },
+    {
+      "name": "破綻標記",
+      "description": "強化對該目標的處決傷害。",
+      "type": "active",
+      "cooldown_ms": 10000,
+      "prototype_effect": "主目標0.60A；處決類傷害加25%，持續8秒。",
+      "auto_condition": "處決前且無標記",
+      "tags": [
+        "直接",
+        "處決標記"
+      ],
+      "id": "SK034",
+      "class_id": "JOB17"
+    },
+    {
+      "name": "疾影連殺",
+      "description": "在敵人之間連續斬擊，只有一名敵人時集中攻擊。",
+      "type": "active",
+      "cooldown_ms": 8000,
+      "prototype_effect": "4斬各0.80A；依目標排序輪替，不足4名可回到主目標。",
+      "auto_condition": "清怪或等待處決期間",
+      "tags": [
+        "直接",
+        "多段"
+      ],
+      "id": "SK035",
+      "class_id": "JOB18"
+    },
+    {
+      "name": "無聲處決",
+      "description": "消耗連擊點，對主目標造成爆發。",
+      "type": "ultimate",
+      "cooldown_ms": 24000,
+      "prototype_effect": "主目標4.50A；每消耗1連擊點加0.75A，最多5點。",
+      "auto_condition": "連擊5點；最多等待3秒",
+      "tags": [
+        "絕招",
+        "直接",
+        "處決"
+      ],
+      "id": "SK036",
+      "class_id": "JOB18"
+    },
+    {
+      "name": "淬毒",
+      "description": "讓一段時間內的本體普攻附帶中毒。",
+      "type": "active",
+      "cooldown_ms": 12000,
+      "prototype_effect": "10秒內本體普攻各加1毒層；每個毒層每秒0.12A，共6次。",
+      "auto_condition": "無淬毒增益時施放",
+      "tags": [
+        "增益",
+        "中毒"
+      ],
+      "id": "SK037",
+      "class_id": "JOB19"
+    },
+    {
+      "name": "毒霧投擲",
+      "description": "對多名敵人施加中毒。",
+      "type": "active",
+      "cooldown_ms": 8000,
+      "prototype_effect": "最多3名敵人各0.80A並各加2層毒。",
+      "auto_condition": "清怪或毒層不足時",
+      "tags": [
+        "直接",
+        "範圍",
+        "中毒"
+      ],
+      "id": "SK038",
+      "class_id": "JOB19"
+    },
+    {
+      "name": "蔓毒之刃",
+      "description": "攻擊主目標，將部分毒層傳播給其他敵人。",
+      "type": "active",
+      "cooldown_ms": 9000,
+      "prototype_effect": "主目標1.80A並加1毒層；複製1層到其他最多2名敵人，沿用剩餘期。",
+      "auto_condition": "主目標有毒時優先",
+      "tags": [
+        "直接",
+        "毒傳播"
+      ],
+      "id": "SK039",
+      "class_id": "JOB20"
+    },
+    {
+      "name": "終末毒爆",
+      "description": "消耗指定毒層，提前結算其中一部分剩餘毒傷。",
+      "type": "ultimate",
+      "cooldown_ms": 24000,
+      "prototype_effect": "主目標3.00A＋被消耗毒層剩餘傷害的80%；消耗層立即移除。",
+      "auto_condition": "毒5層且剩餘期至少3秒；最多等3秒",
+      "tags": [
+        "絕招",
+        "直接＋持續結算"
+      ],
+      "id": "SK040",
+      "class_id": "JOB20"
+    },
+    {
+      "name": "聖光彈",
+      "description": "對主目標造成聖光傷害。",
+      "type": "active",
+      "cooldown_ms": 5000,
+      "prototype_effect": "主目標1.80A；取得聖印被動後，傷害後加1層。",
+      "auto_condition": "有主目標即施放",
+      "tags": [
+        "直接",
+        "聖光"
+      ],
+      "id": "SK041",
+      "class_id": "JOB21"
+    },
+    {
+      "name": "淨罪之環",
+      "description": "對多名敵人造成範圍聖光傷害。",
+      "type": "active",
+      "cooldown_ms": 7000,
+      "prototype_effect": "最多3名敵人各1.50A；聖印分支傷害後各加1層。",
+      "auto_condition": "清怪優先",
+      "tags": [
+        "直接",
+        "範圍",
+        "聖光"
+      ],
+      "id": "SK042",
+      "class_id": "JOB21"
+    },
+    {
+      "name": "祝禱之歌",
+      "description": "短暫強化本體攻擊，不提供治療。",
+      "type": "active",
+      "cooldown_ms": 12000,
+      "prototype_effect": "本體普攻與本體直接技能傷害加20%，維持8秒；不套用召喚物。",
+      "auto_condition": "沒有同名增益時施放",
+      "tags": [
+        "增益",
+        "本體"
+      ],
+      "id": "SK043",
+      "class_id": "JOB22"
+    },
+    {
+      "name": "裁決烙印",
+      "description": "為敵人刻下聖印，強化後續審判。",
+      "type": "active",
+      "cooldown_ms": 8000,
+      "prototype_effect": "主目標1.20A，加2層聖印，狀態維持8秒。",
+      "auto_condition": "主目標未滿聖印時優先",
+      "tags": [
+        "直接",
+        "聖印"
+      ],
+      "id": "SK044",
+      "class_id": "JOB22"
+    },
+    {
+      "name": "聖光連禱",
+      "description": "連續攻擊多名敵人，集中補充主目標的聖印。",
+      "type": "active",
+      "cooldown_ms": 9000,
+      "prototype_effect": "3段各0.75A分配目標；對主目標另外加1層聖印。",
+      "auto_condition": "清怪或聖印未滿時",
+      "tags": [
+        "直接",
+        "多段",
+        "聖印"
+      ],
+      "id": "SK045",
+      "class_id": "JOB23"
+    },
+    {
+      "name": "黎明審判",
+      "description": "消耗聖印，造成集中與範圍傷害。",
+      "type": "ultimate",
+      "cooldown_ms": 24000,
+      "prototype_effect": "主目標4.00A＋每消耗1聖印0.90A；其他最多2名敵人各1.50A。",
+      "auto_condition": "聖印3層；最多等3秒",
+      "tags": [
+        "絕招",
+        "直接",
+        "審判"
+      ],
+      "id": "SK046",
+      "class_id": "JOB23"
+    },
+    {
+      "name": "連環拳",
+      "description": "連續打擊主目標。",
+      "type": "active",
+      "cooldown_ms": 6000,
+      "prototype_effect": "主目標3拳各0.70A；另累積1層氣脈。",
+      "auto_condition": "氣脈未滿時優先",
+      "tags": [
+        "直接",
+        "多段",
+        "氣脈"
+      ],
+      "id": "SK047",
+      "class_id": "JOB24"
+    },
+    {
+      "name": "破山掌",
+      "description": "掌風攻擊多名敵人。",
+      "type": "active",
+      "cooldown_ms": 8000,
+      "prototype_effect": "最多3名敵人各1.90A。",
+      "auto_condition": "清怪優先",
+      "tags": [
+        "直接",
+        "範圍"
+      ],
+      "id": "SK048",
+      "class_id": "JOB24"
+    },
+    {
+      "name": "震岳連拳",
+      "description": "對主目標連擊，拳風波及其他敵人。",
+      "type": "active",
+      "cooldown_ms": 9000,
+      "prototype_effect": "主目標4拳各0.75A；其他最多2名敵人各0.80A。",
+      "auto_condition": "有主目標即施放",
+      "tags": [
+        "直接",
+        "主次目標"
+      ],
+      "id": "SK049",
+      "class_id": "JOB25"
+    },
+    {
+      "name": "五脈崩拳",
+      "description": "消耗氣脈，造成單體爆發。",
+      "type": "ultimate",
+      "cooldown_ms": 24000,
+      "prototype_effect": "主目標4.00A＋每消耗1氣脈0.90A。",
+      "auto_condition": "氣脈5層；最多等3秒",
+      "tags": [
+        "絕招",
+        "直接",
+        "氣脈消耗"
+      ],
+      "id": "SK050",
+      "class_id": "JOB25"
+    },
+    {
+      "name": "飛牌",
+      "description": "對單一敵人投擲卡牌。",
+      "type": "active",
+      "cooldown_ms": 5000,
+      "prototype_effect": "主目標1.80A；牌術路線使用並前進一次花色指標。",
+      "auto_condition": "有主目標即施放",
+      "tags": [
+        "直接",
+        "投牌"
+      ],
+      "id": "SK051",
+      "class_id": "JOB26"
+    },
+    {
+      "name": "散花飛刃",
+      "description": "飛刃分散攻擊多名敵人。",
+      "type": "active",
+      "cooldown_ms": 7000,
+      "prototype_effect": "最多3名敵人各1.50A；不推進花色。",
+      "auto_condition": "清怪優先",
+      "tags": [
+        "直接",
+        "範圍"
+      ],
+      "id": "SK052",
+      "class_id": "JOB26"
+    },
+    {
+      "name": "切牌",
+      "description": "把下一張牌改為預設花色，不增加出牌次數。",
+      "type": "active",
+      "cooldown_ms": 10000,
+      "prototype_effect": "把下一次出牌花色設為玩家選定花色；只改1次，不造成額外出牌。",
+      "auto_condition": "下一張不是指定花色時",
+      "tags": [
+        "增益",
+        "花色控制"
+      ],
+      "id": "SK053",
+      "class_id": "JOB27"
+    },
+    {
+      "name": "連環牌擊",
+      "description": "依花色順序連續出牌。",
+      "type": "active",
+      "cooldown_ms": 8000,
+      "prototype_effect": "3張牌各0.80A，依序推進花色，單目標可集中。",
+      "auto_condition": "切牌後優先",
+      "tags": [
+        "直接",
+        "多段",
+        "出牌"
+      ],
+      "id": "SK054",
+      "class_id": "JOB27"
+    },
+    {
+      "name": "王牌封印",
+      "description": "強化下一次指定花色的出牌效果。",
+      "type": "active",
+      "cooldown_ms": 12000,
+      "prototype_effect": "下一張指定花色的效果提高50%；8秒內有效，僅一次。",
+      "auto_condition": "預定花色即將出現時",
+      "tags": [
+        "增益",
+        "花色強化"
+      ],
+      "id": "SK055",
+      "class_id": "JOB28"
+    },
+    {
+      "name": "四象牌陣",
+      "description": "依序施放四種花色，形成完整爆發。",
+      "type": "ultimate",
+      "cooldown_ms": 24000,
+      "prototype_effect": "固定紅心→方塊→梅花→黑桃，各1.30A並執行花色效果。",
+      "auto_condition": "準備完成即施放",
+      "tags": [
+        "絕招",
+        "直接",
+        "四花色"
+      ],
+      "id": "SK056",
+      "class_id": "JOB28"
+    },
+    {
+      "name": "鏡像飛牌",
+      "description": "建立一個會重演飛牌的幻影。",
+      "type": "active",
+      "cooldown_ms": 8000,
+      "prototype_effect": "建立8秒幻影；第2、4、6、8秒各打0.35A。",
+      "auto_condition": "有空位或最舊單位即將結束",
+      "tags": [
+        "召喚",
+        "幻影"
+      ],
+      "id": "SK057",
+      "class_id": "JOB29"
+    },
+    {
+      "name": "替身爆彈",
+      "description": "建立定時爆炸的替身，不承受傷害。",
+      "type": "active",
+      "cooldown_ms": 10000,
+      "prototype_effect": "建立3秒替身，結算時對最多3名敵人各1.60A。",
+      "auto_condition": "有敵人即施放",
+      "tags": [
+        "召喚",
+        "爆破"
+      ],
+      "id": "SK058",
+      "class_id": "JOB29"
+    },
+    {
+      "name": "戲法換位",
+      "description": "結算最舊幻影並建立新的攻擊幻影。",
+      "type": "active",
+      "cooldown_ms": 9000,
+      "prototype_effect": "提前結算最舊單位並生成8秒基本幻影；沒有舊單位也可生成。",
+      "auto_condition": "有單位且剩餘期≤2秒優先",
+      "tags": [
+        "結算",
+        "召喚"
+      ],
+      "id": "SK059",
+      "class_id": "JOB30"
+    },
+    {
+      "name": "終幕禮炮",
+      "description": "消耗場上幻影，造成範圍爆發。",
+      "type": "ultimate",
+      "cooldown_ms": 24000,
+      "prototype_effect": "最多3名敵人各2.40A；每消耗1單位額外0.80A，最多2單位。",
+      "auto_condition": "2單位存在；最多等3秒",
+      "tags": [
+        "絕招",
+        "直接",
+        "幻影消耗"
+      ],
+      "id": "SK060",
+      "class_id": "JOB30"
+    },
+    {
+      "name": "重鎚敲擊",
+      "description": "攻擊主目標並短暫破甲。",
+      "type": "active",
+      "cooldown_ms": 6000,
+      "prototype_effect": "主目標1.90A；護甲降低15%，6秒。",
+      "auto_condition": "無破甲時優先",
+      "tags": [
+        "直接",
+        "破甲"
+      ],
+      "id": "SK061",
+      "class_id": "JOB31"
+    },
+    {
+      "name": "火花彈",
+      "description": "投擲火花彈，攻擊多名敵人。",
+      "type": "active",
+      "cooldown_ms": 7000,
+      "prototype_effect": "最多3名敵人各1.50A。",
+      "auto_condition": "清怪優先",
+      "tags": [
+        "直接",
+        "範圍"
+      ],
+      "id": "SK062",
+      "class_id": "JOB31"
+    },
+    {
+      "name": "熔火重擊",
+      "description": "消耗熱度，造成重擊與燃燒。",
+      "type": "active",
+      "cooldown_ms": 9000,
+      "prototype_effect": "主目標2.20A＋每消耗1熱度0.30A；另每秒0.20A燃燒4次。",
+      "auto_condition": "熱度5層；最多等3秒",
+      "tags": [
+        "直接",
+        "熱度",
+        "燃燒"
+      ],
+      "id": "SK063",
+      "class_id": "JOB32"
+    },
+    {
+      "name": "鍛地震波",
+      "description": "震波攻擊多名敵人。",
+      "type": "active",
+      "cooldown_ms": 8000,
+      "prototype_effect": "最多3名敵人各1.90A。",
+      "auto_condition": "清怪優先",
+      "tags": [
+        "直接",
+        "範圍"
+      ],
+      "id": "SK064",
+      "class_id": "JOB32"
+    },
+    {
+      "name": "熔痕烙印",
+      "description": "在主目標身上留下持續燃燒的熔痕。",
+      "type": "active",
+      "cooldown_ms": 10000,
+      "prototype_effect": "主目標1.00A；另每秒0.35A熔痕6次，與普通燃燒分開。",
+      "auto_condition": "沒有熔痕或剩餘不足1秒",
+      "tags": [
+        "直接",
+        "持續"
+      ],
+      "id": "SK065",
+      "class_id": "JOB33"
+    },
+    {
+      "name": "天地鍛打",
+      "description": "消耗熱度，造成範圍重擊。",
+      "type": "ultimate",
+      "cooldown_ms": 24000,
+      "prototype_effect": "最多3名敵人各3.50A＋每消耗1熱度0.45A。",
+      "auto_condition": "熱度5層；最多等3秒",
+      "tags": [
+        "絕招",
+        "直接",
+        "範圍"
+      ],
+      "id": "SK066",
+      "class_id": "JOB33"
+    },
+    {
+      "name": "架設砲台",
+      "description": "建立有持續時間的砲台，超額時更新最舊的一座。",
+      "type": "active",
+      "cooldown_ms": 7000,
+      "prototype_effect": "建立14秒砲台，每秒對1目標0.35A；最多2座。",
+      "auto_condition": "少於2座或最舊剩餘≤7秒",
+      "tags": [
+        "召喚",
+        "砲台"
+      ],
+      "id": "SK067",
+      "class_id": "JOB34"
+    },
+    {
+      "name": "超頻指令",
+      "description": "短暫強化現有砲台。",
+      "type": "active",
+      "cooldown_ms": 12000,
+      "prototype_effect": "現有砲台攻擊間隔×0.75，持續6秒；不再額外提高每發傷害。",
+      "auto_condition": "至少1座砲台存在",
+      "tags": [
+        "增益",
+        "砲台"
+      ],
+      "id": "SK068",
+      "class_id": "JOB34"
+    },
+    {
+      "name": "集火信標",
+      "description": "指定主目標，強化砲台的集中射擊。",
+      "type": "active",
+      "cooldown_ms": 10000,
+      "prototype_effect": "主目標0.60A；砲台對此目標傷害加25%，持續8秒。",
+      "auto_condition": "有砲台且無同名信標",
+      "tags": [
+        "直接",
+        "信標"
+      ],
+      "id": "SK069",
+      "class_id": "JOB35"
+    },
+    {
+      "name": "機甲總動員",
+      "description": "召出一架限時步行機甲協同射擊，最多一架。",
+      "type": "ultimate",
+      "cooldown_ms": 24000,
+      "prototype_effect": "建立10秒機甲，每秒對1目標0.70A；最多1架。",
+      "auto_condition": "有敵人即施放",
+      "tags": [
+        "絕招",
+        "召喚",
+        "機甲"
+      ],
+      "id": "SK070",
+      "class_id": "JOB35"
+    }
+  ],
+  "passives": [
+    {
+      "name": "劍術節奏",
+      "description": "每四次本體普攻追加一次斬擊。",
+      "id": "PS001",
+      "class_id": "JOB01",
+      "prototype_rule": "每4次本體普攻後追加0.40A；追加斬擊不計普攻次數。"
+    },
+    {
+      "name": "戰意",
+      "description": "本體每次普攻或常規技能施放累積一層，最多五層。",
+      "id": "PS002",
+      "class_id": "JOB02",
+      "prototype_rule": "每次本體普攻／常規技能施放加1層，上限5；消耗技先消耗，不把同次施放再計為生成。"
+    },
+    {
+      "name": "餘勢",
+      "description": "斷鋼重斬結束後保留一層戰意。",
+      "id": "PS003",
+      "class_id": "JOB03",
+      "prototype_rule": "斷鋼重斬消耗的戰意少1層且保留1層；保留層不算消耗加傷。"
+    },
+    {
+      "name": "破陣",
+      "description": "指定本體技能累積破陣標記，最多三層。",
+      "id": "PS004",
+      "class_id": "JOB04",
+      "prototype_rule": "盾刃突擊加1層，其他有破陣生成標籤的本體技能才可加層；上限3，8秒。"
+    },
+    {
+      "name": "符文連攜",
+      "description": "連續施放兩種不同常規技能後，強化下一次本體攻擊。",
+      "id": "PS005",
+      "class_id": "JOB05",
+      "prototype_rule": "連續兩種不同常規技能後，下一次本體普攻額外0.40A；同時僅保留1次。"
+    },
+    {
+      "name": "連射節奏",
+      "description": "每四次本體普攻，下一次普攻多射一箭。",
+      "id": "PS006",
+      "class_id": "JOB06",
+      "prototype_rule": "每4次本體普攻後，下一次普攻追加0.40A；追加箭不增加計數。"
+    },
+    {
+      "name": "專注",
+      "description": "持續攻擊同一目標累積專注，最多三層。",
+      "id": "PS007",
+      "class_id": "JOB07",
+      "prototype_rule": "每次本體普攻命中同一主目標加1層，上限3；主目標死亡保留1層，手動改目標歸零。"
+    },
+    {
+      "name": "餘箭追獵",
+      "description": "箭矢抵達前目標死亡時，可轉向另一名敵人一次。",
+      "id": "PS008",
+      "class_id": "JOB08",
+      "prototype_rule": "已發射箭的原目標死亡時，按優先序重新選目標一次；無活目標則銷毀，不保留到下一場。"
+    },
+    {
+      "name": "獵伴",
+      "description": "獲得一隻常駐戰獸，沒有獨立生命或裝備系統。",
+      "id": "PS009",
+      "class_id": "JOB09",
+      "prototype_rule": "固定1隻戰獸；每1.5秒1次0.50A；無血量、裝備、獨立經驗；A已含本體攻擊，勿重算。"
+    },
+    {
+      "name": "默契追獵",
+      "description": "本體與戰獸依次命中同一目標後，強化下一次協同撲擊。",
+      "id": "PS010",
+      "class_id": "JOB10",
+      "prototype_rule": "本體命中後2秒內戰獸命中同目標，下一次協同撲擊的戰獸段加30%；內置間隔3秒。"
+    },
+    {
+      "name": "元素殘印",
+      "description": "火與冰技能可在敵人身上保留對應印記。",
+      "id": "PS011",
+      "class_id": "JOB11",
+      "prototype_rule": "火印與冰印各1枚、各8秒；元素術士加雷印。新同元素只刷新，不無限疊層。"
+    },
+    {
+      "name": "元素共鳴",
+      "description": "同一次引爆消耗不同種類印記時獲得加成。",
+      "id": "PS012",
+      "class_id": "JOB12",
+      "prototype_rule": "引爆2種印記的消耗部分加15%，3種加30%；不把額外星火再列為印記來源。"
+    },
+    {
+      "name": "餘燼傳承",
+      "description": "目標死亡時，將一種尚存印記轉移給另一名敵人。",
+      "id": "PS013",
+      "class_id": "JOB13",
+      "prototype_rule": "目標死亡後最多轉移1種剩餘印記，順序火→冰→雷；沿用剩餘時間，無目標則清除。"
+    },
+    {
+      "name": "寒霜累積",
+      "description": "指定冰系技能可疊加寒霜，最多五層。",
+      "id": "PS014",
+      "class_id": "JOB14",
+      "prototype_rule": "冰錐、霜環、寒晶依技能規則加層，上限5、8秒。凍結演出不改敵方攻速。"
+    },
+    {
+      "name": "霜痕",
+      "description": "碎冰後保留一層寒霜；該層不納入消耗傷害。",
+      "id": "PS015",
+      "class_id": "JOB15",
+      "prototype_rule": "碎冰或終章保留1層且不結算該層；本來只有1層時，只打基礎傷害。"
+    },
+    {
+      "name": "快手",
+      "description": "依序施放兩種不同常規技能後，下一次普攻追加一擊。",
+      "id": "PS016",
+      "class_id": "JOB16",
+      "prototype_rule": "兩種不同常規技能依序施放後，下一次本體普攻追加0.35A；不可囤積超過1次。"
+    },
+    {
+      "name": "連擊點",
+      "description": "本體直接攻擊行動累積連擊點，最多五點。",
+      "id": "PS017",
+      "class_id": "JOB17",
+      "prototype_rule": "本體直接攻擊行動每次加1點，上限5；多段共用行動ID，處決行動不再生成。"
+    },
+    {
+      "name": "殘影回刃",
+      "description": "滿點處決後，接下來兩次本體普攻獲得強化。",
+      "id": "PS018",
+      "class_id": "JOB18",
+      "prototype_rule": "滿5點處決後，後續2次本體普攻各額外0.45A；不把餘波列為普攻。"
+    },
+    {
+      "name": "毒性累積",
+      "description": "同一目標最多五層毒，持續傷害不預設暴擊。",
+      "id": "PS019",
+      "class_id": "JOB19",
+      "prototype_rule": "上限5層；每層獨立剩餘次數與傷害快照。滿層再上毒只刷新最早到期層，未跳傷害不另結算。"
+    },
+    {
+      "name": "毒性殘留",
+      "description": "毒爆保留一層毒；保留層不納入提前結算。",
+      "id": "PS020",
+      "class_id": "JOB20",
+      "prototype_rule": "毒爆最多消耗4層，保留剩餘時間最長的1層；保留層不進入毒爆傷害。"
+    },
+    {
+      "name": "信仰回聲",
+      "description": "每三次本體常規技能施放，追加一次聖光攻擊。",
+      "id": "PS021",
+      "class_id": "JOB21",
+      "prototype_rule": "每3次本體常規技能施放追加0.45A聖光；追加不累積本被動或聖印。"
+    },
+    {
+      "name": "聖印",
+      "description": "指定本體聖光技能在目標身上累積聖印，最多三層。",
+      "id": "PS022",
+      "class_id": "JOB22",
+      "prototype_rule": "聖光彈、淨罪之環、裁決烙印、聖光連禱按各自規則加層，上限3、8秒；不可額外雙算。"
+    },
+    {
+      "name": "餘光傳誦",
+      "description": "有聖印的目標死亡後，下一個目標取得一層聖印。",
+      "id": "PS023",
+      "class_id": "JOB23",
+      "prototype_rule": "有聖印目標死亡後轉移1層，保留原剩餘期；下一名敵人不存在則清除。"
+    },
+    {
+      "name": "氣脈",
+      "description": "本體普攻累積氣脈，最多五層。",
+      "id": "PS024",
+      "class_id": "JOB24",
+      "prototype_rule": "每2次本體普攻加1層，上限5；連環拳另加1層；崩拳不生成。"
+    },
+    {
+      "name": "餘勁",
+      "description": "崩拳後的三次本體普攻得到強化。",
+      "id": "PS025",
+      "class_id": "JOB25",
+      "prototype_rule": "崩拳後3次本體普攻各額外0.40A；不加氣脈，不再次觸發餘勁。"
+    },
+    {
+      "name": "巧手",
+      "description": "每四次本體普攻追加一張飛牌，優先攻擊另一名敵人。",
+      "id": "PS026",
+      "class_id": "JOB26",
+      "prototype_rule": "每4次本體普攻追加0.40A飛牌，優先另一目標；無其他目標則打主目標；不推花色。"
+    },
+    {
+      "name": "花色輪轉",
+      "description": "紅心強化普攻、方塊破甲、梅花擴散、黑桃重擊；不是回血機制。",
+      "id": "PS027",
+      "class_id": "JOB27",
+      "prototype_rule": "紅心：下一次本體普攻+30%；方塊：護甲-15%持續4秒；梅花：另一目標0.35A；黑桃：本張+0.40A。效果不可自觸發。"
+    },
+    {
+      "name": "同花迴響",
+      "description": "連續兩次相同花色後，下一次本體飛牌追加一次較弱重演。",
+      "id": "PS028",
+      "class_id": "JOB28",
+      "prototype_rule": "連續兩張同花後，下一次本體飛牌重演基礎傷害的40%，不再出花色效果或觸發牌計數。"
+    },
+    {
+      "name": "幻影舞臺",
+      "description": "幻影與替身共用兩個名額；新增超額時先結算最舊單位。",
+      "id": "PS029",
+      "class_id": "JOB29",
+      "prototype_rule": "幻影與替身合計上限2。超額先結算最舊；幻影只補1次0.35A，替身執行一次爆炸。"
+    },
+    {
+      "name": "謝幕返場",
+      "description": "終幕禮炮結束後建立一個基本幻影，此生成不觸發其他生成效果。",
+      "id": "PS030",
+      "class_id": "JOB30",
+      "prototype_rule": "終幕消耗完成後生成1個8秒基本幻影；被終幕消耗者不得同時再走自然到期爆炸。"
+    },
+    {
+      "name": "工具連動",
+      "description": "依序施放兩種不同常規技能後，強化下一次本體普攻。",
+      "id": "PS031",
+      "class_id": "JOB31",
+      "prototype_rule": "依序兩種不同常規技能後，下一次本體普攻額外0.35A；只可儲存1次。"
+    },
+    {
+      "name": "鍛火熱度",
+      "description": "本體攻擊行動累積熱度，最多五層。",
+      "id": "PS032",
+      "class_id": "JOB32",
+      "prototype_rule": "本體普攻及非消耗常規技能每次行動+1熱度，上限5；消耗型與絕招不反向加熱。"
+    },
+    {
+      "name": "回火",
+      "description": "消耗熱度的技能結束後，強化下一次本體普攻；不提供經濟加成。",
+      "id": "PS033",
+      "class_id": "JOB33",
+      "prototype_rule": "熔火重擊或天地鍛打消耗至少1熱度後，下次本體普攻額外0.50A。"
+    },
+    {
+      "name": "機關協作",
+      "description": "最多同時兩座砲台，無生命值，不會互相觸發召喚。",
+      "id": "PS034",
+      "class_id": "JOB34",
+      "prototype_rule": "砲台上限2；舊砲台更新不爆炸；召喚傷害不觸發工具連動／其他本體被動。"
+    },
+    {
+      "name": "協同校準",
+      "description": "本體命中信標目標後，強化砲台的下一輪攻擊；同輪只計一次。",
+      "id": "PS035",
+      "class_id": "JOB35",
+      "prototype_rule": "本體命中信標後，下一輪最多2座砲台各加20%傷害；1秒內最多觸發一次。"
+    }
+  ],
+  "equipment": [
+    {
+      "id": "EQ001",
+      "name": "見習鐵劍",
+      "owner_class": "劍士",
+      "tier": 1,
+      "min_level": 10,
+      "slot": "主武器",
+      "type": "鐵劍",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-劍士",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "橫掃斬後，下次本體普攻追加0.25A斬擊。",
+      "family": "劍士系"
+    },
+    {
+      "id": "EQ002",
+      "name": "木紋劍鞘",
+      "owner_class": "劍士",
+      "tier": 1,
+      "min_level": 10,
+      "slot": "副手",
+      "type": "劍鞘",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-劍士",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "破甲目標死亡時，將剩餘破甲時間的一半轉移至下一目標。",
+      "family": "劍士系"
+    },
+    {
+      "id": "EQ003",
+      "name": "青枝短弓",
+      "owner_class": "弓手",
+      "tier": 1,
+      "min_level": 10,
+      "slot": "主武器",
+      "type": "短弓",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-弓手",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "散射後，下一次瞄準射擊發射一支0.30A追箭。",
+      "family": "弓手系"
+    },
+    {
+      "id": "EQ004",
+      "name": "皮革箭袋",
+      "owner_class": "弓手",
+      "tier": 1,
+      "min_level": 10,
+      "slot": "副手",
+      "type": "箭袋",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-弓手",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "瞄準射擊擊殺時，下一次普攻額外0.25A；不可囤積。",
+      "family": "弓手系"
+    },
+    {
+      "id": "EQ005",
+      "name": "橡木短杖",
+      "owner_class": "法師",
+      "tier": 1,
+      "min_level": 10,
+      "slot": "主武器",
+      "type": "短杖",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-法師",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "火球命中時，對另一名敵人追加0.20A火星。",
+      "family": "法師系"
+    },
+    {
+      "id": "EQ006",
+      "name": "水晶法珠",
+      "owner_class": "法師",
+      "tier": 1,
+      "min_level": 10,
+      "slot": "副手",
+      "type": "法珠",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-法師",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "冰錐命中後，下次本體普攻追加0.25A冰晶。",
+      "family": "法師系"
+    },
+    {
+      "id": "EQ007",
+      "name": "豁口短刃",
+      "owner_class": "盜賊",
+      "tier": 1,
+      "min_level": 10,
+      "slot": "主武器",
+      "type": "短刃",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-盜賊",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "迅影刺最後一段對另一目標追加0.25A飛刃。",
+      "family": "盜賊系"
+    },
+    {
+      "id": "EQ008",
+      "name": "皮革刀鞘",
+      "owner_class": "盜賊",
+      "tier": 1,
+      "min_level": 10,
+      "slot": "副手",
+      "type": "刀鞘",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-盜賊",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "投刃散射擊殺後，下次本體普攻追加0.25A。",
+      "family": "盜賊系"
+    },
+    {
+      "id": "EQ009",
+      "name": "銅鈴權杖",
+      "owner_class": "祭司",
+      "tier": 1,
+      "min_level": 10,
+      "slot": "主武器",
+      "type": "權杖",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-祭司",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "聖光彈命中後，向另一目標折射0.25A。",
+      "family": "祭司系"
+    },
+    {
+      "id": "EQ010",
+      "name": "晨光聖徽",
+      "owner_class": "祭司",
+      "tier": 1,
+      "min_level": 10,
+      "slot": "副手",
+      "type": "聖徽",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-祭司",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "淨罪之環只有一名目標時，額外0.35A。",
+      "family": "祭司系"
+    },
+    {
+      "id": "EQ011",
+      "name": "紙月牌組",
+      "owner_class": "小丑",
+      "tier": 1,
+      "min_level": 10,
+      "slot": "主武器",
+      "type": "牌組",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-小丑",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "飛牌命中後向另一名敵人彈射0.25A，不出花色。",
+      "family": "小丑系"
+    },
+    {
+      "id": "EQ012",
+      "name": "笑紋面具",
+      "owner_class": "小丑",
+      "tier": 1,
+      "min_level": 10,
+      "slot": "副手",
+      "type": "面具",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-小丑",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "散花飛刃擊殺後，下一張本體飛牌追加0.25A。",
+      "family": "小丑系"
+    },
+    {
+      "id": "EQ013",
+      "name": "銅頭工鎚",
+      "owner_class": "工匠",
+      "tier": 1,
+      "min_level": 10,
+      "slot": "主武器",
+      "type": "工鎚",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-工匠",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "重鎚敲擊後，下次普攻追加0.30A火花。",
+      "family": "工匠系"
+    },
+    {
+      "id": "EQ014",
+      "name": "黃銅工具匣",
+      "owner_class": "工匠",
+      "tier": 1,
+      "min_level": 10,
+      "slot": "副手",
+      "type": "工具匣",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-工匠",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "火花彈只有一名目標時，追加0.35A。",
+      "family": "工匠系"
+    },
+    {
+      "id": "EQ015",
+      "name": "斷牙巨劍",
+      "owner_class": "狂劍士",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "主武器",
+      "type": "雙手劍",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-劍士",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "斷鋼重斬消耗至少3戰意時，對其他目標各追加0.40A。",
+      "family": "劍士系"
+    },
+    {
+      "id": "EQ016",
+      "name": "赤鐵劍鞘",
+      "owner_class": "狂劍士",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "副手",
+      "type": "劍鞘",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-劍士",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "旋風連斬最後一段命中後，下一次本體普攻追加0.35A。",
+      "family": "劍士系"
+    },
+    {
+      "id": "EQ017",
+      "name": "破曉巨劍",
+      "owner_class": "劍聖",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "主武器",
+      "type": "雙手劍",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-劍士",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "萬劍歸流結束後，留下一次最多3目標各0.60A劍氣。",
+      "family": "劍士系"
+    },
+    {
+      "id": "EQ018",
+      "name": "不滅劍鞘",
+      "owner_class": "劍聖",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "副手",
+      "type": "劍鞘",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-劍士",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "旋風連斬只有一個目標時，主目標總傷害增加25%。",
+      "family": "劍士系"
+    },
+    {
+      "id": "EQ019",
+      "name": "鐵脊長劍",
+      "owner_class": "破陣騎士",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "主武器",
+      "type": "單手劍",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-劍士",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "盾刃突擊後，下一次普攻追加0.30A破陣斬。",
+      "family": "劍士系"
+    },
+    {
+      "id": "EQ020",
+      "name": "銅獅戰盾",
+      "owner_class": "破陣騎士",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "副手",
+      "type": "戰盾",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-劍士",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "震地盾擊消耗至少2層時，追加一次主目標0.50A震波。",
+      "family": "劍士系"
+    },
+    {
+      "id": "EQ021",
+      "name": "赫紋聖劍",
+      "owner_class": "符文騎士",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "主武器",
+      "type": "單手劍",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-劍士",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "符文刻印的最後一次觸發，向另一名目標追加0.50A。",
+      "family": "劍士系"
+    },
+    {
+      "id": "EQ022",
+      "name": "破城符盾",
+      "owner_class": "符文騎士",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "副手",
+      "type": "戰盾",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-劍士",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "破城聖裁後，下一次盾刃突擊追加0.70A。",
+      "family": "劍士系"
+    },
+    {
+      "id": "EQ023",
+      "name": "蒼羽長弓",
+      "owner_class": "神射手",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "主武器",
+      "type": "長弓",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-弓手",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "穿甲箭擊殺後，向下一目標發射0.40A追箭。",
+      "family": "弓手系"
+    },
+    {
+      "id": "EQ024",
+      "name": "鷹眼箭袋",
+      "owner_class": "神射手",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "副手",
+      "type": "箭袋",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-弓手",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "弱點標記到期且目標存活時，追加0.35A箭擊；每次標記一次。",
+      "family": "弓手系"
+    },
+    {
+      "id": "EQ025",
+      "name": "逐星長弓",
+      "owner_class": "星隼遊俠",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "主武器",
+      "type": "長弓",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-弓手",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "天穹狙擊後留下0.80A追箭，沿用原攻擊快照。",
+      "family": "弓手系"
+    },
+    {
+      "id": "EQ026",
+      "name": "天隼箭匣",
+      "owner_class": "星隼遊俠",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "副手",
+      "type": "箭袋",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-弓手",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "追星箭每次施放首次擊殺後，對下一目標追加0.40A追擊。",
+      "family": "弓手系"
+    },
+    {
+      "id": "EQ027",
+      "name": "荊棘獵弓",
+      "owner_class": "馴獸師",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "主武器",
+      "type": "獵弓",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-弓手",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "協同撲擊後，下一次本體普攻追加0.35A。",
+      "family": "弓手系"
+    },
+    {
+      "id": "EQ028",
+      "name": "狼牙骨笛",
+      "owner_class": "馴獸師",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "副手",
+      "type": "獸笛／號角",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-弓手",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "戰獸命中掠食標記時，每4次追加一次0.30A撕裂。",
+      "family": "弓手系"
+    },
+    {
+      "id": "EQ029",
+      "name": "百獸獵弓",
+      "owner_class": "獸王獵手",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "主武器",
+      "type": "獵弓",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-弓手",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "獵群奔襲只有一個目標時，追加1.00A戰獸追擊。",
+      "family": "弓手系"
+    },
+    {
+      "id": "EQ030",
+      "name": "獸王號角",
+      "owner_class": "獸王獵手",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "副手",
+      "type": "獸笛／號角",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-弓手",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "號令期間首次協同攻擊，對其他敵人各追加0.70A。",
+      "family": "弓手系"
+    },
+    {
+      "id": "EQ031",
+      "name": "赤曜法杖",
+      "owner_class": "元素術士",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "主武器",
+      "type": "法杖",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-法師",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "連鎖閃電結束後，主目標追加0.35A雷擊，不生成雷印。",
+      "family": "法師系"
+    },
+    {
+      "id": "EQ032",
+      "name": "雷紋法珠",
+      "owner_class": "元素術士",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "副手",
+      "type": "法珠／星核",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-法師",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "元素引爆後，下次本體普攻追加0.30A電弧。",
+      "family": "法師系"
+    },
+    {
+      "id": "EQ033",
+      "name": "星界長杖",
+      "owner_class": "星界賢者",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "主武器",
+      "type": "法杖",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-法師",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "星界崩解後，下次火球額外0.80A隕火。",
+      "family": "法師系"
+    },
+    {
+      "id": "EQ034",
+      "name": "三相星核",
+      "owner_class": "星界賢者",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "副手",
+      "type": "法珠／星核",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-法師",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "元素引爆消耗至少2種印記時，追加主目標0.60A星火。",
+      "family": "法師系"
+    },
+    {
+      "id": "EQ035",
+      "name": "霜枝冰杖",
+      "owner_class": "冰咒師",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "主武器",
+      "type": "冰杖",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-法師",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "霜環只有一名目標時，追加0.40A冰晶。",
+      "family": "法師系"
+    },
+    {
+      "id": "EQ036",
+      "name": "寒霧法典",
+      "owner_class": "冰咒師",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "副手",
+      "type": "法典",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-法師",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "碎冰消耗至少3層時，另一目標追加0.45A。",
+      "family": "法師系"
+    },
+    {
+      "id": "EQ037",
+      "name": "永冬權杖",
+      "owner_class": "永冬魔導士",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "主武器",
+      "type": "冰杖",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-法師",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "零度終章後，下一次寒晶綻放對主目標追加0.80A。",
+      "family": "法師系"
+    },
+    {
+      "id": "EQ038",
+      "name": "零度法典",
+      "owner_class": "永冬魔導士",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "副手",
+      "type": "法典",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-法師",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "霜痕保留寒霜後，下次冰錐追加0.50A，不多保留層數。",
+      "family": "法師系"
+    },
+    {
+      "id": "EQ039",
+      "name": "月牙雙刃",
+      "owner_class": "影刃刺客",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "主武器",
+      "type": "成對雙刃",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-盜賊",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "影襲最後一段命中後，下一次普攻追加0.35A。",
+      "family": "盜賊系"
+    },
+    {
+      "id": "EQ040",
+      "name": "夜行忍具",
+      "owner_class": "影刃刺客",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "副手",
+      "type": "忍具",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-盜賊",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "破綻標記目標死亡時，對下一名敵人施加原剩餘時間的一半。",
+      "family": "盜賊系"
+    },
+    {
+      "id": "EQ041",
+      "name": "無聲雙刃",
+      "owner_class": "影舞者",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "主武器",
+      "type": "成對雙刃",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-盜賊",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "處決消耗5點時，其他敵人各追加0.60A影刃。",
+      "family": "盜賊系"
+    },
+    {
+      "id": "EQ042",
+      "name": "殘影忍具",
+      "owner_class": "影舞者",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "副手",
+      "type": "忍具",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-盜賊",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "疾影連殺結束後，追加一次主目標0.50A，不增加連擊點。",
+      "family": "盜賊系"
+    },
+    {
+      "id": "EQ043",
+      "name": "蛇牙匕首",
+      "owner_class": "毒刃獵手",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "主武器",
+      "type": "匕首",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-盜賊",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "滿5層毒目標受本體普攻，每4次對另一目標施加1層毒。",
+      "family": "盜賊系"
+    },
+    {
+      "id": "EQ044",
+      "name": "陶製毒瓶",
+      "owner_class": "毒刃獵手",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "副手",
+      "type": "毒瓶／毒囊",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-盜賊",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "毒霧結束後，下次本體普攻額外0.30A毒刃直接傷害。",
+      "family": "盜賊系"
+    },
+    {
+      "id": "EQ045",
+      "name": "蝕骨毒刃",
+      "owner_class": "劇毒使徒",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "主武器",
+      "type": "匕首",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-盜賊",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "終末毒爆後，下一次蔓毒之刃追加0.70A直接傷害。",
+      "family": "盜賊系"
+    },
+    {
+      "id": "EQ046",
+      "name": "黑棘毒囊",
+      "owner_class": "劇毒使徒",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "副手",
+      "type": "毒瓶／毒囊",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-盜賊",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "毒爆保留的毒層可傳播至另一目標一次，沿用剩餘期。",
+      "family": "盜賊系"
+    },
+    {
+      "id": "EQ047",
+      "name": "銀鐘聖杖",
+      "owner_class": "聖詠祭司",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "主武器",
+      "type": "聖杖",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-祭司",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "裁決烙印之後，下次聖光彈向另一目標折射0.35A。",
+      "family": "祭司系"
+    },
+    {
+      "id": "EQ048",
+      "name": "晨禱聖徽",
+      "owner_class": "聖詠祭司",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "副手",
+      "type": "聖徽／聖典",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-祭司",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "祝禱結束後，下一次本體普攻追加0.40A。",
+      "family": "祭司系"
+    },
+    {
+      "id": "EQ049",
+      "name": "黎明權杖",
+      "owner_class": "審判主教",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "主武器",
+      "type": "聖杖",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-祭司",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "黎明審判消耗3聖印時，下次聖光彈追加0.70A。",
+      "family": "祭司系"
+    },
+    {
+      "id": "EQ050",
+      "name": "審判聖典",
+      "owner_class": "審判主教",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "副手",
+      "type": "聖徽／聖典",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-祭司",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "聖光連禱結束後，對另一敵人追加0.50A，不加聖印。",
+      "family": "祭司系"
+    },
+    {
+      "id": "EQ051",
+      "name": "修行拳套",
+      "owner_class": "武僧",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "主武器",
+      "type": "成對拳套",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-祭司",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "連環拳最後一拳向另一目標追加0.35A拳風。",
+      "family": "祭司系"
+    },
+    {
+      "id": "EQ052",
+      "name": "木珠念串",
+      "owner_class": "武僧",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "副手",
+      "type": "念珠",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-祭司",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "破山掌只有一名目標時，追加0.40A。",
+      "family": "祭司系"
+    },
+    {
+      "id": "EQ053",
+      "name": "崩岳拳甲",
+      "owner_class": "修羅武聖",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "主武器",
+      "type": "成對拳套",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-祭司",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "震岳連拳結束後，下一次本體普攻追加0.60A。",
+      "family": "祭司系"
+    },
+    {
+      "id": "EQ054",
+      "name": "五脈念珠",
+      "owner_class": "修羅武聖",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "副手",
+      "type": "念珠",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-祭司",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "滿5氣脈崩拳對其他最多2敵人各追加0.80A，不重複命中主目標。",
+      "family": "祭司系"
+    },
+    {
+      "id": "EQ055",
+      "name": "銀邊牌組",
+      "owner_class": "牌術師",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "主武器",
+      "type": "牌組",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-小丑",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "連環牌擊結束後，追加0.35A無花色飛牌。",
+      "family": "小丑系"
+    },
+    {
+      "id": "EQ056",
+      "name": "四色牌盒",
+      "owner_class": "牌術師",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "副手",
+      "type": "牌盒",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-小丑",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "切牌後的下一張牌向另一目標彈射0.30A，不重演花色。",
+      "family": "小丑系"
+    },
+    {
+      "id": "EQ057",
+      "name": "王冠牌組",
+      "owner_class": "命運魔術師",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "主武器",
+      "type": "牌組",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-小丑",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "四象牌陣結束後，對主目標追加0.80A無花色王牌。",
+      "family": "小丑系"
+    },
+    {
+      "id": "EQ058",
+      "name": "命運牌匣",
+      "owner_class": "命運魔術師",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "副手",
+      "type": "牌盒",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-小丑",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "切牌後指定花色效果增強25%，不增加牌數；與王牌封印同組加算。",
+      "family": "小丑系"
+    },
+    {
+      "id": "EQ059",
+      "name": "月紋短杖",
+      "owner_class": "幻戲師",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "主武器",
+      "type": "戲杖",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-小丑",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "鏡像飛牌建立後，立即本體飛牌0.30A，不再生成幻影。",
+      "family": "小丑系"
+    },
+    {
+      "id": "EQ060",
+      "name": "木偶線軸",
+      "owner_class": "幻戲師",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "副手",
+      "type": "線軸／線輪",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-小丑",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "替身爆彈只有一名目標時，追加0.40A。",
+      "family": "小丑系"
+    },
+    {
+      "id": "EQ061",
+      "name": "千面戲杖",
+      "owner_class": "千面幻術師",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "主武器",
+      "type": "戲杖",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-小丑",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "終幕禮炮消耗2單位時，下次本體飛牌追加0.70A。",
+      "family": "小丑系"
+    },
+    {
+      "id": "EQ062",
+      "name": "鏡界線輪",
+      "owner_class": "千面幻術師",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "副手",
+      "type": "線軸／線輪",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-小丑",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "戲法換位生成的幻影首次攻擊加0.45A，每次生成一次。",
+      "family": "小丑系"
+    },
+    {
+      "id": "EQ063",
+      "name": "黑鐵戰鎚",
+      "owner_class": "戰鎚鐵匠",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "主武器",
+      "type": "戰鎚",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-工匠",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "熔火重擊消耗至少3熱度時，另一名敵人追加0.40A火花。",
+      "family": "工匠系"
+    },
+    {
+      "id": "EQ064",
+      "name": "火鉗工具匣",
+      "owner_class": "戰鎚鐵匠",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "副手",
+      "type": "工具匣／風箱",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-工匠",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "鍛地震波只有一名目標時，追加0.40A。",
+      "family": "工匠系"
+    },
+    {
+      "id": "EQ065",
+      "name": "熔心巨鎚",
+      "owner_class": "熔爐神匠",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "主武器",
+      "type": "戰鎚",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-工匠",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "天地鍛打後留下2秒區域，每秒對最多3敵人各0.30A。",
+      "family": "工匠系"
+    },
+    {
+      "id": "EQ066",
+      "name": "日輪風箱",
+      "owner_class": "熔爐神匠",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "副手",
+      "type": "工具匣／風箱",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-工匠",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "熔痕到期且目標仍活著時追加0.60A；被刷新不觸發。",
+      "family": "工匠系"
+    },
+    {
+      "id": "EQ067",
+      "name": "銅管手砲",
+      "owner_class": "機械師",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "主武器",
+      "type": "手砲／機砲",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-工匠",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "本體每6次普攻，砲台下一輪每座追加0.20A。",
+      "family": "工匠系"
+    },
+    {
+      "id": "EQ068",
+      "name": "發條機芯",
+      "owner_class": "機械師",
+      "tier": 2,
+      "min_level": 40,
+      "slot": "副手",
+      "type": "機芯",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-工匠",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "新架設砲台的第一次射擊向另一目標追加0.25A。",
+      "family": "工匠系"
+    },
+    {
+      "id": "EQ069",
+      "name": "雷鳴機砲",
+      "owner_class": "機械統帥",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "主武器",
+      "type": "手砲／機砲",
+      "base_stat_rule": "W(L,Q)",
+      "affix_pool": "P-工匠",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "機甲存在時，本體每4次普攻追加0.40A，不能讓機甲再觸發。",
+      "family": "工匠系"
+    },
+    {
+      "id": "EQ070",
+      "name": "零式動力核",
+      "owner_class": "機械統帥",
+      "tier": 3,
+      "min_level": 80,
+      "slot": "副手",
+      "type": "機芯",
+      "base_stat_rule": "O(L,Q)",
+      "affix_pool": "P-工匠",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "超頻持續時間增加2秒，不增加砲台數量。",
+      "family": "工匠系"
+    },
+    {
+      "id": "EQ071",
+      "name": "旅人軟帽",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "頭部",
+      "type": "共用",
+      "base_stat_rule": "S(L,Q)技能傷害",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "每5次本體普攻後，下次常規直接技能追加0.25A。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ072",
+      "name": "羽飾獵帽",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "頭部",
+      "type": "共用",
+      "base_stat_rule": "S(L,Q)技能傷害",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "主目標死亡時，下次本體普攻對另一目標追加0.25A；內置間隔3秒。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ073",
+      "name": "星紋頭冠",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "頭部",
+      "type": "共用",
+      "base_stat_rule": "S(L,Q)技能傷害",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "絕招結束後，下次本體普攻追加0.50A。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ074",
+      "name": "亞麻旅衣",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "身體",
+      "type": "共用",
+      "base_stat_rule": "S(L,Q)攻擊加成",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "兩種不同常規技能接續施放後，下次普攻追加0.25A。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ075",
+      "name": "赤銅胸甲",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "身體",
+      "type": "共用",
+      "base_stat_rule": "S(L,Q)攻擊加成",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "破甲生效後的下一次本體普攻追加0.30A；每3秒一次。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ076",
+      "name": "月紋長袍",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "身體",
+      "type": "共用",
+      "base_stat_rule": "S(L,Q)攻擊加成",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "本體直接技能首次命中無狀態目標時追加0.30A；每目標一次。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ077",
+      "name": "縫皮手套",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "手部",
+      "type": "共用",
+      "base_stat_rule": "S(L,Q)攻速",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "每5次本體普攻追加0.25A，不累積自身計數。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ078",
+      "name": "銀扣護手",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "手部",
+      "type": "共用",
+      "base_stat_rule": "S(L,Q)攻速",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "普攻暴擊後，下次常規技能追加0.25A；每3秒一次。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ079",
+      "name": "發條手甲",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "手部",
+      "type": "共用",
+      "base_stat_rule": "S(L,Q)攻速",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "本體每6次普攻，下一次召喚物命中追加0.35A；無召喚則下次普攻追加。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ080",
+      "name": "軟底旅靴",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "腳部",
+      "type": "共用",
+      "base_stat_rule": "C(L,Q)冷卻縮減",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "新波次首次本體普攻追加0.25A；每3秒一次。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ081",
+      "name": "追風長靴",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "腳部",
+      "type": "共用",
+      "base_stat_rule": "C(L,Q)冷卻縮減",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "本體普攻擊殺後，下一次普攻追加0.25A；最多存1次。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ082",
+      "name": "流星短靴",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "腳部",
+      "type": "共用",
+      "base_stat_rule": "C(L,Q)冷卻縮減",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "三種不同常規技能後，下一次絕招追加主目標0.50A。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ083",
+      "name": "木牙墜飾",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "項鍊",
+      "type": "共用",
+      "base_stat_rule": "S(L,Q)技能傷害",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "首次對新目標施加持續傷害時追加0.25A直接傷害。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ084",
+      "name": "琥珀項鍊",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "項鍊",
+      "type": "共用",
+      "base_stat_rule": "S(L,Q)技能傷害",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "同目標累積6次本體普攻後，下一次常規技能追加0.35A。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ085",
+      "name": "星核墜飾",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "項鍊",
+      "type": "共用",
+      "base_stat_rule": "S(L,Q)技能傷害",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "每次絕招結束後，另一目標追加0.50A；無其他目標則主目標0.25A。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ086",
+      "name": "銅環戒指",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "戒指",
+      "type": "共用",
+      "base_stat_rule": "C(L,Q)暴擊率",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "每6次本體普攻，下次普攻追加0.25A。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ087",
+      "name": "月銀指環",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "戒指",
+      "type": "共用",
+      "base_stat_rule": "C(L,Q)暴擊率",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "本體直接技能暴擊後，下次普攻追加0.30A；每3秒一次。",
+      "family": "共用"
+    },
+    {
+      "id": "EQ088",
+      "name": "王冠印戒",
+      "owner_class": "共用",
+      "tier": 0,
+      "min_level": 1,
+      "slot": "戒指",
+      "type": "共用",
+      "base_stat_rule": "C(L,Q)暴擊率",
+      "affix_pool": "P-COMMON",
+      "quality_options": [
+        "普通",
+        "精良",
+        "稀有",
+        "史詩",
+        "傳說"
+      ],
+      "legend_effect": "攻擊同一目標滿8秒後，下次常規技能追加0.40A；每8秒一次。",
+      "family": "共用"
+    }
+  ],
+  "qualities": [
+    {
+      "id": "Q1",
+      "name": "普通",
+      "multiplier": 1.0,
+      "affixes": 0
+    },
+    {
+      "id": "Q2",
+      "name": "精良",
+      "multiplier": 1.12,
+      "affixes": 1
+    },
+    {
+      "id": "Q3",
+      "name": "稀有",
+      "multiplier": 1.28,
+      "affixes": 2
+    },
+    {
+      "id": "Q4",
+      "name": "史詩",
+      "multiplier": 1.48,
+      "affixes": 2
+    },
+    {
+      "id": "Q5",
+      "name": "傳說",
+      "multiplier": 1.72,
+      "affixes": 2
+    }
+  ],
+  "bench_levels": [
+    {
+      "level": 1,
+      "quality_weights_percent": [
+        80,
+        20,
+        0,
+        0,
+        0
+      ],
+      "next_cost": 500,
+      "status": "prototype_unbalanced"
+    },
+    {
+      "level": 2,
+      "quality_weights_percent": [
+        65,
+        30,
+        5,
+        0,
+        0
+      ],
+      "next_cost": 2000,
+      "status": "prototype_unbalanced"
+    },
+    {
+      "level": 3,
+      "quality_weights_percent": [
+        50,
+        35,
+        14,
+        1,
+        0
+      ],
+      "next_cost": 4500,
+      "status": "prototype_unbalanced"
+    },
+    {
+      "level": 4,
+      "quality_weights_percent": [
+        35,
+        40,
+        22,
+        3,
+        0
+      ],
+      "next_cost": 8000,
+      "status": "prototype_unbalanced"
+    },
+    {
+      "level": 5,
+      "quality_weights_percent": [
+        25,
+        40,
+        29,
+        5,
+        1
+      ],
+      "next_cost": 12500,
+      "status": "prototype_unbalanced"
+    },
+    {
+      "level": 6,
+      "quality_weights_percent": [
+        15,
+        38,
+        36,
+        9,
+        2
+      ],
+      "next_cost": 18000,
+      "status": "prototype_unbalanced"
+    },
+    {
+      "level": 7,
+      "quality_weights_percent": [
+        10,
+        30,
+        42,
+        14,
+        4
+      ],
+      "next_cost": 24500,
+      "status": "prototype_unbalanced"
+    },
+    {
+      "level": 8,
+      "quality_weights_percent": [
+        5,
+        24,
+        44,
+        20,
+        7
+      ],
+      "next_cost": 32000,
+      "status": "prototype_unbalanced"
+    },
+    {
+      "level": 9,
+      "quality_weights_percent": [
+        2,
+        15,
+        43,
+        30,
+        10
+      ],
+      "next_cost": 40500,
+      "status": "prototype_unbalanced"
+    },
+    {
+      "level": 10,
+      "quality_weights_percent": [
+        0,
+        8,
+        37,
+        40,
+        15
+      ],
+      "next_cost": null,
+      "status": "prototype_unbalanced"
+    }
+  ],
+  "maps": [
+    {
+      "id": "MAP01",
+      "number": 1,
+      "name": "蘆風原野",
+      "normal_monsters": [
+        "糰葉怪",
+        "撞果豬",
+        "紙帽雞"
+      ],
+      "boss_feature": "召出少量枝芽；本體全程可攻擊。",
+      "boss": "冠葉樹王",
+      "elites": [
+        "草帽雞長",
+        "尖牙野豬",
+        "暴走磨輪",
+        "石背河龜",
+        "牧草巨羊"
+      ],
+      "stage_ids": [
+        "ST001",
+        "ST002",
+        "ST003",
+        "ST004",
+        "ST005",
+        "ST006",
+        "ST007",
+        "ST008",
+        "ST009",
+        "ST010",
+        "ST011",
+        "ST012",
+        "ST013",
+        "ST014",
+        "ST015",
+        "ST016",
+        "ST017",
+        "ST018",
+        "ST019",
+        "ST020",
+        "ST021",
+        "ST022",
+        "ST023",
+        "ST024",
+        "ST025",
+        "ST026",
+        "ST027",
+        "ST028",
+        "ST029",
+        "ST030"
+      ],
+      "boss_mechanic_prototype": [
+        "第8秒起每12秒生2枝芽；每枝HP=本體最大HP的4%，最多2枝。",
+        "枝芽只有HP與生成演出；不攻擊角色。",
+        "枝芽存在時本體護甲+10%；全程可打，清掉可解除。"
+      ]
+    },
+    {
+      "id": "MAP02",
+      "number": 2,
+      "name": "蜜糖林地",
+      "normal_monsters": [
+        "蜜糖蜂",
+        "莓果精",
+        "黏糖怪"
+      ],
+      "boss_feature": "蜂巢是可選副目標；擊破可削弱本體護甲。",
+      "boss": "琥珀蜂后",
+      "elites": [
+        "莓果熊",
+        "蜂巢守衛",
+        "黏糖巨怪",
+        "刺針隊長",
+        "空心木偶"
+      ],
+      "stage_ids": [
+        "ST031",
+        "ST032",
+        "ST033",
+        "ST034",
+        "ST035",
+        "ST036",
+        "ST037",
+        "ST038",
+        "ST039",
+        "ST040",
+        "ST041",
+        "ST042",
+        "ST043",
+        "ST044",
+        "ST045",
+        "ST046",
+        "ST047",
+        "ST048",
+        "ST049",
+        "ST050",
+        "ST051",
+        "ST052",
+        "ST053",
+        "ST054",
+        "ST055",
+        "ST056",
+        "ST057",
+        "ST058",
+        "ST059",
+        "ST060"
+      ],
+      "boss_mechanic_prototype": [
+        "第6秒起每15秒生1蜂巢；HP=本體最大HP的5%，最多1個。",
+        "蜂巢被破壞後本體護甲-25%，維持8秒。",
+        "不得反覆召喚刷古物；蜂巢沒有資源獎勵。"
+      ]
+    },
+    {
+      "id": "MAP03",
+      "number": 3,
+      "name": "銅鈴礦山",
+      "normal_monsters": [
+        "礦帽鼴鼠",
+        "銅殼蟲",
+        "煤球精"
+      ],
+      "boss_feature": "護甲週期變化；沒有完全無敵階段。",
+      "boss": "轟鳴鑽王",
+      "elites": [
+        "盔帽鼴鼠",
+        "失控礦車",
+        "赤銅甲蟲",
+        "鐵鏈監工",
+        "熔渣石怪"
+      ],
+      "stage_ids": [
+        "ST061",
+        "ST062",
+        "ST063",
+        "ST064",
+        "ST065",
+        "ST066",
+        "ST067",
+        "ST068",
+        "ST069",
+        "ST070",
+        "ST071",
+        "ST072",
+        "ST073",
+        "ST074",
+        "ST075",
+        "ST076",
+        "ST077",
+        "ST078",
+        "ST079",
+        "ST080",
+        "ST081",
+        "ST082",
+        "ST083",
+        "ST084",
+        "ST085",
+        "ST086",
+        "ST087",
+        "ST088",
+        "ST089",
+        "ST090"
+      ],
+      "boss_mechanic_prototype": [
+        "10秒一循環：前6秒護甲×1.30，後4秒護甲×0.70。",
+        "UI顯示「硬殼／鬆動」及短倒數。",
+        "階段切換不清除毒層、印記與投射物。"
+      ]
+    },
+    {
+      "id": "MAP04",
+      "number": 4,
+      "name": "霧鐘古鎮",
+      "normal_monsters": [
+        "雨傘精",
+        "布偶幽靈",
+        "發條鼠"
+      ],
+      "boss_feature": "出現幻影；打幻影的一部分傷害回傳本體，不考驗手動找真身。",
+      "boss": "無面鐘匠",
+      "elites": [
+        "提燈遊魂",
+        "長巷稻偶",
+        "破傘商人",
+        "發條鐘僕",
+        "銹鐘守衛"
+      ],
+      "stage_ids": [
+        "ST091",
+        "ST092",
+        "ST093",
+        "ST094",
+        "ST095",
+        "ST096",
+        "ST097",
+        "ST098",
+        "ST099",
+        "ST100",
+        "ST101",
+        "ST102",
+        "ST103",
+        "ST104",
+        "ST105",
+        "ST106",
+        "ST107",
+        "ST108",
+        "ST109",
+        "ST110",
+        "ST111",
+        "ST112",
+        "ST113",
+        "ST114",
+        "ST115",
+        "ST116",
+        "ST117",
+        "ST118",
+        "ST119",
+        "ST120"
+      ],
+      "boss_mechanic_prototype": [
+        "第8秒起每16秒生2幻影，維持8秒；各HP=本體最大HP的4%。",
+        "幻影有效傷害的30%傳至本體，記為一次回傳事件。",
+        "本體始終可選；回傳不再觸發追加、暴擊或再次回傳。"
+      ]
+    },
+    {
+      "id": "MAP05",
+      "number": 5,
+      "name": "砂海商路",
+      "normal_monsters": [
+        "背包沙鼠",
+        "小砂蠍",
+        "流砂精"
+      ],
+      "boss_feature": "固定節奏暴露核心，提供爆發窗口。",
+      "boss": "鎏金蠍皇",
+      "elites": [
+        "背貨沙鼠",
+        "風砂盜首",
+        "琉砂甲蠍",
+        "迷路駝王",
+        "古井沙靈"
+      ],
+      "stage_ids": [
+        "ST121",
+        "ST122",
+        "ST123",
+        "ST124",
+        "ST125",
+        "ST126",
+        "ST127",
+        "ST128",
+        "ST129",
+        "ST130",
+        "ST131",
+        "ST132",
+        "ST133",
+        "ST134",
+        "ST135",
+        "ST136",
+        "ST137",
+        "ST138",
+        "ST139",
+        "ST140",
+        "ST141",
+        "ST142",
+        "ST143",
+        "ST144",
+        "ST145",
+        "ST146",
+        "ST147",
+        "ST148",
+        "ST149",
+        "ST150"
+      ],
+      "boss_mechanic_prototype": [
+        "12秒一循環：最後4秒核心顯露，承受傷害+25%。",
+        "核心是狀態，不額外創造可掉落敵人。",
+        "不需要玩家閃招或點弱點，本體保持可攻擊。"
+      ]
+    },
+    {
+      "id": "MAP06",
+      "number": 6,
+      "name": "碧潮港灣",
+      "normal_monsters": [
+        "木桶蟹",
+        "貝殼精",
+        "紙帽水手"
+      ],
+      "boss_feature": "觸腕是副目標，傷害部分回傳本體；本體一直可攻擊。",
+      "boss": "深潮章王",
+      "elites": [
+        "鉗鉗蟹長",
+        "木桶水手",
+        "珊瑚巨螺",
+        "斷錨海盜",
+        "黑帆船長"
+      ],
+      "stage_ids": [
+        "ST151",
+        "ST152",
+        "ST153",
+        "ST154",
+        "ST155",
+        "ST156",
+        "ST157",
+        "ST158",
+        "ST159",
+        "ST160",
+        "ST161",
+        "ST162",
+        "ST163",
+        "ST164",
+        "ST165",
+        "ST166",
+        "ST167",
+        "ST168",
+        "ST169",
+        "ST170",
+        "ST171",
+        "ST172",
+        "ST173",
+        "ST174",
+        "ST175",
+        "ST176",
+        "ST177",
+        "ST178",
+        "ST179",
+        "ST180"
+      ],
+      "boss_mechanic_prototype": [
+        "第8秒起每15秒生2觸腕；各HP=本體最大HP的5%。",
+        "觸腕有效傷害的25%回傳本體，範圍技可順帶處理。",
+        "過量傷害不回傳；每事件至多回傳一次。"
+      ]
+    },
+    {
+      "id": "MAP07",
+      "number": 7,
+      "name": "霜羽雪嶺",
+      "normal_monsters": [
+        "圍巾雪兔",
+        "冰帽鳥",
+        "霜毛狼"
+      ],
+      "boss_feature": "外殼依累積傷害破裂，不設冰系免疫。",
+      "boss": "白冠霜鵬",
+      "elites": [
+        "厚毛雪兔",
+        "霜羽獵鷹",
+        "冰牙狼王",
+        "冰殼巨龜",
+        "白霧雪人"
+      ],
+      "stage_ids": [
+        "ST181",
+        "ST182",
+        "ST183",
+        "ST184",
+        "ST185",
+        "ST186",
+        "ST187",
+        "ST188",
+        "ST189",
+        "ST190",
+        "ST191",
+        "ST192",
+        "ST193",
+        "ST194",
+        "ST195",
+        "ST196",
+        "ST197",
+        "ST198",
+        "ST199",
+        "ST200",
+        "ST201",
+        "ST202",
+        "ST203",
+        "ST204",
+        "ST205",
+        "ST206",
+        "ST207",
+        "ST208",
+        "ST209",
+        "ST210"
+      ],
+      "boss_mechanic_prototype": [
+        "開場冰殼護甲×1.30；受到相當最大HP20%的有效傷害後解除。",
+        "解除後本體承受傷害+15%，維持8秒；本場不再重生冰殼。",
+        "不免疫冰技，不清除寒霜，不以玩家傷害類型決定能否破殼。"
+      ]
+    },
+    {
+      "id": "MAP08",
+      "number": 8,
+      "name": "赤爐火山",
+      "normal_monsters": [
+        "火帽蟲",
+        "熔泥怪",
+        "煤球蜥"
+      ],
+      "boss_feature": "升溫後進入弱點窗口，不清除持續傷害。",
+      "boss": "熔心巨匠",
+      "elites": [
+        "灰燼甲蟲",
+        "赤岩犀角",
+        "熔流巨蜥",
+        "硫火石像",
+        "黑鐵監工"
+      ],
+      "stage_ids": [
+        "ST211",
+        "ST212",
+        "ST213",
+        "ST214",
+        "ST215",
+        "ST216",
+        "ST217",
+        "ST218",
+        "ST219",
+        "ST220",
+        "ST221",
+        "ST222",
+        "ST223",
+        "ST224",
+        "ST225",
+        "ST226",
+        "ST227",
+        "ST228",
+        "ST229",
+        "ST230",
+        "ST231",
+        "ST232",
+        "ST233",
+        "ST234",
+        "ST235",
+        "ST236",
+        "ST237",
+        "ST238",
+        "ST239",
+        "ST240"
+      ],
+      "boss_mechanic_prototype": [
+        "15秒一循環：前10秒升溫，後5秒弱點暴露，承受傷害+25%。",
+        "熔爐裂口與時間條提示窗口。",
+        "不清除燃燒，火系可以正常攻擊火山BOSS。"
+      ]
+    },
+    {
+      "id": "MAP09",
+      "number": 9,
+      "name": "發條王城",
+      "normal_monsters": [
+        "發條鼠",
+        "小銅兵",
+        "齒輪蟲"
+      ],
+      "boss_feature": "兩個機芯是可選副目標，擊破任一即可打開弱點。",
+      "boss": "零號機械王",
+      "elites": [
+        "銅門衛兵",
+        "齒輪蜘蛛",
+        "蒸汽清道夫",
+        "發條將軍",
+        "失控星盤"
+      ],
+      "stage_ids": [
+        "ST241",
+        "ST242",
+        "ST243",
+        "ST244",
+        "ST245",
+        "ST246",
+        "ST247",
+        "ST248",
+        "ST249",
+        "ST250",
+        "ST251",
+        "ST252",
+        "ST253",
+        "ST254",
+        "ST255",
+        "ST256",
+        "ST257",
+        "ST258",
+        "ST259",
+        "ST260",
+        "ST261",
+        "ST262",
+        "ST263",
+        "ST264",
+        "ST265",
+        "ST266",
+        "ST267",
+        "ST268",
+        "ST269",
+        "ST270"
+      ],
+      "boss_mechanic_prototype": [
+        "第5秒生2機芯，單個HP=本體最大HP的5%；每20秒可重生一輪。",
+        "任一機芯擊破後本體承受傷害+25%持續8秒，另個機芯仍可攻擊但不疊加。",
+        "不要求兩個都打掉；全部職業都能打本體。"
+      ]
+    },
+    {
+      "id": "MAP10",
+      "number": 10,
+      "name": "星墜花園",
+      "normal_monsters": [
+        "星砂刺蝟仔",
+        "夜光花精",
+        "浮石蟲"
+      ],
+      "boss_feature": "星晶提供範圍輸出機會，不要求手動走位。",
+      "boss": "逐星巨鹿",
+      "elites": [
+        "星砂刺蝟",
+        "食光花妖",
+        "浮岩守衛",
+        "隕晶甲獸",
+        "月影鹿靈"
+      ],
+      "stage_ids": [
+        "ST271",
+        "ST272",
+        "ST273",
+        "ST274",
+        "ST275",
+        "ST276",
+        "ST277",
+        "ST278",
+        "ST279",
+        "ST280",
+        "ST281",
+        "ST282",
+        "ST283",
+        "ST284",
+        "ST285",
+        "ST286",
+        "ST287",
+        "ST288",
+        "ST289",
+        "ST290",
+        "ST291",
+        "ST292",
+        "ST293",
+        "ST294",
+        "ST295",
+        "ST296",
+        "ST297",
+        "ST298",
+        "ST299",
+        "ST300"
+      ],
+      "boss_mechanic_prototype": [
+        "第7秒起每14秒生2星晶，單個HP=本體最大HP的4%。",
+        "每顆擊破使本體受到一次0.8%最大HP的固定機制傷害。",
+        "此機制傷害不暴擊、不吃角色加成、不觸發裝備。"
+      ]
+    },
+    {
+      "id": "MAP11",
+      "number": 11,
+      "name": "空島聖域",
+      "normal_monsters": [
+        "雲翼羊",
+        "風羽鳥",
+        "白曜小像"
+      ],
+      "boss_feature": "聖印定時亮起，提高受到的傷害；所有職業都能利用。",
+      "boss": "天穹審判官",
+      "elites": [
+        "雲翼山羊",
+        "浮橋石衛",
+        "聖羽獅鷲",
+        "風紋巨像",
+        "白曜裁決者"
+      ],
+      "stage_ids": [
+        "ST301",
+        "ST302",
+        "ST303",
+        "ST304",
+        "ST305",
+        "ST306",
+        "ST307",
+        "ST308",
+        "ST309",
+        "ST310",
+        "ST311",
+        "ST312",
+        "ST313",
+        "ST314",
+        "ST315",
+        "ST316",
+        "ST317",
+        "ST318",
+        "ST319",
+        "ST320",
+        "ST321",
+        "ST322",
+        "ST323",
+        "ST324",
+        "ST325",
+        "ST326",
+        "ST327",
+        "ST328",
+        "ST329",
+        "ST330"
+      ],
+      "boss_mechanic_prototype": [
+        "12秒一循環：最後4秒聖印亮起，本體承受傷害+25%。",
+        "亮印只使用共通易傷狀態，祭司不獲隱藏獨占加成。",
+        "不能用聖光免疫或角色種族限制來封鎖職業。"
+      ]
+    },
+    {
+      "id": "MAP12",
+      "number": 12,
+      "name": "終焉書庫",
+      "normal_monsters": [
+        "紙頁犬",
+        "墨水精",
+        "漂浮書"
+      ],
+      "boss_feature": "分階段結合護甲、弱點窗口與召喚物，但不清除已施加的職業狀態。",
+      "boss": "噬頁龍王",
+      "elites": [
+        "飛頁獵犬",
+        "禁書守衛",
+        "墨潮巨怪",
+        "倒鐘魔像",
+        "無字書靈"
+      ],
+      "stage_ids": [
+        "ST331",
+        "ST332",
+        "ST333",
+        "ST334",
+        "ST335",
+        "ST336",
+        "ST337",
+        "ST338",
+        "ST339",
+        "ST340",
+        "ST341",
+        "ST342",
+        "ST343",
+        "ST344",
+        "ST345",
+        "ST346",
+        "ST347",
+        "ST348",
+        "ST349",
+        "ST350",
+        "ST351",
+        "ST352",
+        "ST353",
+        "ST354",
+        "ST355",
+        "ST356",
+        "ST357",
+        "ST358",
+        "ST359",
+        "ST360"
+      ],
+      "boss_mechanic_prototype": [
+        "60秒分三段：0～20秒護甲×1.20；20～40秒每10秒有4秒易傷+20%；40～60秒生2書頁。",
+        "書頁各HP=本體最大HP的4%；有效傷害25%回傳本體。",
+        "階段不清狀態；不新增第四階段或隱藏二條血。"
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "id": "ST001",
+      "number": 1,
+      "map_id": "MAP01",
+      "local_number": 1,
+      "display_code": "01-01",
+      "name": "蘆風小徑・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST002",
+      "number": 2,
+      "map_id": "MAP01",
+      "local_number": 2,
+      "display_code": "01-02",
+      "name": "蘆風小徑・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST003",
+      "number": 3,
+      "map_id": "MAP01",
+      "local_number": 3,
+      "display_code": "01-03",
+      "name": "蘆風小徑・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST004",
+      "number": 4,
+      "map_id": "MAP01",
+      "local_number": 4,
+      "display_code": "01-04",
+      "name": "蘆風小徑・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST005",
+      "number": 5,
+      "map_id": "MAP01",
+      "local_number": 5,
+      "display_code": "01-05",
+      "name": "蘆風小徑・草帽雞長",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST006",
+      "number": 6,
+      "map_id": "MAP01",
+      "local_number": 6,
+      "display_code": "01-06",
+      "name": "蘋果坡地・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST007",
+      "number": 7,
+      "map_id": "MAP01",
+      "local_number": 7,
+      "display_code": "01-07",
+      "name": "蘋果坡地・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST008",
+      "number": 8,
+      "map_id": "MAP01",
+      "local_number": 8,
+      "display_code": "01-08",
+      "name": "蘋果坡地・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST009",
+      "number": 9,
+      "map_id": "MAP01",
+      "local_number": 9,
+      "display_code": "01-09",
+      "name": "蘋果坡地・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST010",
+      "number": 10,
+      "map_id": "MAP01",
+      "local_number": 10,
+      "display_code": "01-10",
+      "name": "蘋果坡地・尖牙野豬",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST011",
+      "number": 11,
+      "map_id": "MAP01",
+      "local_number": 11,
+      "display_code": "01-11",
+      "name": "舊磨坊・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST012",
+      "number": 12,
+      "map_id": "MAP01",
+      "local_number": 12,
+      "display_code": "01-12",
+      "name": "舊磨坊・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST013",
+      "number": 13,
+      "map_id": "MAP01",
+      "local_number": 13,
+      "display_code": "01-13",
+      "name": "舊磨坊・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST014",
+      "number": 14,
+      "map_id": "MAP01",
+      "local_number": 14,
+      "display_code": "01-14",
+      "name": "舊磨坊・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST015",
+      "number": 15,
+      "map_id": "MAP01",
+      "local_number": 15,
+      "display_code": "01-15",
+      "name": "舊磨坊・暴走磨輪",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST016",
+      "number": 16,
+      "map_id": "MAP01",
+      "local_number": 16,
+      "display_code": "01-16",
+      "name": "河岸木橋・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST017",
+      "number": 17,
+      "map_id": "MAP01",
+      "local_number": 17,
+      "display_code": "01-17",
+      "name": "河岸木橋・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST018",
+      "number": 18,
+      "map_id": "MAP01",
+      "local_number": 18,
+      "display_code": "01-18",
+      "name": "河岸木橋・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST019",
+      "number": 19,
+      "map_id": "MAP01",
+      "local_number": 19,
+      "display_code": "01-19",
+      "name": "河岸木橋・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST020",
+      "number": 20,
+      "map_id": "MAP01",
+      "local_number": 20,
+      "display_code": "01-20",
+      "name": "河岸木橋・石背河龜",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST021",
+      "number": 21,
+      "map_id": "MAP01",
+      "local_number": 21,
+      "display_code": "01-21",
+      "name": "牧羊草丘・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST022",
+      "number": 22,
+      "map_id": "MAP01",
+      "local_number": 22,
+      "display_code": "01-22",
+      "name": "牧羊草丘・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST023",
+      "number": 23,
+      "map_id": "MAP01",
+      "local_number": 23,
+      "display_code": "01-23",
+      "name": "牧羊草丘・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST024",
+      "number": 24,
+      "map_id": "MAP01",
+      "local_number": 24,
+      "display_code": "01-24",
+      "name": "牧羊草丘・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST025",
+      "number": 25,
+      "map_id": "MAP01",
+      "local_number": 25,
+      "display_code": "01-25",
+      "name": "牧羊草丘・牧草巨羊",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST026",
+      "number": 26,
+      "map_id": "MAP01",
+      "local_number": 26,
+      "display_code": "01-26",
+      "name": "古樹廣場・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST027",
+      "number": 27,
+      "map_id": "MAP01",
+      "local_number": 27,
+      "display_code": "01-27",
+      "name": "古樹廣場・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST028",
+      "number": 28,
+      "map_id": "MAP01",
+      "local_number": 28,
+      "display_code": "01-28",
+      "name": "古樹廣場・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST029",
+      "number": 29,
+      "map_id": "MAP01",
+      "local_number": 29,
+      "display_code": "01-29",
+      "name": "古樹廣場・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST030",
+      "number": 30,
+      "map_id": "MAP01",
+      "local_number": 30,
+      "display_code": "01-30",
+      "name": "古樹廣場・冠葉樹王",
+      "type": "boss",
+      "type_name": "BOSS",
+      "encounter": "1 名地圖 BOSS"
+    },
+    {
+      "id": "ST031",
+      "number": 31,
+      "map_id": "MAP02",
+      "local_number": 1,
+      "display_code": "02-01",
+      "name": "莓果林徑・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST032",
+      "number": 32,
+      "map_id": "MAP02",
+      "local_number": 2,
+      "display_code": "02-02",
+      "name": "莓果林徑・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST033",
+      "number": 33,
+      "map_id": "MAP02",
+      "local_number": 3,
+      "display_code": "02-03",
+      "name": "莓果林徑・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST034",
+      "number": 34,
+      "map_id": "MAP02",
+      "local_number": 4,
+      "display_code": "02-04",
+      "name": "莓果林徑・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST035",
+      "number": 35,
+      "map_id": "MAP02",
+      "local_number": 5,
+      "display_code": "02-05",
+      "name": "莓果林徑・莓果熊",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST036",
+      "number": 36,
+      "map_id": "MAP02",
+      "local_number": 6,
+      "display_code": "02-06",
+      "name": "蜂蜜樹洞・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST037",
+      "number": 37,
+      "map_id": "MAP02",
+      "local_number": 7,
+      "display_code": "02-07",
+      "name": "蜂蜜樹洞・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST038",
+      "number": 38,
+      "map_id": "MAP02",
+      "local_number": 8,
+      "display_code": "02-08",
+      "name": "蜂蜜樹洞・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST039",
+      "number": 39,
+      "map_id": "MAP02",
+      "local_number": 9,
+      "display_code": "02-09",
+      "name": "蜂蜜樹洞・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST040",
+      "number": 40,
+      "map_id": "MAP02",
+      "local_number": 10,
+      "display_code": "02-10",
+      "name": "蜂蜜樹洞・蜂巢守衛",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST041",
+      "number": 41,
+      "map_id": "MAP02",
+      "local_number": 11,
+      "display_code": "02-11",
+      "name": "黏糖溪谷・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST042",
+      "number": 42,
+      "map_id": "MAP02",
+      "local_number": 12,
+      "display_code": "02-12",
+      "name": "黏糖溪谷・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST043",
+      "number": 43,
+      "map_id": "MAP02",
+      "local_number": 13,
+      "display_code": "02-13",
+      "name": "黏糖溪谷・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST044",
+      "number": 44,
+      "map_id": "MAP02",
+      "local_number": 14,
+      "display_code": "02-14",
+      "name": "黏糖溪谷・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST045",
+      "number": 45,
+      "map_id": "MAP02",
+      "local_number": 15,
+      "display_code": "02-15",
+      "name": "黏糖溪谷・黏糖巨怪",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST046",
+      "number": 46,
+      "map_id": "MAP02",
+      "local_number": 16,
+      "display_code": "02-16",
+      "name": "野蜂花圃・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST047",
+      "number": 47,
+      "map_id": "MAP02",
+      "local_number": 17,
+      "display_code": "02-17",
+      "name": "野蜂花圃・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST048",
+      "number": 48,
+      "map_id": "MAP02",
+      "local_number": 18,
+      "display_code": "02-18",
+      "name": "野蜂花圃・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST049",
+      "number": 49,
+      "map_id": "MAP02",
+      "local_number": 19,
+      "display_code": "02-19",
+      "name": "野蜂花圃・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST050",
+      "number": 50,
+      "map_id": "MAP02",
+      "local_number": 20,
+      "display_code": "02-20",
+      "name": "野蜂花圃・刺針隊長",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST051",
+      "number": 51,
+      "map_id": "MAP02",
+      "local_number": 21,
+      "display_code": "02-21",
+      "name": "腐木深處・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST052",
+      "number": 52,
+      "map_id": "MAP02",
+      "local_number": 22,
+      "display_code": "02-22",
+      "name": "腐木深處・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST053",
+      "number": 53,
+      "map_id": "MAP02",
+      "local_number": 23,
+      "display_code": "02-23",
+      "name": "腐木深處・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST054",
+      "number": 54,
+      "map_id": "MAP02",
+      "local_number": 24,
+      "display_code": "02-24",
+      "name": "腐木深處・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST055",
+      "number": 55,
+      "map_id": "MAP02",
+      "local_number": 25,
+      "display_code": "02-25",
+      "name": "腐木深處・空心木偶",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST056",
+      "number": 56,
+      "map_id": "MAP02",
+      "local_number": 26,
+      "display_code": "02-26",
+      "name": "蜂后王庭・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST057",
+      "number": 57,
+      "map_id": "MAP02",
+      "local_number": 27,
+      "display_code": "02-27",
+      "name": "蜂后王庭・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST058",
+      "number": 58,
+      "map_id": "MAP02",
+      "local_number": 28,
+      "display_code": "02-28",
+      "name": "蜂后王庭・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST059",
+      "number": 59,
+      "map_id": "MAP02",
+      "local_number": 29,
+      "display_code": "02-29",
+      "name": "蜂后王庭・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST060",
+      "number": 60,
+      "map_id": "MAP02",
+      "local_number": 30,
+      "display_code": "02-30",
+      "name": "蜂后王庭・琥珀蜂后",
+      "type": "boss",
+      "type_name": "BOSS",
+      "encounter": "1 名地圖 BOSS"
+    },
+    {
+      "id": "ST061",
+      "number": 61,
+      "map_id": "MAP03",
+      "local_number": 1,
+      "display_code": "03-01",
+      "name": "礦工營地・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST062",
+      "number": 62,
+      "map_id": "MAP03",
+      "local_number": 2,
+      "display_code": "03-02",
+      "name": "礦工營地・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST063",
+      "number": 63,
+      "map_id": "MAP03",
+      "local_number": 3,
+      "display_code": "03-03",
+      "name": "礦工營地・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST064",
+      "number": 64,
+      "map_id": "MAP03",
+      "local_number": 4,
+      "display_code": "03-04",
+      "name": "礦工營地・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST065",
+      "number": 65,
+      "map_id": "MAP03",
+      "local_number": 5,
+      "display_code": "03-05",
+      "name": "礦工營地・盔帽鼴鼠",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST066",
+      "number": 66,
+      "map_id": "MAP03",
+      "local_number": 6,
+      "display_code": "03-06",
+      "name": "廢軌隧道・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST067",
+      "number": 67,
+      "map_id": "MAP03",
+      "local_number": 7,
+      "display_code": "03-07",
+      "name": "廢軌隧道・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST068",
+      "number": 68,
+      "map_id": "MAP03",
+      "local_number": 8,
+      "display_code": "03-08",
+      "name": "廢軌隧道・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST069",
+      "number": 69,
+      "map_id": "MAP03",
+      "local_number": 9,
+      "display_code": "03-09",
+      "name": "廢軌隧道・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST070",
+      "number": 70,
+      "map_id": "MAP03",
+      "local_number": 10,
+      "display_code": "03-10",
+      "name": "廢軌隧道・失控礦車",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST071",
+      "number": 71,
+      "map_id": "MAP03",
+      "local_number": 11,
+      "display_code": "03-11",
+      "name": "赤銅礦脈・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST072",
+      "number": 72,
+      "map_id": "MAP03",
+      "local_number": 12,
+      "display_code": "03-12",
+      "name": "赤銅礦脈・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST073",
+      "number": 73,
+      "map_id": "MAP03",
+      "local_number": 13,
+      "display_code": "03-13",
+      "name": "赤銅礦脈・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST074",
+      "number": 74,
+      "map_id": "MAP03",
+      "local_number": 14,
+      "display_code": "03-14",
+      "name": "赤銅礦脈・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST075",
+      "number": 75,
+      "map_id": "MAP03",
+      "local_number": 15,
+      "display_code": "03-15",
+      "name": "赤銅礦脈・赤銅甲蟲",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST076",
+      "number": 76,
+      "map_id": "MAP03",
+      "local_number": 16,
+      "display_code": "03-16",
+      "name": "升降井道・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST077",
+      "number": 77,
+      "map_id": "MAP03",
+      "local_number": 17,
+      "display_code": "03-17",
+      "name": "升降井道・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST078",
+      "number": 78,
+      "map_id": "MAP03",
+      "local_number": 18,
+      "display_code": "03-18",
+      "name": "升降井道・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST079",
+      "number": 79,
+      "map_id": "MAP03",
+      "local_number": 19,
+      "display_code": "03-19",
+      "name": "升降井道・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST080",
+      "number": 80,
+      "map_id": "MAP03",
+      "local_number": 20,
+      "display_code": "03-20",
+      "name": "升降井道・鐵鏈監工",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST081",
+      "number": 81,
+      "map_id": "MAP03",
+      "local_number": 21,
+      "display_code": "03-21",
+      "name": "熔渣工棚・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST082",
+      "number": 82,
+      "map_id": "MAP03",
+      "local_number": 22,
+      "display_code": "03-22",
+      "name": "熔渣工棚・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST083",
+      "number": 83,
+      "map_id": "MAP03",
+      "local_number": 23,
+      "display_code": "03-23",
+      "name": "熔渣工棚・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST084",
+      "number": 84,
+      "map_id": "MAP03",
+      "local_number": 24,
+      "display_code": "03-24",
+      "name": "熔渣工棚・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST085",
+      "number": 85,
+      "map_id": "MAP03",
+      "local_number": 25,
+      "display_code": "03-25",
+      "name": "熔渣工棚・熔渣石怪",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST086",
+      "number": 86,
+      "map_id": "MAP03",
+      "local_number": 26,
+      "display_code": "03-26",
+      "name": "礦心巨窟・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST087",
+      "number": 87,
+      "map_id": "MAP03",
+      "local_number": 27,
+      "display_code": "03-27",
+      "name": "礦心巨窟・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST088",
+      "number": 88,
+      "map_id": "MAP03",
+      "local_number": 28,
+      "display_code": "03-28",
+      "name": "礦心巨窟・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST089",
+      "number": 89,
+      "map_id": "MAP03",
+      "local_number": 29,
+      "display_code": "03-29",
+      "name": "礦心巨窟・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST090",
+      "number": 90,
+      "map_id": "MAP03",
+      "local_number": 30,
+      "display_code": "03-30",
+      "name": "礦心巨窟・轟鳴鑽王",
+      "type": "boss",
+      "type_name": "BOSS",
+      "encounter": "1 名地圖 BOSS"
+    },
+    {
+      "id": "ST091",
+      "number": 91,
+      "map_id": "MAP04",
+      "local_number": 1,
+      "display_code": "04-01",
+      "name": "苔石街口・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST092",
+      "number": 92,
+      "map_id": "MAP04",
+      "local_number": 2,
+      "display_code": "04-02",
+      "name": "苔石街口・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST093",
+      "number": 93,
+      "map_id": "MAP04",
+      "local_number": 3,
+      "display_code": "04-03",
+      "name": "苔石街口・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST094",
+      "number": 94,
+      "map_id": "MAP04",
+      "local_number": 4,
+      "display_code": "04-04",
+      "name": "苔石街口・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST095",
+      "number": 95,
+      "map_id": "MAP04",
+      "local_number": 5,
+      "display_code": "04-05",
+      "name": "苔石街口・提燈遊魂",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST096",
+      "number": 96,
+      "map_id": "MAP04",
+      "local_number": 6,
+      "display_code": "04-06",
+      "name": "空屋長巷・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST097",
+      "number": 97,
+      "map_id": "MAP04",
+      "local_number": 7,
+      "display_code": "04-07",
+      "name": "空屋長巷・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST098",
+      "number": 98,
+      "map_id": "MAP04",
+      "local_number": 8,
+      "display_code": "04-08",
+      "name": "空屋長巷・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST099",
+      "number": 99,
+      "map_id": "MAP04",
+      "local_number": 9,
+      "display_code": "04-09",
+      "name": "空屋長巷・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST100",
+      "number": 100,
+      "map_id": "MAP04",
+      "local_number": 10,
+      "display_code": "04-10",
+      "name": "空屋長巷・長巷稻偶",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST101",
+      "number": 101,
+      "map_id": "MAP04",
+      "local_number": 11,
+      "display_code": "04-11",
+      "name": "風鈴市場・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST102",
+      "number": 102,
+      "map_id": "MAP04",
+      "local_number": 12,
+      "display_code": "04-12",
+      "name": "風鈴市場・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST103",
+      "number": 103,
+      "map_id": "MAP04",
+      "local_number": 13,
+      "display_code": "04-13",
+      "name": "風鈴市場・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST104",
+      "number": 104,
+      "map_id": "MAP04",
+      "local_number": 14,
+      "display_code": "04-14",
+      "name": "風鈴市場・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST105",
+      "number": 105,
+      "map_id": "MAP04",
+      "local_number": 15,
+      "display_code": "04-15",
+      "name": "風鈴市場・破傘商人",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST106",
+      "number": 106,
+      "map_id": "MAP04",
+      "local_number": 16,
+      "display_code": "04-16",
+      "name": "鐘匠工坊・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST107",
+      "number": 107,
+      "map_id": "MAP04",
+      "local_number": 17,
+      "display_code": "04-17",
+      "name": "鐘匠工坊・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST108",
+      "number": 108,
+      "map_id": "MAP04",
+      "local_number": 18,
+      "display_code": "04-18",
+      "name": "鐘匠工坊・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST109",
+      "number": 109,
+      "map_id": "MAP04",
+      "local_number": 19,
+      "display_code": "04-19",
+      "name": "鐘匠工坊・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST110",
+      "number": 110,
+      "map_id": "MAP04",
+      "local_number": 20,
+      "display_code": "04-20",
+      "name": "鐘匠工坊・發條鐘僕",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST111",
+      "number": 111,
+      "map_id": "MAP04",
+      "local_number": 21,
+      "display_code": "04-21",
+      "name": "午夜鐘樓・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST112",
+      "number": 112,
+      "map_id": "MAP04",
+      "local_number": 22,
+      "display_code": "04-22",
+      "name": "午夜鐘樓・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST113",
+      "number": 113,
+      "map_id": "MAP04",
+      "local_number": 23,
+      "display_code": "04-23",
+      "name": "午夜鐘樓・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST114",
+      "number": 114,
+      "map_id": "MAP04",
+      "local_number": 24,
+      "display_code": "04-24",
+      "name": "午夜鐘樓・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST115",
+      "number": 115,
+      "map_id": "MAP04",
+      "local_number": 25,
+      "display_code": "04-25",
+      "name": "午夜鐘樓・銹鐘守衛",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST116",
+      "number": 116,
+      "map_id": "MAP04",
+      "local_number": 26,
+      "display_code": "04-26",
+      "name": "月影劇場・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST117",
+      "number": 117,
+      "map_id": "MAP04",
+      "local_number": 27,
+      "display_code": "04-27",
+      "name": "月影劇場・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST118",
+      "number": 118,
+      "map_id": "MAP04",
+      "local_number": 28,
+      "display_code": "04-28",
+      "name": "月影劇場・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST119",
+      "number": 119,
+      "map_id": "MAP04",
+      "local_number": 29,
+      "display_code": "04-29",
+      "name": "月影劇場・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST120",
+      "number": 120,
+      "map_id": "MAP04",
+      "local_number": 30,
+      "display_code": "04-30",
+      "name": "月影劇場・無面鐘匠",
+      "type": "boss",
+      "type_name": "BOSS",
+      "encounter": "1 名地圖 BOSS"
+    },
+    {
+      "id": "ST121",
+      "number": 121,
+      "map_id": "MAP05",
+      "local_number": 1,
+      "display_code": "05-01",
+      "name": "旅人驛站・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST122",
+      "number": 122,
+      "map_id": "MAP05",
+      "local_number": 2,
+      "display_code": "05-02",
+      "name": "旅人驛站・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST123",
+      "number": 123,
+      "map_id": "MAP05",
+      "local_number": 3,
+      "display_code": "05-03",
+      "name": "旅人驛站・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST124",
+      "number": 124,
+      "map_id": "MAP05",
+      "local_number": 4,
+      "display_code": "05-04",
+      "name": "旅人驛站・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST125",
+      "number": 125,
+      "map_id": "MAP05",
+      "local_number": 5,
+      "display_code": "05-05",
+      "name": "旅人驛站・背貨沙鼠",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST126",
+      "number": 126,
+      "map_id": "MAP05",
+      "local_number": 6,
+      "display_code": "05-06",
+      "name": "風蝕商道・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST127",
+      "number": 127,
+      "map_id": "MAP05",
+      "local_number": 7,
+      "display_code": "05-07",
+      "name": "風蝕商道・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST128",
+      "number": 128,
+      "map_id": "MAP05",
+      "local_number": 8,
+      "display_code": "05-08",
+      "name": "風蝕商道・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST129",
+      "number": 129,
+      "map_id": "MAP05",
+      "local_number": 9,
+      "display_code": "05-09",
+      "name": "風蝕商道・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST130",
+      "number": 130,
+      "map_id": "MAP05",
+      "local_number": 10,
+      "display_code": "05-10",
+      "name": "風蝕商道・風砂盜首",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST131",
+      "number": 131,
+      "map_id": "MAP05",
+      "local_number": 11,
+      "display_code": "05-11",
+      "name": "琉砂沙丘・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST132",
+      "number": 132,
+      "map_id": "MAP05",
+      "local_number": 12,
+      "display_code": "05-12",
+      "name": "琉砂沙丘・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST133",
+      "number": 133,
+      "map_id": "MAP05",
+      "local_number": 13,
+      "display_code": "05-13",
+      "name": "琉砂沙丘・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST134",
+      "number": 134,
+      "map_id": "MAP05",
+      "local_number": 14,
+      "display_code": "05-14",
+      "name": "琉砂沙丘・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST135",
+      "number": 135,
+      "map_id": "MAP05",
+      "local_number": 15,
+      "display_code": "05-15",
+      "name": "琉砂沙丘・琉砂甲蠍",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST136",
+      "number": 136,
+      "map_id": "MAP05",
+      "local_number": 16,
+      "display_code": "05-16",
+      "name": "失落駝站・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST137",
+      "number": 137,
+      "map_id": "MAP05",
+      "local_number": 17,
+      "display_code": "05-17",
+      "name": "失落駝站・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST138",
+      "number": 138,
+      "map_id": "MAP05",
+      "local_number": 18,
+      "display_code": "05-18",
+      "name": "失落駝站・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST139",
+      "number": 139,
+      "map_id": "MAP05",
+      "local_number": 19,
+      "display_code": "05-19",
+      "name": "失落駝站・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST140",
+      "number": 140,
+      "map_id": "MAP05",
+      "local_number": 20,
+      "display_code": "05-20",
+      "name": "失落駝站・迷路駝王",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST141",
+      "number": 141,
+      "map_id": "MAP05",
+      "local_number": 21,
+      "display_code": "05-21",
+      "name": "古井綠洲・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST142",
+      "number": 142,
+      "map_id": "MAP05",
+      "local_number": 22,
+      "display_code": "05-22",
+      "name": "古井綠洲・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST143",
+      "number": 143,
+      "map_id": "MAP05",
+      "local_number": 23,
+      "display_code": "05-23",
+      "name": "古井綠洲・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST144",
+      "number": 144,
+      "map_id": "MAP05",
+      "local_number": 24,
+      "display_code": "05-24",
+      "name": "古井綠洲・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST145",
+      "number": 145,
+      "map_id": "MAP05",
+      "local_number": 25,
+      "display_code": "05-25",
+      "name": "古井綠洲・古井沙靈",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST146",
+      "number": 146,
+      "map_id": "MAP05",
+      "local_number": 26,
+      "display_code": "05-26",
+      "name": "黃金砂宮・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST147",
+      "number": 147,
+      "map_id": "MAP05",
+      "local_number": 27,
+      "display_code": "05-27",
+      "name": "黃金砂宮・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST148",
+      "number": 148,
+      "map_id": "MAP05",
+      "local_number": 28,
+      "display_code": "05-28",
+      "name": "黃金砂宮・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST149",
+      "number": 149,
+      "map_id": "MAP05",
+      "local_number": 29,
+      "display_code": "05-29",
+      "name": "黃金砂宮・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST150",
+      "number": 150,
+      "map_id": "MAP05",
+      "local_number": 30,
+      "display_code": "05-30",
+      "name": "黃金砂宮・鎏金蠍皇",
+      "type": "boss",
+      "type_name": "BOSS",
+      "encounter": "1 名地圖 BOSS"
+    },
+    {
+      "id": "ST151",
+      "number": 151,
+      "map_id": "MAP06",
+      "local_number": 1,
+      "display_code": "06-01",
+      "name": "貝殼淺灘・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST152",
+      "number": 152,
+      "map_id": "MAP06",
+      "local_number": 2,
+      "display_code": "06-02",
+      "name": "貝殼淺灘・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST153",
+      "number": 153,
+      "map_id": "MAP06",
+      "local_number": 3,
+      "display_code": "06-03",
+      "name": "貝殼淺灘・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST154",
+      "number": 154,
+      "map_id": "MAP06",
+      "local_number": 4,
+      "display_code": "06-04",
+      "name": "貝殼淺灘・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST155",
+      "number": 155,
+      "map_id": "MAP06",
+      "local_number": 5,
+      "display_code": "06-05",
+      "name": "貝殼淺灘・鉗鉗蟹長",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST156",
+      "number": 156,
+      "map_id": "MAP06",
+      "local_number": 6,
+      "display_code": "06-06",
+      "name": "鹽風碼頭・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST157",
+      "number": 157,
+      "map_id": "MAP06",
+      "local_number": 7,
+      "display_code": "06-07",
+      "name": "鹽風碼頭・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST158",
+      "number": 158,
+      "map_id": "MAP06",
+      "local_number": 8,
+      "display_code": "06-08",
+      "name": "鹽風碼頭・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST159",
+      "number": 159,
+      "map_id": "MAP06",
+      "local_number": 9,
+      "display_code": "06-09",
+      "name": "鹽風碼頭・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST160",
+      "number": 160,
+      "map_id": "MAP06",
+      "local_number": 10,
+      "display_code": "06-10",
+      "name": "鹽風碼頭・木桶水手",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST161",
+      "number": 161,
+      "map_id": "MAP06",
+      "local_number": 11,
+      "display_code": "06-11",
+      "name": "珊瑚棧橋・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST162",
+      "number": 162,
+      "map_id": "MAP06",
+      "local_number": 12,
+      "display_code": "06-12",
+      "name": "珊瑚棧橋・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST163",
+      "number": 163,
+      "map_id": "MAP06",
+      "local_number": 13,
+      "display_code": "06-13",
+      "name": "珊瑚棧橋・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST164",
+      "number": 164,
+      "map_id": "MAP06",
+      "local_number": 14,
+      "display_code": "06-14",
+      "name": "珊瑚棧橋・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST165",
+      "number": 165,
+      "map_id": "MAP06",
+      "local_number": 15,
+      "display_code": "06-15",
+      "name": "珊瑚棧橋・珊瑚巨螺",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST166",
+      "number": 166,
+      "map_id": "MAP06",
+      "local_number": 16,
+      "display_code": "06-16",
+      "name": "沉船外灣・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST167",
+      "number": 167,
+      "map_id": "MAP06",
+      "local_number": 17,
+      "display_code": "06-17",
+      "name": "沉船外灣・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST168",
+      "number": 168,
+      "map_id": "MAP06",
+      "local_number": 18,
+      "display_code": "06-18",
+      "name": "沉船外灣・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST169",
+      "number": 169,
+      "map_id": "MAP06",
+      "local_number": 19,
+      "display_code": "06-19",
+      "name": "沉船外灣・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST170",
+      "number": 170,
+      "map_id": "MAP06",
+      "local_number": 20,
+      "display_code": "06-20",
+      "name": "沉船外灣・斷錨海盜",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST171",
+      "number": 171,
+      "map_id": "MAP06",
+      "local_number": 21,
+      "display_code": "06-21",
+      "name": "黑帆錨地・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST172",
+      "number": 172,
+      "map_id": "MAP06",
+      "local_number": 22,
+      "display_code": "06-22",
+      "name": "黑帆錨地・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST173",
+      "number": 173,
+      "map_id": "MAP06",
+      "local_number": 23,
+      "display_code": "06-23",
+      "name": "黑帆錨地・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST174",
+      "number": 174,
+      "map_id": "MAP06",
+      "local_number": 24,
+      "display_code": "06-24",
+      "name": "黑帆錨地・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST175",
+      "number": 175,
+      "map_id": "MAP06",
+      "local_number": 25,
+      "display_code": "06-25",
+      "name": "黑帆錨地・黑帆船長",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST176",
+      "number": 176,
+      "map_id": "MAP06",
+      "local_number": 26,
+      "display_code": "06-26",
+      "name": "潮汐王座・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST177",
+      "number": 177,
+      "map_id": "MAP06",
+      "local_number": 27,
+      "display_code": "06-27",
+      "name": "潮汐王座・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST178",
+      "number": 178,
+      "map_id": "MAP06",
+      "local_number": 28,
+      "display_code": "06-28",
+      "name": "潮汐王座・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST179",
+      "number": 179,
+      "map_id": "MAP06",
+      "local_number": 29,
+      "display_code": "06-29",
+      "name": "潮汐王座・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST180",
+      "number": 180,
+      "map_id": "MAP06",
+      "local_number": 30,
+      "display_code": "06-30",
+      "name": "潮汐王座・深潮章王",
+      "type": "boss",
+      "type_name": "BOSS",
+      "encounter": "1 名地圖 BOSS"
+    },
+    {
+      "id": "ST181",
+      "number": 181,
+      "map_id": "MAP07",
+      "local_number": 1,
+      "display_code": "07-01",
+      "name": "雪松山徑・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST182",
+      "number": 182,
+      "map_id": "MAP07",
+      "local_number": 2,
+      "display_code": "07-02",
+      "name": "雪松山徑・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST183",
+      "number": 183,
+      "map_id": "MAP07",
+      "local_number": 3,
+      "display_code": "07-03",
+      "name": "雪松山徑・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST184",
+      "number": 184,
+      "map_id": "MAP07",
+      "local_number": 4,
+      "display_code": "07-04",
+      "name": "雪松山徑・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST185",
+      "number": 185,
+      "map_id": "MAP07",
+      "local_number": 5,
+      "display_code": "07-05",
+      "name": "雪松山徑・厚毛雪兔",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST186",
+      "number": 186,
+      "map_id": "MAP07",
+      "local_number": 6,
+      "display_code": "07-06",
+      "name": "霜羽林・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST187",
+      "number": 187,
+      "map_id": "MAP07",
+      "local_number": 7,
+      "display_code": "07-07",
+      "name": "霜羽林・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST188",
+      "number": 188,
+      "map_id": "MAP07",
+      "local_number": 8,
+      "display_code": "07-08",
+      "name": "霜羽林・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST189",
+      "number": 189,
+      "map_id": "MAP07",
+      "local_number": 9,
+      "display_code": "07-09",
+      "name": "霜羽林・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST190",
+      "number": 190,
+      "map_id": "MAP07",
+      "local_number": 10,
+      "display_code": "07-10",
+      "name": "霜羽林・霜羽獵鷹",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST191",
+      "number": 191,
+      "map_id": "MAP07",
+      "local_number": 11,
+      "display_code": "07-11",
+      "name": "冰牙峽谷・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST192",
+      "number": 192,
+      "map_id": "MAP07",
+      "local_number": 12,
+      "display_code": "07-12",
+      "name": "冰牙峽谷・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST193",
+      "number": 193,
+      "map_id": "MAP07",
+      "local_number": 13,
+      "display_code": "07-13",
+      "name": "冰牙峽谷・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST194",
+      "number": 194,
+      "map_id": "MAP07",
+      "local_number": 14,
+      "display_code": "07-14",
+      "name": "冰牙峽谷・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST195",
+      "number": 195,
+      "map_id": "MAP07",
+      "local_number": 15,
+      "display_code": "07-15",
+      "name": "冰牙峽谷・冰牙狼王",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST196",
+      "number": 196,
+      "map_id": "MAP07",
+      "local_number": 16,
+      "display_code": "07-16",
+      "name": "凍湖棧道・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST197",
+      "number": 197,
+      "map_id": "MAP07",
+      "local_number": 17,
+      "display_code": "07-17",
+      "name": "凍湖棧道・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST198",
+      "number": 198,
+      "map_id": "MAP07",
+      "local_number": 18,
+      "display_code": "07-18",
+      "name": "凍湖棧道・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST199",
+      "number": 199,
+      "map_id": "MAP07",
+      "local_number": 19,
+      "display_code": "07-19",
+      "name": "凍湖棧道・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST200",
+      "number": 200,
+      "map_id": "MAP07",
+      "local_number": 20,
+      "display_code": "07-20",
+      "name": "凍湖棧道・冰殼巨龜",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST201",
+      "number": 201,
+      "map_id": "MAP07",
+      "local_number": 21,
+      "display_code": "07-21",
+      "name": "白霧山口・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST202",
+      "number": 202,
+      "map_id": "MAP07",
+      "local_number": 22,
+      "display_code": "07-22",
+      "name": "白霧山口・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST203",
+      "number": 203,
+      "map_id": "MAP07",
+      "local_number": 23,
+      "display_code": "07-23",
+      "name": "白霧山口・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST204",
+      "number": 204,
+      "map_id": "MAP07",
+      "local_number": 24,
+      "display_code": "07-24",
+      "name": "白霧山口・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST205",
+      "number": 205,
+      "map_id": "MAP07",
+      "local_number": 25,
+      "display_code": "07-25",
+      "name": "白霧山口・白霧雪人",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST206",
+      "number": 206,
+      "map_id": "MAP07",
+      "local_number": 26,
+      "display_code": "07-26",
+      "name": "永霜鳥巢・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST207",
+      "number": 207,
+      "map_id": "MAP07",
+      "local_number": 27,
+      "display_code": "07-27",
+      "name": "永霜鳥巢・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST208",
+      "number": 208,
+      "map_id": "MAP07",
+      "local_number": 28,
+      "display_code": "07-28",
+      "name": "永霜鳥巢・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST209",
+      "number": 209,
+      "map_id": "MAP07",
+      "local_number": 29,
+      "display_code": "07-29",
+      "name": "永霜鳥巢・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST210",
+      "number": 210,
+      "map_id": "MAP07",
+      "local_number": 30,
+      "display_code": "07-30",
+      "name": "永霜鳥巢・白冠霜鵬",
+      "type": "boss",
+      "type_name": "BOSS",
+      "encounter": "1 名地圖 BOSS"
+    },
+    {
+      "id": "ST211",
+      "number": 211,
+      "map_id": "MAP08",
+      "local_number": 1,
+      "display_code": "08-01",
+      "name": "灰燼山道・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST212",
+      "number": 212,
+      "map_id": "MAP08",
+      "local_number": 2,
+      "display_code": "08-02",
+      "name": "灰燼山道・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST213",
+      "number": 213,
+      "map_id": "MAP08",
+      "local_number": 3,
+      "display_code": "08-03",
+      "name": "灰燼山道・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST214",
+      "number": 214,
+      "map_id": "MAP08",
+      "local_number": 4,
+      "display_code": "08-04",
+      "name": "灰燼山道・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST215",
+      "number": 215,
+      "map_id": "MAP08",
+      "local_number": 5,
+      "display_code": "08-05",
+      "name": "灰燼山道・灰燼甲蟲",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST216",
+      "number": 216,
+      "map_id": "MAP08",
+      "local_number": 6,
+      "display_code": "08-06",
+      "name": "赤岩採場・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST217",
+      "number": 217,
+      "map_id": "MAP08",
+      "local_number": 7,
+      "display_code": "08-07",
+      "name": "赤岩採場・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST218",
+      "number": 218,
+      "map_id": "MAP08",
+      "local_number": 8,
+      "display_code": "08-08",
+      "name": "赤岩採場・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST219",
+      "number": 219,
+      "map_id": "MAP08",
+      "local_number": 9,
+      "display_code": "08-09",
+      "name": "赤岩採場・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST220",
+      "number": 220,
+      "map_id": "MAP08",
+      "local_number": 10,
+      "display_code": "08-10",
+      "name": "赤岩採場・赤岩犀角",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST221",
+      "number": 221,
+      "map_id": "MAP08",
+      "local_number": 11,
+      "display_code": "08-11",
+      "name": "熔流裂谷・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST222",
+      "number": 222,
+      "map_id": "MAP08",
+      "local_number": 12,
+      "display_code": "08-12",
+      "name": "熔流裂谷・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST223",
+      "number": 223,
+      "map_id": "MAP08",
+      "local_number": 13,
+      "display_code": "08-13",
+      "name": "熔流裂谷・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST224",
+      "number": 224,
+      "map_id": "MAP08",
+      "local_number": 14,
+      "display_code": "08-14",
+      "name": "熔流裂谷・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST225",
+      "number": 225,
+      "map_id": "MAP08",
+      "local_number": 15,
+      "display_code": "08-15",
+      "name": "熔流裂谷・熔流巨蜥",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST226",
+      "number": 226,
+      "map_id": "MAP08",
+      "local_number": 16,
+      "display_code": "08-16",
+      "name": "硫火洞窟・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST227",
+      "number": 227,
+      "map_id": "MAP08",
+      "local_number": 17,
+      "display_code": "08-17",
+      "name": "硫火洞窟・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST228",
+      "number": 228,
+      "map_id": "MAP08",
+      "local_number": 18,
+      "display_code": "08-18",
+      "name": "硫火洞窟・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST229",
+      "number": 229,
+      "map_id": "MAP08",
+      "local_number": 19,
+      "display_code": "08-19",
+      "name": "硫火洞窟・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST230",
+      "number": 230,
+      "map_id": "MAP08",
+      "local_number": 20,
+      "display_code": "08-20",
+      "name": "硫火洞窟・硫火石像",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST231",
+      "number": 231,
+      "map_id": "MAP08",
+      "local_number": 21,
+      "display_code": "08-21",
+      "name": "黑鐵祭壇・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST232",
+      "number": 232,
+      "map_id": "MAP08",
+      "local_number": 22,
+      "display_code": "08-22",
+      "name": "黑鐵祭壇・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST233",
+      "number": 233,
+      "map_id": "MAP08",
+      "local_number": 23,
+      "display_code": "08-23",
+      "name": "黑鐵祭壇・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST234",
+      "number": 234,
+      "map_id": "MAP08",
+      "local_number": 24,
+      "display_code": "08-24",
+      "name": "黑鐵祭壇・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST235",
+      "number": 235,
+      "map_id": "MAP08",
+      "local_number": 25,
+      "display_code": "08-25",
+      "name": "黑鐵祭壇・黑鐵監工",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST236",
+      "number": 236,
+      "map_id": "MAP08",
+      "local_number": 26,
+      "display_code": "08-26",
+      "name": "地心熔殿・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST237",
+      "number": 237,
+      "map_id": "MAP08",
+      "local_number": 27,
+      "display_code": "08-27",
+      "name": "地心熔殿・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST238",
+      "number": 238,
+      "map_id": "MAP08",
+      "local_number": 28,
+      "display_code": "08-28",
+      "name": "地心熔殿・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST239",
+      "number": 239,
+      "map_id": "MAP08",
+      "local_number": 29,
+      "display_code": "08-29",
+      "name": "地心熔殿・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST240",
+      "number": 240,
+      "map_id": "MAP08",
+      "local_number": 30,
+      "display_code": "08-30",
+      "name": "地心熔殿・熔心巨匠",
+      "type": "boss",
+      "type_name": "BOSS",
+      "encounter": "1 名地圖 BOSS"
+    },
+    {
+      "id": "ST241",
+      "number": 241,
+      "map_id": "MAP09",
+      "local_number": 1,
+      "display_code": "09-01",
+      "name": "銅門大道・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST242",
+      "number": 242,
+      "map_id": "MAP09",
+      "local_number": 2,
+      "display_code": "09-02",
+      "name": "銅門大道・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST243",
+      "number": 243,
+      "map_id": "MAP09",
+      "local_number": 3,
+      "display_code": "09-03",
+      "name": "銅門大道・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST244",
+      "number": 244,
+      "map_id": "MAP09",
+      "local_number": 4,
+      "display_code": "09-04",
+      "name": "銅門大道・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST245",
+      "number": 245,
+      "map_id": "MAP09",
+      "local_number": 5,
+      "display_code": "09-05",
+      "name": "銅門大道・銅門衛兵",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST246",
+      "number": 246,
+      "map_id": "MAP09",
+      "local_number": 6,
+      "display_code": "09-06",
+      "name": "齒輪工坊・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST247",
+      "number": 247,
+      "map_id": "MAP09",
+      "local_number": 7,
+      "display_code": "09-07",
+      "name": "齒輪工坊・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST248",
+      "number": 248,
+      "map_id": "MAP09",
+      "local_number": 8,
+      "display_code": "09-08",
+      "name": "齒輪工坊・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST249",
+      "number": 249,
+      "map_id": "MAP09",
+      "local_number": 9,
+      "display_code": "09-09",
+      "name": "齒輪工坊・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST250",
+      "number": 250,
+      "map_id": "MAP09",
+      "local_number": 10,
+      "display_code": "09-10",
+      "name": "齒輪工坊・齒輪蜘蛛",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST251",
+      "number": 251,
+      "map_id": "MAP09",
+      "local_number": 11,
+      "display_code": "09-11",
+      "name": "蒸汽水道・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST252",
+      "number": 252,
+      "map_id": "MAP09",
+      "local_number": 12,
+      "display_code": "09-12",
+      "name": "蒸汽水道・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST253",
+      "number": 253,
+      "map_id": "MAP09",
+      "local_number": 13,
+      "display_code": "09-13",
+      "name": "蒸汽水道・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST254",
+      "number": 254,
+      "map_id": "MAP09",
+      "local_number": 14,
+      "display_code": "09-14",
+      "name": "蒸汽水道・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST255",
+      "number": 255,
+      "map_id": "MAP09",
+      "local_number": 15,
+      "display_code": "09-15",
+      "name": "蒸汽水道・蒸汽清道夫",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST256",
+      "number": 256,
+      "map_id": "MAP09",
+      "local_number": 16,
+      "display_code": "09-16",
+      "name": "發條兵營・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST257",
+      "number": 257,
+      "map_id": "MAP09",
+      "local_number": 17,
+      "display_code": "09-17",
+      "name": "發條兵營・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST258",
+      "number": 258,
+      "map_id": "MAP09",
+      "local_number": 18,
+      "display_code": "09-18",
+      "name": "發條兵營・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST259",
+      "number": 259,
+      "map_id": "MAP09",
+      "local_number": 19,
+      "display_code": "09-19",
+      "name": "發條兵營・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST260",
+      "number": 260,
+      "map_id": "MAP09",
+      "local_number": 20,
+      "display_code": "09-20",
+      "name": "發條兵營・發條將軍",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST261",
+      "number": 261,
+      "map_id": "MAP09",
+      "local_number": 21,
+      "display_code": "09-21",
+      "name": "星盤機庫・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST262",
+      "number": 262,
+      "map_id": "MAP09",
+      "local_number": 22,
+      "display_code": "09-22",
+      "name": "星盤機庫・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST263",
+      "number": 263,
+      "map_id": "MAP09",
+      "local_number": 23,
+      "display_code": "09-23",
+      "name": "星盤機庫・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST264",
+      "number": 264,
+      "map_id": "MAP09",
+      "local_number": 24,
+      "display_code": "09-24",
+      "name": "星盤機庫・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST265",
+      "number": 265,
+      "map_id": "MAP09",
+      "local_number": 25,
+      "display_code": "09-25",
+      "name": "星盤機庫・失控星盤",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST266",
+      "number": 266,
+      "map_id": "MAP09",
+      "local_number": 26,
+      "display_code": "09-26",
+      "name": "王城中樞・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST267",
+      "number": 267,
+      "map_id": "MAP09",
+      "local_number": 27,
+      "display_code": "09-27",
+      "name": "王城中樞・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST268",
+      "number": 268,
+      "map_id": "MAP09",
+      "local_number": 28,
+      "display_code": "09-28",
+      "name": "王城中樞・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST269",
+      "number": 269,
+      "map_id": "MAP09",
+      "local_number": 29,
+      "display_code": "09-29",
+      "name": "王城中樞・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST270",
+      "number": 270,
+      "map_id": "MAP09",
+      "local_number": 30,
+      "display_code": "09-30",
+      "name": "王城中樞・零號機械王",
+      "type": "boss",
+      "type_name": "BOSS",
+      "encounter": "1 名地圖 BOSS"
+    },
+    {
+      "id": "ST271",
+      "number": 271,
+      "map_id": "MAP10",
+      "local_number": 1,
+      "display_code": "10-01",
+      "name": "星砂步道・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST272",
+      "number": 272,
+      "map_id": "MAP10",
+      "local_number": 2,
+      "display_code": "10-02",
+      "name": "星砂步道・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST273",
+      "number": 273,
+      "map_id": "MAP10",
+      "local_number": 3,
+      "display_code": "10-03",
+      "name": "星砂步道・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST274",
+      "number": 274,
+      "map_id": "MAP10",
+      "local_number": 4,
+      "display_code": "10-04",
+      "name": "星砂步道・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST275",
+      "number": 275,
+      "map_id": "MAP10",
+      "local_number": 5,
+      "display_code": "10-05",
+      "name": "星砂步道・星砂刺蝟",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST276",
+      "number": 276,
+      "map_id": "MAP10",
+      "local_number": 6,
+      "display_code": "10-06",
+      "name": "夜光花田・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST277",
+      "number": 277,
+      "map_id": "MAP10",
+      "local_number": 7,
+      "display_code": "10-07",
+      "name": "夜光花田・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST278",
+      "number": 278,
+      "map_id": "MAP10",
+      "local_number": 8,
+      "display_code": "10-08",
+      "name": "夜光花田・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST279",
+      "number": 279,
+      "map_id": "MAP10",
+      "local_number": 9,
+      "display_code": "10-09",
+      "name": "夜光花田・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST280",
+      "number": 280,
+      "map_id": "MAP10",
+      "local_number": 10,
+      "display_code": "10-10",
+      "name": "夜光花田・食光花妖",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST281",
+      "number": 281,
+      "map_id": "MAP10",
+      "local_number": 11,
+      "display_code": "10-11",
+      "name": "浮石回廊・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST282",
+      "number": 282,
+      "map_id": "MAP10",
+      "local_number": 12,
+      "display_code": "10-12",
+      "name": "浮石回廊・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST283",
+      "number": 283,
+      "map_id": "MAP10",
+      "local_number": 13,
+      "display_code": "10-13",
+      "name": "浮石回廊・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST284",
+      "number": 284,
+      "map_id": "MAP10",
+      "local_number": 14,
+      "display_code": "10-14",
+      "name": "浮石回廊・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST285",
+      "number": 285,
+      "map_id": "MAP10",
+      "local_number": 15,
+      "display_code": "10-15",
+      "name": "浮石回廊・浮岩守衛",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST286",
+      "number": 286,
+      "map_id": "MAP10",
+      "local_number": 16,
+      "display_code": "10-16",
+      "name": "隕晶溫室・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST287",
+      "number": 287,
+      "map_id": "MAP10",
+      "local_number": 17,
+      "display_code": "10-17",
+      "name": "隕晶溫室・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST288",
+      "number": 288,
+      "map_id": "MAP10",
+      "local_number": 18,
+      "display_code": "10-18",
+      "name": "隕晶溫室・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST289",
+      "number": 289,
+      "map_id": "MAP10",
+      "local_number": 19,
+      "display_code": "10-19",
+      "name": "隕晶溫室・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST290",
+      "number": 290,
+      "map_id": "MAP10",
+      "local_number": 20,
+      "display_code": "10-20",
+      "name": "隕晶溫室・隕晶甲獸",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST291",
+      "number": 291,
+      "map_id": "MAP10",
+      "local_number": 21,
+      "display_code": "10-21",
+      "name": "月影池畔・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST292",
+      "number": 292,
+      "map_id": "MAP10",
+      "local_number": 22,
+      "display_code": "10-22",
+      "name": "月影池畔・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST293",
+      "number": 293,
+      "map_id": "MAP10",
+      "local_number": 23,
+      "display_code": "10-23",
+      "name": "月影池畔・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST294",
+      "number": 294,
+      "map_id": "MAP10",
+      "local_number": 24,
+      "display_code": "10-24",
+      "name": "月影池畔・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST295",
+      "number": 295,
+      "map_id": "MAP10",
+      "local_number": 25,
+      "display_code": "10-25",
+      "name": "月影池畔・月影鹿靈",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST296",
+      "number": 296,
+      "map_id": "MAP10",
+      "local_number": 26,
+      "display_code": "10-26",
+      "name": "觀星高臺・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST297",
+      "number": 297,
+      "map_id": "MAP10",
+      "local_number": 27,
+      "display_code": "10-27",
+      "name": "觀星高臺・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST298",
+      "number": 298,
+      "map_id": "MAP10",
+      "local_number": 28,
+      "display_code": "10-28",
+      "name": "觀星高臺・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST299",
+      "number": 299,
+      "map_id": "MAP10",
+      "local_number": 29,
+      "display_code": "10-29",
+      "name": "觀星高臺・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST300",
+      "number": 300,
+      "map_id": "MAP10",
+      "local_number": 30,
+      "display_code": "10-30",
+      "name": "觀星高臺・逐星巨鹿",
+      "type": "boss",
+      "type_name": "BOSS",
+      "encounter": "1 名地圖 BOSS"
+    },
+    {
+      "id": "ST301",
+      "number": 301,
+      "map_id": "MAP11",
+      "local_number": 1,
+      "display_code": "11-01",
+      "name": "雲端渡口・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST302",
+      "number": 302,
+      "map_id": "MAP11",
+      "local_number": 2,
+      "display_code": "11-02",
+      "name": "雲端渡口・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST303",
+      "number": 303,
+      "map_id": "MAP11",
+      "local_number": 3,
+      "display_code": "11-03",
+      "name": "雲端渡口・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST304",
+      "number": 304,
+      "map_id": "MAP11",
+      "local_number": 4,
+      "display_code": "11-04",
+      "name": "雲端渡口・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST305",
+      "number": 305,
+      "map_id": "MAP11",
+      "local_number": 5,
+      "display_code": "11-05",
+      "name": "雲端渡口・雲翼山羊",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST306",
+      "number": 306,
+      "map_id": "MAP11",
+      "local_number": 6,
+      "display_code": "11-06",
+      "name": "浮橋長廊・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST307",
+      "number": 307,
+      "map_id": "MAP11",
+      "local_number": 7,
+      "display_code": "11-07",
+      "name": "浮橋長廊・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST308",
+      "number": 308,
+      "map_id": "MAP11",
+      "local_number": 8,
+      "display_code": "11-08",
+      "name": "浮橋長廊・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST309",
+      "number": 309,
+      "map_id": "MAP11",
+      "local_number": 9,
+      "display_code": "11-09",
+      "name": "浮橋長廊・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST310",
+      "number": 310,
+      "map_id": "MAP11",
+      "local_number": 10,
+      "display_code": "11-10",
+      "name": "浮橋長廊・浮橋石衛",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST311",
+      "number": 311,
+      "map_id": "MAP11",
+      "local_number": 11,
+      "display_code": "11-11",
+      "name": "聖羽庭院・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST312",
+      "number": 312,
+      "map_id": "MAP11",
+      "local_number": 12,
+      "display_code": "11-12",
+      "name": "聖羽庭院・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST313",
+      "number": 313,
+      "map_id": "MAP11",
+      "local_number": 13,
+      "display_code": "11-13",
+      "name": "聖羽庭院・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST314",
+      "number": 314,
+      "map_id": "MAP11",
+      "local_number": 14,
+      "display_code": "11-14",
+      "name": "聖羽庭院・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST315",
+      "number": 315,
+      "map_id": "MAP11",
+      "local_number": 15,
+      "display_code": "11-15",
+      "name": "聖羽庭院・聖羽獅鷲",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST316",
+      "number": 316,
+      "map_id": "MAP11",
+      "local_number": 16,
+      "display_code": "11-16",
+      "name": "晴空迴廊・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST317",
+      "number": 317,
+      "map_id": "MAP11",
+      "local_number": 17,
+      "display_code": "11-17",
+      "name": "晴空迴廊・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST318",
+      "number": 318,
+      "map_id": "MAP11",
+      "local_number": 18,
+      "display_code": "11-18",
+      "name": "晴空迴廊・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST319",
+      "number": 319,
+      "map_id": "MAP11",
+      "local_number": 19,
+      "display_code": "11-19",
+      "name": "晴空迴廊・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST320",
+      "number": 320,
+      "map_id": "MAP11",
+      "local_number": 20,
+      "display_code": "11-20",
+      "name": "晴空迴廊・風紋巨像",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST321",
+      "number": 321,
+      "map_id": "MAP11",
+      "local_number": 21,
+      "display_code": "11-21",
+      "name": "白曜神殿・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST322",
+      "number": 322,
+      "map_id": "MAP11",
+      "local_number": 22,
+      "display_code": "11-22",
+      "name": "白曜神殿・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST323",
+      "number": 323,
+      "map_id": "MAP11",
+      "local_number": 23,
+      "display_code": "11-23",
+      "name": "白曜神殿・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST324",
+      "number": 324,
+      "map_id": "MAP11",
+      "local_number": 24,
+      "display_code": "11-24",
+      "name": "白曜神殿・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST325",
+      "number": 325,
+      "map_id": "MAP11",
+      "local_number": 25,
+      "display_code": "11-25",
+      "name": "白曜神殿・白曜裁決者",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST326",
+      "number": 326,
+      "map_id": "MAP11",
+      "local_number": 26,
+      "display_code": "11-26",
+      "name": "天穹祭壇・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST327",
+      "number": 327,
+      "map_id": "MAP11",
+      "local_number": 27,
+      "display_code": "11-27",
+      "name": "天穹祭壇・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST328",
+      "number": 328,
+      "map_id": "MAP11",
+      "local_number": 28,
+      "display_code": "11-28",
+      "name": "天穹祭壇・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST329",
+      "number": 329,
+      "map_id": "MAP11",
+      "local_number": 29,
+      "display_code": "11-29",
+      "name": "天穹祭壇・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST330",
+      "number": 330,
+      "map_id": "MAP11",
+      "local_number": 30,
+      "display_code": "11-30",
+      "name": "天穹祭壇・天穹審判官",
+      "type": "boss",
+      "type_name": "BOSS",
+      "encounter": "1 名地圖 BOSS"
+    },
+    {
+      "id": "ST331",
+      "number": 331,
+      "map_id": "MAP12",
+      "local_number": 1,
+      "display_code": "12-01",
+      "name": "散頁門廳・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST332",
+      "number": 332,
+      "map_id": "MAP12",
+      "local_number": 2,
+      "display_code": "12-02",
+      "name": "散頁門廳・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST333",
+      "number": 333,
+      "map_id": "MAP12",
+      "local_number": 3,
+      "display_code": "12-03",
+      "name": "散頁門廳・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST334",
+      "number": 334,
+      "map_id": "MAP12",
+      "local_number": 4,
+      "display_code": "12-04",
+      "name": "散頁門廳・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST335",
+      "number": 335,
+      "map_id": "MAP12",
+      "local_number": 5,
+      "display_code": "12-05",
+      "name": "散頁門廳・飛頁獵犬",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST336",
+      "number": 336,
+      "map_id": "MAP12",
+      "local_number": 6,
+      "display_code": "12-06",
+      "name": "禁書長廊・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST337",
+      "number": 337,
+      "map_id": "MAP12",
+      "local_number": 7,
+      "display_code": "12-07",
+      "name": "禁書長廊・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST338",
+      "number": 338,
+      "map_id": "MAP12",
+      "local_number": 8,
+      "display_code": "12-08",
+      "name": "禁書長廊・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST339",
+      "number": 339,
+      "map_id": "MAP12",
+      "local_number": 9,
+      "display_code": "12-09",
+      "name": "禁書長廊・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST340",
+      "number": 340,
+      "map_id": "MAP12",
+      "local_number": 10,
+      "display_code": "12-10",
+      "name": "禁書長廊・禁書守衛",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST341",
+      "number": 341,
+      "map_id": "MAP12",
+      "local_number": 11,
+      "display_code": "12-11",
+      "name": "墨潮書室・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST342",
+      "number": 342,
+      "map_id": "MAP12",
+      "local_number": 12,
+      "display_code": "12-12",
+      "name": "墨潮書室・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST343",
+      "number": 343,
+      "map_id": "MAP12",
+      "local_number": 13,
+      "display_code": "12-13",
+      "name": "墨潮書室・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST344",
+      "number": 344,
+      "map_id": "MAP12",
+      "local_number": 14,
+      "display_code": "12-14",
+      "name": "墨潮書室・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST345",
+      "number": 345,
+      "map_id": "MAP12",
+      "local_number": 15,
+      "display_code": "12-15",
+      "name": "墨潮書室・墨潮巨怪",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST346",
+      "number": 346,
+      "map_id": "MAP12",
+      "local_number": 16,
+      "display_code": "12-16",
+      "name": "倒轉階梯・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST347",
+      "number": 347,
+      "map_id": "MAP12",
+      "local_number": 17,
+      "display_code": "12-17",
+      "name": "倒轉階梯・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST348",
+      "number": 348,
+      "map_id": "MAP12",
+      "local_number": 18,
+      "display_code": "12-18",
+      "name": "倒轉階梯・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST349",
+      "number": 349,
+      "map_id": "MAP12",
+      "local_number": 19,
+      "display_code": "12-19",
+      "name": "倒轉階梯・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST350",
+      "number": 350,
+      "map_id": "MAP12",
+      "local_number": 20,
+      "display_code": "12-20",
+      "name": "倒轉階梯・倒鐘魔像",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST351",
+      "number": 351,
+      "map_id": "MAP12",
+      "local_number": 21,
+      "display_code": "12-21",
+      "name": "無字殿堂・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST352",
+      "number": 352,
+      "map_id": "MAP12",
+      "local_number": 22,
+      "display_code": "12-22",
+      "name": "無字殿堂・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST353",
+      "number": 353,
+      "map_id": "MAP12",
+      "local_number": 23,
+      "display_code": "12-23",
+      "name": "無字殿堂・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST354",
+      "number": 354,
+      "map_id": "MAP12",
+      "local_number": 24,
+      "display_code": "12-24",
+      "name": "無字殿堂・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST355",
+      "number": 355,
+      "map_id": "MAP12",
+      "local_number": 25,
+      "display_code": "12-25",
+      "name": "無字殿堂・無字書靈",
+      "type": "elite",
+      "type_name": "小首領",
+      "encounter": "1 名小首領"
+    },
+    {
+      "id": "ST356",
+      "number": 356,
+      "map_id": "MAP12",
+      "local_number": 26,
+      "display_code": "12-26",
+      "name": "世界封底・Ⅰ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST357",
+      "number": 357,
+      "map_id": "MAP12",
+      "local_number": 27,
+      "display_code": "12-27",
+      "name": "世界封底・Ⅱ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST358",
+      "number": 358,
+      "map_id": "MAP12",
+      "local_number": 28,
+      "display_code": "12-28",
+      "name": "世界封底・Ⅲ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST359",
+      "number": 359,
+      "map_id": "MAP12",
+      "local_number": 29,
+      "display_code": "12-29",
+      "name": "世界封底・Ⅳ",
+      "type": "normal",
+      "type_name": "普通關",
+      "encounter": "3 波 × 3 隻小怪"
+    },
+    {
+      "id": "ST360",
+      "number": 360,
+      "map_id": "MAP12",
+      "local_number": 30,
+      "display_code": "12-30",
+      "name": "世界封底・噬頁龍王",
+      "type": "boss",
+      "type_name": "BOSS",
+      "encounter": "1 名地圖 BOSS"
+    }
+  ],
+  "ui_layout_reference": [
+    {
+      "region": "資源列",
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 60,
+      "content": "頭像、等級／經驗、金幣、古物、更多"
+    },
+    {
+      "region": "地圖列",
+      "x": 0,
+      "y": 60,
+      "width": 390,
+      "height": 48,
+      "content": "當前圖／關、進度、地圖入口"
+    },
+    {
+      "region": "戰鬥區",
+      "x": 0,
+      "y": 108,
+      "width": 390,
+      "height": 272,
+      "content": "角色左、敵人右；BOSS資訊與召喚"
+    },
+    {
+      "region": "技能列",
+      "x": 0,
+      "y": 380,
+      "width": 390,
+      "height": 72,
+      "content": "3常規＋1絕招；配置入口"
+    },
+    {
+      "region": "裝備區",
+      "x": 0,
+      "y": 452,
+      "width": 390,
+      "height": 116,
+      "content": "2列×4格；部位圖示與品質"
+    },
+    {
+      "region": "鑑定區",
+      "x": 0,
+      "y": 568,
+      "width": 390,
+      "height": 176,
+      "content": "台資訊、鑑定、自動、升級、篩選、目標路線"
+    },
+    {
+      "region": "底部導覽",
+      "x": 0,
+      "y": 744,
+      "width": 390,
+      "height": 56,
+      "content": "冒險、角色、技能、圖鑑"
+    }
+  ],
+  "ui_buttons": [
+    {
+      "id": "UI-A01",
+      "label": "頭像／等級",
+      "rect_reference": "12,6,118,48",
+      "action": "開角色屬性摘要",
+      "state_rule": "無寫入"
+    },
+    {
+      "id": "UI-A02",
+      "label": "更多",
+      "rect_reference": "330,6,48,48",
+      "action": "開設定面板",
+      "state_rule": "顯示連線／內容版本"
+    },
+    {
+      "id": "UI-A03",
+      "label": "地圖列",
+      "rect_reference": "16,60,358,48",
+      "action": "開當前地圖情報",
+      "state_rule": "不傳送至舊圖"
+    },
+    {
+      "id": "UI-A04",
+      "label": "召喚BOSS",
+      "rect_reference": "244,316,130,48",
+      "action": "檢查打王配置後建立挑戰",
+      "state_rule": "非第30關隱藏；進行中禁用"
+    },
+    {
+      "id": "UI-A05",
+      "label": "技能四格",
+      "rect_reference": "16/80/144/208,388,56,56",
+      "action": "開技能詳情／條件；不改成手動即時放招",
+      "state_rule": "BOSS可查看，不可修改"
+    },
+    {
+      "id": "UI-A06",
+      "label": "配置",
+      "rect_reference": "280,392,94,48",
+      "action": "切清怪／打王或開設定",
+      "state_rule": "戰鬥中凍結修改"
+    },
+    {
+      "id": "UI-A07",
+      "label": "八個裝備格",
+      "rect_reference": "見前頁2×4網格",
+      "action": "開裝備詳情與同部位背包",
+      "state_rule": "穿戴限制由伺服器驗證"
+    },
+    {
+      "id": "UI-A08",
+      "label": "升級鑑定台",
+      "rect_reference": "246,576,128,48",
+      "action": "預覽品質變化與花費",
+      "state_rule": "金幣不足不扣款；BOSS禁用"
+    },
+    {
+      "id": "UI-A09",
+      "label": "鑑定一次",
+      "rect_reference": "16,632,238,56",
+      "action": "消耗1古物並顯示結果",
+      "state_rule": "不足／滿包／等待回覆／BOSS禁用"
+    },
+    {
+      "id": "UI-A10",
+      "label": "自動鑑定",
+      "rect_reference": "262,632,112,56",
+      "action": "開啟／暫停逐筆鑑定",
+      "state_rule": "一筆進行中，關閉只停止下一筆"
+    },
+    {
+      "id": "UI-A11",
+      "label": "篩選",
+      "rect_reference": "16,696,112,48",
+      "action": "開保留與自動出售條件",
+      "state_rule": "預設不自動賣特殊裝備"
+    },
+    {
+      "id": "UI-A12",
+      "label": "產出路線",
+      "rect_reference": "136,696,150,48",
+      "action": "選已解鎖職業作為鑑定目標",
+      "state_rule": "不切換當前戰鬥職業"
+    },
+    {
+      "id": "UI-A13",
+      "label": "古物存量",
+      "rect_reference": "294,696,80,48",
+      "action": "只顯示剩餘古物／停止原因",
+      "state_rule": "不可誤設為商城入口"
+    },
+    {
+      "id": "UI-A14",
+      "label": "四個底部入口",
+      "rect_reference": "0/97.5/195/292.5,744,97.5,56",
+      "action": "切換冒險、角色、技能、圖鑑",
+      "state_rule": "保留各頁捲動位置"
+    }
+  ],
+  "prototype_globals": {
+    "tick_ms": 50,
+    "boss_duration_ms": 60000,
+    "backpack_capacity": 200,
+    "max_enemies": 3,
+    "max_normal_skills": 3,
+    "max_ultimate_skills": 1,
+    "quality_weights_sum": 100,
+    "no_player_hp_mp": true,
+    "xp_source": "IDENTIFIED",
+    "gold_source": "ITEM_SOLD",
+    "offline_rewards": false
+  }
+}

@@ -1,0 +1,469 @@
+.page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pageHeader {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--gutter);
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: var(--font-xl);
+  overflow-wrap: anywhere;
+}
+
+.tabBar {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  padding: var(--space-2) var(--gutter);
+  background: var(--c-bg);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.pageBody {
+  flex: 1;
+  padding: var(--space-3) var(--gutter) var(--space-5);
+}
+
+.list {
+  list-style: none;
+  margin: var(--space-2) 0;
+  padding: 0;
+}
+
+.listButton {
+  width: 100%;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border: 0;
+  border-bottom: 1px solid var(--c-border);
+  background: transparent;
+  text-align: left;
+}
+
+.slotName {
+  flex: none;
+  width: 3.5em;
+  color: var(--c-text-dim);
+  font-size: var(--font-s);
+}
+
+.card {
+  margin: var(--space-2) 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+
+.bagHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.search {
+  width: 100%;
+  min-height: var(--touch);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--c-border-strong);
+  background: var(--c-surface-2);
+  padding: 0 var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.filterRow {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+  scrollbar-width: none;
+}
+
+.filterRow > * {
+  flex: none;
+}
+
+.itemGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.itemCell {
+  display: flex;
+  min-width: 0;
+}
+
+.itemCard {
+  flex: 1;
+  position: relative;
+  min-height: 72px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--q);
+  background: color-mix(in srgb, var(--q) 9%, var(--c-surface-2));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: var(--space-1) 2px;
+  font-size: var(--font-xs);
+  min-width: 0;
+}
+
+.itemSelected {
+  box-shadow: inset 0 0 0 3px var(--c-accent-strong);
+}
+
+.itemSlot {
+  color: var(--c-text-dim);
+}
+
+.itemQuality {
+  color: var(--q);
+  font-weight: 700;
+}
+
+.itemMarks {
+  display: flex;
+  gap: 2px;
+  min-height: 1.1em;
+  font-size: 0.625rem;
+}
+
+.itemMarks span {
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--c-surface-3);
+}
+
+.selectionBar {
+  position: sticky;
+  bottom: 0;
+  margin: var(--space-3) calc(-1 * var(--gutter)) 0;
+  padding: var(--space-2) var(--gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border-strong);
+  font-size: var(--font-s);
+}
+
+.family {
+  margin-top: var(--space-4);
+}
+
+.familyTitle {
+  margin: var(--space-3) 0 var(--space-2);
+  font-size: var(--font-m);
+  color: var(--c-accent-strong);
+}
+
+.branches {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 359px) {
+  .branches {
+    grid-template-columns: 1fr;
+  }
+}
+
+:global(html[data-text-scale='2']) .branches {
+  grid-template-columns: 1fr;
+}
+
+.branch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.jobNode {
+  width: 100%;
+  min-height: 72px;
+  padding: var(--space-2);
+  border-radius: var(--radius-m);
+  border: 1px solid var(--c-border-strong);
+  background: var(--c-surface-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: left;
+}
+
+.jobArt {
+  flex: none;
+  display: flex;
+}
+
+.jobArt > svg {
+  display: block;
+}
+
+.jobText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.jobNode:disabled {
+  opacity: 0.75;
+}
+
+.jobCurrent {
+  border-color: var(--c-accent);
+  box-shadow: inset 0 0 0 1px var(--c-accent);
+}
+
+.jobUnavailable {
+  border-style: dashed;
+}
+
+.jobStatus {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: var(--c-accent-strong);
+}
+
+.statSummary {
+  margin: var(--space-3) 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.statSummary > div {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-m);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-border);
+}
+
+.statSummary dt {
+  font-size: var(--font-xs);
+  color: var(--c-text-dim);
+}
+
+.statSummary dd {
+  margin: 0;
+  font-weight: 800;
+  font-size: var(--font-l);
+  overflow-wrap: anywhere;
+}
+
+.equippedSkills {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.equippedSkills .skillRow {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.equippedSkills .skillActions {
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.skillRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.passiveRow {
+  background: var(--c-surface-2);
+  border-radius: var(--radius-s);
+  padding: var(--space-2) var(--space-3);
+  margin-top: var(--space-2);
+  border-bottom: none;
+}
+
+.passiveActive,
+.passiveInactive {
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  font-size: var(--font-xs);
+  vertical-align: middle;
+}
+
+.passiveActive {
+  background: var(--c-success-soft);
+  color: var(--c-success);
+}
+
+.passiveInactive {
+  background: var(--c-surface-3);
+  color: var(--c-text-dim);
+}
+
+.skillRowEmpty {
+  padding: var(--space-3);
+  margin: var(--space-2) 0;
+  border-radius: var(--radius-m);
+  border: 1px dashed var(--c-border-strong);
+  color: var(--c-text-dim);
+  font-size: var(--font-s);
+}
+
+.skillActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: none;
+}
+
+.conditionPicker {
+  margin-top: var(--space-2);
+}
+
+.skillGroup {
+  margin-top: var(--space-2);
+}
+
+.skillInfo {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--touch);
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.skillBadge {
+  flex: none;
+  align-self: center;
+  font-size: var(--font-xs);
+  color: var(--c-accent-strong);
+}
+
+.saveBar {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--gutter);
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border-strong);
+}
+
+.expand {
+  padding: var(--space-2) 0 var(--space-3);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.compactList {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: var(--font-s);
+}
+
+/* ── 美術縮圖（圖鑑、背包） ── */
+.rowArt {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+}
+
+.rowArt > svg {
+  display: block;
+}
+
+/* 未發現的怪物與裝備只顯示剪影，不提前暴露外觀。 */
+.silhouette > svg {
+  filter: brightness(0) opacity(0.45);
+}
+
+.mapThumb {
+  width: 100%;
+  height: 140px;
+  border-radius: var(--radius-s);
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+}
+
+.itemArt {
+  display: flex;
+  height: 30px;
+  align-items: center;
+}
+
+.itemArt > svg {
+  display: block;
+}
+
+/* 字體放大時先減裝飾：列表與職業樹的小圖隱藏，文字欄取得全寬（規格：頁面擁擠先減裝飾而非縮字）。 */
+:global(html[data-text-scale='1.5']) .itemArt,
+:global(html[data-text-scale='2']) .itemArt,
+:global(html[data-text-scale='1.5']) .rowArt,
+:global(html[data-text-scale='2']) .rowArt,
+:global(html[data-text-scale='1.5']) .jobArt,
+:global(html[data-text-scale='2']) .jobArt,
+:global(html[data-text-scale='1.5']) .skillTitleWithIcon > svg,
+:global(html[data-text-scale='2']) .skillTitleWithIcon > svg {
+  display: none;
+}
+
+.skillTitleWithIcon {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.skillTitleWithIcon > svg {
+  flex: none;
+}
+
+.equipArtFilled,
+.equipArtEmpty {
+  min-width: 40px;
+  height: 40px;
+  border-radius: var(--radius-s);
+}
+
+.equipArtFilled {
+  border: 1px solid var(--q);
+  background: color-mix(in srgb, var(--q) 10%, var(--c-surface-2));
+}
+
+.equipArtEmpty {
+  border: 1px dashed var(--c-border-strong);
+  color: var(--c-text-dim);
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@qiwu/game-core",
+  "private": true,
+  "version": "0.1.0",
+  "description": "純邏輯遊戲核心：戰鬥、狀態機、經濟交易；不得依賴 DOM / React / 網路",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@qiwu/content": "*",
+    "zod": "4.6.7"
+  }
+}

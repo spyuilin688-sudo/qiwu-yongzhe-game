@@ -1,0 +1,83 @@
+.frame {
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
+  max-width: var(--app-max-width);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-bg);
+  overflow: hidden;
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+.main {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* 各頁保持掛載以保留捲動位置；非目前頁面以 visibility 隱藏並設為 inert。 */
+.screenHidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.devBadge {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--safe-top) + 2px);
+  transform: translateX(-50%);
+  z-index: 60;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--c-danger);
+  color: var(--c-white);
+  font-size: 0.625rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.blocker {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--gutter);
+  background: var(--c-blocker);
+  text-align: center;
+}
+
+.blocker h2 {
+  margin: 0;
+  font-size: var(--font-xl);
+}
+
+.blocker p {
+  margin: 0;
+  color: var(--c-text-muted);
+}
+
+.suspendedBar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 20;
+  padding: var(--space-1) var(--gutter);
+  background: var(--c-accent-soft);
+  font-size: var(--font-xs);
+  text-align: center;
+}

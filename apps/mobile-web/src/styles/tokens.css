@@ -1,0 +1,163 @@
+/*
+ * 設計 Tokens：所有顏色、間距、尺寸集中於此，元件不得寫死色碼或區域高度。
+ * 區域高度對照規格 07「主畫面位置：390 × 800 安全內容區」，以 du = CSS px 對應。
+ * 美術尚未交付：此主題只是可替換的暫時視覺（木桌、黃銅、羊皮紙色調），不是最終美術。
+ */
+:root {
+  color-scheme: dark;
+
+  --c-bg: #15100c;
+  --c-surface: #211913;
+  --c-surface-2: #2b2119;
+  --c-surface-3: #382b20;
+  --c-overlay: rgba(10, 7, 5, 0.66);
+  --c-border: #4b3b2c;
+  --c-border-strong: #6e5640;
+  --c-text: #f4ead9;
+  --c-text-muted: #cdbca4;
+  --c-text-dim: #a89680;
+  --c-accent: #d9a441;
+  --c-accent-strong: #f2c15c;
+  --c-accent-ink: #1e1507;
+  --c-accent-soft: rgba(217, 164, 65, 0.16);
+  --c-danger: #ec7c64;
+  --c-danger-soft: rgba(236, 124, 100, 0.14);
+  --c-success: #86cf86;
+  --c-success-soft: rgba(134, 207, 134, 0.14);
+  --c-info: #7fbde8;
+  --c-boss: #e0614f;
+  --c-focus: #ffd27a;
+
+  /* 品質：一律同時顯示文字，顏色只是輔助（規格 04）。 */
+  --q1: #cfc8bc;
+  --q2: #86d488;
+  --q3: #79bdf2;
+  --q4: #c999f5;
+  --q5: #f4ad42;
+
+  --battle-sky-top: #3a4a3a;
+  --battle-sky-bottom: #6b7b4f;
+  --battle-ground: #4b3d25;
+  --hp-enemy: #e06a52;
+  --hp-boss: #e0614f;
+  --hp-track: rgba(0, 0, 0, 0.45);
+
+
+  /* 暫時美術（幾何佔位）用色：換正式美術時只改這裡。 */
+  --lens-glass: rgba(170, 220, 255, 0.55);
+  --c-accent-glow: rgba(242, 193, 92, 0.35);
+  --c-accent-banner: rgba(217, 164, 65, 0.85);
+  --c-pop-bg: rgba(20, 14, 8, 0.75);
+  --q5-soft: rgba(244, 173, 66, 0.08);
+  --c-blocker: rgba(15, 11, 8, 0.94);
+  --shade-45: rgba(0, 0, 0, 0.45);
+  --shade-55: rgba(0, 0, 0, 0.55);
+  --shade-50: rgba(0, 0, 0, 0.5);
+  --shade-60: rgba(0, 0, 0, 0.6);
+  --c-header-top: #2a2017;
+  --coin-light: #ffe08a;
+  --coin-dark: #c58a1f;
+  --coin-rim: #8c5f12;
+  --relic-paper: #d8c7a0;
+  --relic-seal: #a2432f;
+  --relic-rim: #6c5634;
+  --skill-top: #4a3a2a;
+  --skill-bottom: #2c2219;
+  --c-timer: #ffe1a0;
+  --brass-1: #c9952f;
+  --brass-2: #f2c15c;
+  --brass-3: #9a6b1c;
+  --brass-rim: #6b4a14;
+  --battle-ground-deep: #3a2f1c;
+  --float-crit: #ffd55c;
+  --float-dot: #ff9e6b;
+  --float-summon: #a8d8ff;
+  --float-follow: #d8ffb0;
+  --hp-boss-deep: #b8382a;
+  --suit-red: #ff8d7a;
+  --suit-black: #e8e2d6;
+  --c-white: #fff;
+  --c-black: #000;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --gutter: 16px;
+
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 18px;
+
+  --touch: 48px;
+  --icon: 24px;
+
+  --font-xs: 0.75rem;
+  --font-s: 0.8125rem;
+  --font-m: 0.9375rem;
+  --font-l: 1.125rem;
+  --font-xl: 1.25rem;
+  --font-family: 'PingFang TC', 'Noto Sans TC', 'Noto Sans CJK TC', 'Microsoft JhengHei', 'Heiti TC', system-ui, -apple-system, sans-serif;
+  /* 粉圓（Huninn，OFL）只有一種字重：標題、按鈕、數字用它表現遊戲感，內文維持系統字型以利閱讀與流量。 */
+  --font-display: 'Huninn', var(--font-family);
+  --font-numeric: 'Huninn', ui-rounded, 'SF Pro Rounded', var(--font-family);
+
+  --app-max-width: 480px;
+  --h-header: 60px;
+  --h-stagebar: 48px;
+  --h-skillbar: 72px;
+  --h-equip: 116px;
+  --h-equip-collapsed: 60px;
+  --h-dock: 176px;
+  --h-dock-compact: 152px;
+  --h-nav: 56px;
+  --battle-min: 180px;
+  --skill-button: 56px;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  --shadow-sheet: 0 -8px 32px rgba(0, 0, 0, 0.55);
+  --duration-fast: 120ms;
+  --duration-m: 240ms;
+  --duration-reveal: 600ms;
+}
+
+/* 窄版 320：技能按鈕與間距略縮，但觸控區仍 ≥ 48。 */
+@media (max-width: 359px) {
+  :root {
+    --gutter: 12px;
+    --skill-button: 52px;
+  }
+}
+
+:root[data-reduced-motion='true'] {
+  --duration-fast: 0ms;
+  --duration-m: 0ms;
+  --duration-reveal: 0ms;
+}
+
+/* 減少動態效果：移除位移、飄字與閃光動畫；不改變實際戰鬥速度或傷害事件。 */
+:root[data-reduced-motion='true'] *,
+:root[data-reduced-motion='true'] *::before,
+:root[data-reduced-motion='true'] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-reduced-motion='false']) {
+    --duration-fast: 0ms;
+    --duration-m: 0ms;
+    --duration-reveal: 0ms;
+  }
+  :root:not([data-reduced-motion='false']) *,
+  :root:not([data-reduced-motion='false']) *::before,
+  :root:not([data-reduced-motion='false']) *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
